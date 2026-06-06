@@ -9,9 +9,9 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      font-size: 10pt; /* all contents */
       background: #f5f5f5;
       color: #222;
+      font-size: 10pt; /* all content */
     }
 
     .topbar {
@@ -111,7 +111,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      min-width: 150px;
+      min-width: 170px;
       justify-content: center;
     }
 
@@ -175,7 +175,7 @@
 
   <script>
     // -----------------------------
-    // Login/session handling
+    // Session handling
     // -----------------------------
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -192,288 +192,175 @@
     }
 
     // -----------------------------
-    // Hardcoded FIFA World Cup 2026 fixtures
-    // Groups A-D only, sorted by date then group
-    // Times displayed as EDT for this project
+    // Flag URL map
+    // -----------------------------
+    const teamFlagUrl = {
+      "Mexico": "https://flagcdn.com/w40/mx.png",
+      "South Africa": "https://flagcdn.com/w40/za.png",
+      "Korea Republic": "https://flagcdn.com/w40/kr.png",
+      "Czechia": "https://flagcdn.com/w40/cz.png",
+
+      "Canada": "https://flagcdn.com/w40/ca.png",
+      "Bosnia and Herzegovina": "https://flagcdn.com/w40/ba.png",
+      "Qatar": "https://flagcdn.com/w40/qa.png",
+      "Switzerland": "https://flagcdn.com/w40/ch.png",
+
+      "Brazil": "https://flagcdn.com/w40/br.png",
+      "Morocco": "https://flagcdn.com/w40/ma.png",
+      "Haiti": "https://flagcdn.com/w40/ht.png",
+      "Scotland": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
+
+      "USA": "https://flagcdn.com/w40/us.png",
+      "Paraguay": "https://flagcdn.com/w40/py.png",
+      "Australia": "https://flagcdn.com/w40/au.png",
+      "Türkiye": "https://flagcdn.com/w40/tr.png",
+
+      "Germany": "https://flagcdn.com/w40/de.png",
+      "Curaçao": "https://flagcdn.com/w40/cw.png",
+      "Côte d'Ivoire": "https://flagcdn.com/w40/ci.png",
+      "Ecuador": "https://flagcdn.com/w40/ec.png",
+
+      "Netherlands": "https://flagcdn.com/w40/nl.png",
+      "Japan": "https://flagcdn.com/w40/jp.png",
+      "Tunisia": "https://flagcdn.com/w40/tn.png",
+      "Sweden": "https://flagcdn.com/w40/se.png",
+
+      "Belgium": "https://flagcdn.com/w40/be.png",
+      "Egypt": "https://flagcdn.com/w40/eg.png",
+      "IR Iran": "https://flagcdn.com/w40/ir.png",
+      "New Zealand": "https://flagcdn.com/w40/nz.png",
+
+      "Spain": "https://flagcdn.com/w40/es.png",
+      "Cabo Verde": "https://flagcdn.com/w40/cv.png",
+      "Saudi Arabia": "https://flagcdn.com/w40/sa.png",
+      "Uruguay": "https://flagcdn.com/w40/uy.png",
+
+      "France": "https://flagcdn.com/w40/fr.png",
+      "Senegal": "https://flagcdn.com/w40/sn.png",
+      "Iraq": "https://flagcdn.com/w40/iq.png",
+      "Norway": "https://flagcdn.com/w40/no.png",
+
+      "Argentina": "https://flagcdn.com/w40/ar.png",
+      "Algeria": "https://flagcdn.com/w40/dz.png",
+      "Austria": "https://flagcdn.com/w40/at.png",
+      "Jordan": "https://flagcdn.com/w40/jo.png",
+
+      "Portugal": "https://flagcdn.com/w40/pt.png",
+      "Congo DR": "https://flagcdn.com/w40/cd.png",
+      "Uzbekistan": "https://flagcdn.com/w40/uz.png",
+      "Colombia": "https://flagcdn.com/w40/co.png",
+
+      "England": "https://upload.wikimedia.org/wikipedia/en/thumb/b/be/Flag_of_England.svg/40px-Flag_of_England.svg.png",
+      "Croatia": "https://flagcdn.com/w40/hr.png",
+      "Ghana": "https://flagcdn.com/w40/gh.png",
+      "Panama": "https://flagcdn.com/w40/pa.png"
+    };
+
+    // -----------------------------
+    // Full 72-match dataset
+    // Times shown in EDT for this project
+    // startEdt is the lock time
     // -----------------------------
     const matches = [
-      {
-        id: "A1",
-        group: "A",
-        date: "2026-06-11",
-        time: "14:00",
-        startEdt: "2026-06-11T14:00:00-04:00",
-        team1: "Mexico",
-        team2: "South Africa",
-        flag1: "https://flagcdn.com/w40/mx.png",
-        flag2: "https://flagcdn.com/w40/za.png"
-      },
+      // Group A
+      { id:"A1", group:"A", date:"2026-06-11", time:"15:00", startEdt:"2026-06-11T15:00:00-04:00", team1:"Mexico", team2:"South Africa" },
+      { id:"A2", group:"A", date:"2026-06-11", time:"22:00", startEdt:"2026-06-11T22:00:00-04:00", team1:"Korea Republic", team2:"Czechia" },
+      { id:"A3", group:"A", date:"2026-06-18", time:"12:00", startEdt:"2026-06-18T12:00:00-04:00", team1:"Czechia", team2:"South Africa" },
+      { id:"A4", group:"A", date:"2026-06-18", time:"23:00", startEdt:"2026-06-18T23:00:00-04:00", team1:"Mexico", team2:"Korea Republic" },
+      { id:"A5", group:"A", date:"2026-06-24", time:"21:00", startEdt:"2026-06-24T21:00:00-04:00", team1:"South Africa", team2:"Korea Republic" },
+      { id:"A6", group:"A", date:"2026-06-24", time:"21:00", startEdt:"2026-06-24T21:00:00-04:00", team1:"Czechia", team2:"Mexico" },
 
-      {
-        id: "A2",
-        group: "A",
-        date: "2026-06-11",
-        time: "22:00",
-        startEdt: "2026-06-11T22:00:00-04:00",
-        team1: "Korea Republic",
-        team2: "Czechia",
-        flag1: "https://flagcdn.com/w40/kr.png",
-        flag2: "https://flagcdn.com/w40/cz.png"
-      },
-      {
-        id: "B1",
-        group: "B",
-        date: "2026-06-12",
-        time: "19:00",
-        startEdt: "2026-06-12T19:00:00-04:00",
-        team1: "Canada",
-        team2: "Bosnia and Herzegovina",
-        flag1: "https://flagcdn.com/w40/ca.png",
-        flag2: "https://flagcdn.com/w40/ba.png"
-      },
+      // Group B
+      { id:"B1", group:"B", date:"2026-06-12", time:"15:00", startEdt:"2026-06-12T15:00:00-04:00", team1:"Canada", team2:"Bosnia and Herzegovina" },
+      { id:"B2", group:"B", date:"2026-06-13", time:"15:00", startEdt:"2026-06-13T15:00:00-04:00", team1:"Qatar", team2:"Switzerland" },
+      { id:"B3", group:"B", date:"2026-06-18", time:"15:00", startEdt:"2026-06-18T15:00:00-04:00", team1:"Switzerland", team2:"Bosnia and Herzegovina" },
+      { id:"B4", group:"B", date:"2026-06-18", time:"18:00", startEdt:"2026-06-18T18:00:00-04:00", team1:"Canada", team2:"Qatar" },
+      { id:"B5", group:"B", date:"2026-06-24", time:"15:00", startEdt:"2026-06-24T15:00:00-04:00", team1:"Bosnia and Herzegovina", team2:"Qatar" },
+      { id:"B6", group:"B", date:"2026-06-24", time:"15:00", startEdt:"2026-06-24T15:00:00-04:00", team1:"Switzerland", team2:"Canada" },
 
-      {
-        id: "D1",
-        group: "D",
-        date: "2026-06-12",
-        time: "21:00",
-        startEdt: "2026-06-12T21:00:00-04:00",
-        team1: "USA",
-        team2: "Paraguay",
-        flag1: "https://flagcdn.com/w40/us.png",
-        flag2: "https://flagcdn.com/w40/py.png"
-      },
-      {
-        id: "B2",
-        group: "B",
-        date: "2026-06-13",
-        time: "19:00",
-        startEdt: "2026-06-13T19:00:00-04:00",
-        team1: "Qatar",
-        team2: "Switzerland",
-        flag1: "https://flagcdn.com/w40/qa.png",
-        flag2: "https://flagcdn.com/w40/ch.png"
-      },
-      {
-        id: "C1",
-        group: "C",
-        date: "2026-06-13",
-        time: "18:00",
-        startEdt: "2026-06-13T18:00:00-04:00",
-        team1: "Brazil",
-        team2: "Morocco",
-        flag1: "https://flagcdn.com/w40/br.png",
-        flag2: "https://flagcdn.com/w40/ma.png"
-      },
+      // Group C
+      { id:"C1", group:"C", date:"2026-06-13", time:"18:00", startEdt:"2026-06-13T18:00:00-04:00", team1:"Brazil", team2:"Morocco" },
+      { id:"C2", group:"C", date:"2026-06-13", time:"21:00", startEdt:"2026-06-13T21:00:00-04:00", team1:"Haiti", team2:"Scotland" },
+      { id:"C3", group:"C", date:"2026-06-19", time:"18:00", startEdt:"2026-06-19T18:00:00-04:00", team1:"Scotland", team2:"Morocco" },
+      { id:"C4", group:"C", date:"2026-06-19", time:"20:30", startEdt:"2026-06-19T20:30:00-04:00", team1:"Brazil", team2:"Haiti" },
+      { id:"C5", group:"C", date:"2026-06-24", time:"18:00", startEdt:"2026-06-24T18:00:00-04:00", team1:"Morocco", team2:"Haiti" },
+      { id:"C6", group:"C", date:"2026-06-24", time:"18:00", startEdt:"2026-06-24T18:00:00-04:00", team1:"Scotland", team2:"Brazil" },
 
-      {
-        id: "C2",
-        group: "C",
-        date: "2026-06-13",
-        time: "21:00",
-        startEdt: "2026-06-13T21:00:00-04:00",
-        team1: "Haiti",
-        team2: "Scotland",
-        flag1: "https://flagcdn.com/w40/ht.png",
-        flag2: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png"
-      },
-      {
-        id: "D2",
-        group: "D",
-        date: "2026-06-13",
-        time: "23:00",
-        startEdt: "2026-06-13T23:00:00-04:00",
-        team1: "Australia",
-        team2: "Türkiye",
-        flag1: "https://flagcdn.com/w40/au.png",
-        flag2: "https://flagcdn.com/w40/tr.png"
-      },
+      // Group D
+      { id:"D1", group:"D", date:"2026-06-12", time:"21:00", startEdt:"2026-06-12T21:00:00-04:00", team1:"USA", team2:"Paraguay" },
+      { id:"D2", group:"D", date:"2026-06-14", time:"00:00", startEdt:"2026-06-14T00:00:00-04:00", team1:"Australia", team2:"Türkiye" },
+      { id:"D3", group:"D", date:"2026-06-19", time:"15:00", startEdt:"2026-06-19T15:00:00-04:00", team1:"USA", team2:"Australia" },
+      { id:"D4", group:"D", date:"2026-06-19", time:"23:00", startEdt:"2026-06-19T23:00:00-04:00", team1:"Türkiye", team2:"Paraguay" },
+      { id:"D5", group:"D", date:"2026-06-25", time:"22:00", startEdt:"2026-06-25T22:00:00-04:00", team1:"Paraguay", team2:"Australia" },
+      { id:"D6", group:"D", date:"2026-06-25", time:"22:00", startEdt:"2026-06-25T22:00:00-04:00", team1:"Türkiye", team2:"USA" },
 
-      {
-        id: "A3",
-        group: "A",
-        date: "2026-06-18",
-        time: "16:00",
-        startEdt: "2026-06-18T16:00:00-04:00",
-        team1: "Czechia",
-        team2: "South Africa",
-        flag1: "https://flagcdn.com/w40/cz.png",
-        flag2: "https://flagcdn.com/w40/za.png"
-      },
-      {
-        id: "B3",
-        group: "B",
-        date: "2026-06-18",
-        time: "19:00",
-        startEdt: "2026-06-18T19:00:00-04:00",
-        team1: "Switzerland",
-        team2: "Bosnia and Herzegovina",
-        flag1: "https://flagcdn.com/w40/ch.png",
-        flag2: "https://flagcdn.com/w40/ba.png"
-      },
-      {
-        id: "B4",
-        group: "B",
-        date: "2026-06-18",
-        time: "22:00",
-        startEdt: "2026-06-18T22:00:00-04:00",
-        team1: "Canada",
-        team2: "Qatar",
-        flag1: "https://flagcdn.com/w40/ca.png",
-        flag2: "https://flagcdn.com/w40/qa.png"
-      },
+      // Group E
+      { id:"E1", group:"E", date:"2026-06-14", time:"13:00", startEdt:"2026-06-14T13:00:00-04:00", team1:"Germany", team2:"Curaçao" },
+      { id:"E2", group:"E", date:"2026-06-14", time:"19:00", startEdt:"2026-06-14T19:00:00-04:00", team1:"Côte d'Ivoire", team2:"Ecuador" },
+      { id:"E3", group:"E", date:"2026-06-20", time:"16:00", startEdt:"2026-06-20T16:00:00-04:00", team1:"Germany", team2:"Côte d'Ivoire" },
+      { id:"E4", group:"E", date:"2026-06-20", time:"20:00", startEdt:"2026-06-20T20:00:00-04:00", team1:"Ecuador", team2:"Curaçao" },
+      { id:"E5", group:"E", date:"2026-06-25", time:"16:00", startEdt:"2026-06-25T16:00:00-04:00", team1:"Curaçao", team2:"Côte d'Ivoire" },
+      { id:"E6", group:"E", date:"2026-06-25", time:"16:00", startEdt:"2026-06-25T16:00:00-04:00", team1:"Ecuador", team2:"Germany" },
 
-      {
-        id: "A4",
-        group: "A",
-        date: "2026-06-18",
-        time: "21:00",
-        startEdt: "2026-06-18T21:00:00-04:00",
-        team1: "Mexico",
-        team2: "Korea Republic",
-        flag1: "https://flagcdn.com/w40/mx.png",
-        flag2: "https://flagcdn.com/w40/kr.png"
-      },
-      {
-        id: "C3",
-        group: "C",
-        date: "2026-06-19",
-        time: "18:00",
-        startEdt: "2026-06-19T18:00:00-04:00",
-        team1: "Scotland",
-        team2: "Morocco",
-        flag1: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
-        flag2: "https://flagcdn.com/w40/ma.png"
-      },
-      {
-        id: "D3",
-        group: "D",
-        date: "2026-06-19",
-        time: "19:00",
-        startEdt: "2026-06-19T19:00:00-04:00",
-        team1: "USA",
-        team2: "Australia",
-        flag1: "https://flagcdn.com/w40/us.png",
-        flag2: "https://flagcdn.com/w40/au.png"
-      },
+      // Group F
+      { id:"F1", group:"F", date:"2026-06-14", time:"16:00", startEdt:"2026-06-14T16:00:00-04:00", team1:"Netherlands", team2:"Japan" },
+      { id:"F2", group:"F", date:"2026-06-14", time:"22:00", startEdt:"2026-06-14T22:00:00-04:00", team1:"Sweden", team2:"Tunisia" },
+      { id:"F3", group:"F", date:"2026-06-20", time:"13:00", startEdt:"2026-06-20T13:00:00-04:00", team1:"Netherlands", team2:"Sweden" },
+      { id:"F4", group:"F", date:"2026-06-21", time:"00:00", startEdt:"2026-06-21T00:00:00-04:00", team1:"Tunisia", team2:"Japan" },
+      { id:"F5", group:"F", date:"2026-06-25", time:"19:00", startEdt:"2026-06-25T19:00:00-04:00", team1:"Tunisia", team2:"Netherlands" },
+      { id:"F6", group:"F", date:"2026-06-25", time:"19:00", startEdt:"2026-06-25T19:00:00-04:00", team1:"Japan", team2:"Sweden" },
 
-      {
-        id: "C4",
-        group: "C",
-        date: "2026-06-19",
-        time: "20:30",
-        startEdt: "2026-06-19T20:30:00-04:00",
-        team1: "Brazil",
-        team2: "Haiti",
-        flag1: "https://flagcdn.com/w40/br.png",
-        flag2: "https://flagcdn.com/w40/ht.png"
-      },
-      {
-        id: "D4",
-        group: "D",
-        date: "2026-06-19",
-        time: "23:00",
-        startEdt: "2026-06-19T23:00:00-04:00",
-        team1: "Türkiye",
-        team2: "Paraguay",
-        flag1: "https://flagcdn.com/w40/tr.png",
-        flag2: "https://flagcdn.com/w40/py.png"
-      },
+      // Group G
+      { id:"G1", group:"G", date:"2026-06-15", time:"15:00", startEdt:"2026-06-15T15:00:00-04:00", team1:"Belgium", team2:"Egypt" },
+      { id:"G2", group:"G", date:"2026-06-15", time:"21:00", startEdt:"2026-06-15T21:00:00-04:00", team1:"IR Iran", team2:"New Zealand" },
+      { id:"G3", group:"G", date:"2026-06-21", time:"15:00", startEdt:"2026-06-21T15:00:00-04:00", team1:"Belgium", team2:"IR Iran" },
+      { id:"G4", group:"G", date:"2026-06-21", time:"21:00", startEdt:"2026-06-21T21:00:00-04:00", team1:"New Zealand", team2:"Egypt" },
+      { id:"G5", group:"G", date:"2026-06-26", time:"23:00", startEdt:"2026-06-26T23:00:00-04:00", team1:"New Zealand", team2:"Belgium" },
+      { id:"G6", group:"G", date:"2026-06-26", time:"23:00", startEdt:"2026-06-26T23:00:00-04:00", team1:"Egypt", team2:"IR Iran" },
 
-      {
-        id: "B5",
-        group: "B",
-        date: "2026-06-24",
-        time: "19:00",
-        startEdt: "2026-06-24T19:00:00-04:00",
-        team1: "Bosnia and Herzegovina",
-        team2: "Qatar",
-        flag1: "https://flagcdn.com/w40/ba.png",
-        flag2: "https://flagcdn.com/w40/qa.png"
-      },
-      {
-        id: "B6",
-        group: "B",
-        date: "2026-06-24",
-        time: "19:00",
-        startEdt: "2026-06-24T19:00:00-04:00",
-        team1: "Switzerland",
-        team2: "Canada",
-        flag1: "https://flagcdn.com/w40/ch.png",
-        flag2: "https://flagcdn.com/w40/ca.png"
-      },
-      {
-        id: "C5",
-        group: "C",
-        date: "2026-06-24",
-        time: "18:00",
-        startEdt: "2026-06-24T18:00:00-04:00",
-        team1: "Morocco",
-        team2: "Haiti",
-        flag1: "https://flagcdn.com/w40/ma.png",
-        flag2: "https://flagcdn.com/w40/ht.png"
-      },
-      {
-        id: "C6",
-        group: "C",
-        date: "2026-06-24",
-        time: "18:00",
-        startEdt: "2026-06-24T18:00:00-04:00",
-        team1: "Scotland",
-        team2: "Brazil",
-        flag1: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
-        flag2: "https://flagcdn.com/w40/br.png"
-      },
+      // Group H
+      { id:"H1", group:"H", date:"2026-06-15", time:"12:00", startEdt:"2026-06-15T12:00:00-04:00", team1:"Spain", team2:"Cabo Verde" },
+      { id:"H2", group:"H", date:"2026-06-15", time:"18:00", startEdt:"2026-06-15T18:00:00-04:00", team1:"Saudi Arabia", team2:"Uruguay" },
+      { id:"H3", group:"H", date:"2026-06-21", time:"12:00", startEdt:"2026-06-21T12:00:00-04:00", team1:"Spain", team2:"Saudi Arabia" },
+      { id:"H4", group:"H", date:"2026-06-21", time:"18:00", startEdt:"2026-06-21T18:00:00-04:00", team1:"Uruguay", team2:"Cabo Verde" },
+      { id:"H5", group:"H", date:"2026-06-26", time:"20:00", startEdt:"2026-06-26T20:00:00-04:00", team1:"Uruguay", team2:"Spain" },
+      { id:"H6", group:"H", date:"2026-06-26", time:"20:00", startEdt:"2026-06-26T20:00:00-04:00", team1:"Cabo Verde", team2:"Saudi Arabia" },
 
-      {
-        id: "A5",
-        group: "A",
-        date: "2026-06-24",
-        time: "21:00",
-        startEdt: "2026-06-24T21:00:00-04:00",
-        team1: "South Africa",
-        team2: "Korea Republic",
-        flag1: "https://flagcdn.com/w40/za.png",
-        flag2: "https://flagcdn.com/w40/kr.png"
-      },
-      {
-        id: "A6",
-        group: "A",
-        date: "2026-06-24",
-        time: "21:00",
-        startEdt: "2026-06-24T21:00:00-04:00",
-        team1: "Czechia",
-        team2: "Mexico",
-        flag1: "https://flagcdn.com/w40/cz.png",
-        flag2: "https://flagcdn.com/w40/mx.png"
-      },
+      // Group I
+      { id:"I1", group:"I", date:"2026-06-16", time:"15:00", startEdt:"2026-06-16T15:00:00-04:00", team1:"France", team2:"Senegal" },
+      { id:"I2", group:"I", date:"2026-06-16", time:"18:00", startEdt:"2026-06-16T18:00:00-04:00", team1:"Iraq", team2:"Norway" },
+      { id:"I3", group:"I", date:"2026-06-22", time:"17:00", startEdt:"2026-06-22T17:00:00-04:00", team1:"France", team2:"Iraq" },
+      { id:"I4", group:"I", date:"2026-06-22", time:"20:00", startEdt:"2026-06-22T20:00:00-04:00", team1:"Norway", team2:"Senegal" },
+      { id:"I5", group:"I", date:"2026-06-26", time:"15:00", startEdt:"2026-06-26T15:00:00-04:00", team1:"Senegal", team2:"Iraq" },
+      { id:"I6", group:"I", date:"2026-06-26", time:"15:00", startEdt:"2026-06-26T15:00:00-04:00", team1:"Norway", team2:"France" },
 
-      {
-        id: "D5",
-        group: "D",
-        date: "2026-06-25",
-        time: "22:00",
-        startEdt: "2026-06-25T22:00:00-04:00",
-        team1: "Paraguay",
-        team2: "Australia",
-        flag1: "https://flagcdn.com/w40/py.png",
-        flag2: "https://flagcdn.com/w40/au.png"
-      },
-      {
-        id: "D6",
-        group: "D",
-        date: "2026-06-25",
-        time: "22:00",
-        startEdt: "2026-06-25T22:00:00-04:00",
-        team1: "Türkiye",
-        team2: "USA",
-        flag1: "https://flagcdn.com/w40/tr.png",
-        flag2: "https://flagcdn.com/w40/us.png"
-      }
+      // Group J
+      { id:"J1", group:"J", date:"2026-06-16", time:"21:00", startEdt:"2026-06-16T21:00:00-04:00", team1:"Argentina", team2:"Algeria" },
+      { id:"J2", group:"J", date:"2026-06-17", time:"00:00", startEdt:"2026-06-17T00:00:00-04:00", team1:"Austria", team2:"Jordan" },
+      { id:"J3", group:"J", date:"2026-06-22", time:"13:00", startEdt:"2026-06-22T13:00:00-04:00", team1:"Argentina", team2:"Austria" },
+      { id:"J4", group:"J", date:"2026-06-22", time:"23:00", startEdt:"2026-06-22T23:00:00-04:00", team1:"Jordan", team2:"Algeria" },
+      { id:"J5", group:"J", date:"2026-06-27", time:"22:00", startEdt:"2026-06-27T22:00:00-04:00", team1:"Algeria", team2:"Austria" },
+      { id:"J6", group:"J", date:"2026-06-27", time:"22:00", startEdt:"2026-06-27T22:00:00-04:00", team1:"Jordan", team2:"Argentina" },
+
+      // Group K
+      { id:"K1", group:"K", date:"2026-06-17", time:"13:00", startEdt:"2026-06-17T13:00:00-04:00", team1:"Portugal", team2:"Congo DR" },
+      { id:"K2", group:"K", date:"2026-06-17", time:"22:00", startEdt:"2026-06-17T22:00:00-04:00", team1:"Uzbekistan", team2:"Colombia" },
+      { id:"K3", group:"K", date:"2026-06-23", time:"13:00", startEdt:"2026-06-23T13:00:00-04:00", team1:"Portugal", team2:"Uzbekistan" },
+      { id:"K4", group:"K", date:"2026-06-23", time:"22:00", startEdt:"2026-06-23T22:00:00-04:00", team1:"Colombia", team2:"Congo DR" },
+      { id:"K5", group:"K", date:"2026-06-27", time:"19:30", startEdt:"2026-06-27T19:30:00-04:00", team1:"Congo DR", team2:"Uzbekistan" },
+      { id:"K6", group:"K", date:"2026-06-27", time:"19:30", startEdt:"2026-06-27T19:30:00-04:00", team1:"Colombia", team2:"Portugal" },
+
+      // Group L
+      { id:"L1", group:"L", date:"2026-06-17", time:"16:00", startEdt:"2026-06-17T16:00:00-04:00", team1:"England", team2:"Croatia" },
+      { id:"L2", group:"L", date:"2026-06-17", time:"19:00", startEdt:"2026-06-17T19:00:00-04:00", team1:"Ghana", team2:"Panama" },
+      { id:"L3", group:"L", date:"2026-06-23", time:"16:00", startEdt:"2026-06-23T16:00:00-04:00", team1:"England", team2:"Ghana" },
+      { id:"L4", group:"L", date:"2026-06-23", time:"19:00", startEdt:"2026-06-23T19:00:00-04:00", team1:"Panama", team2:"Croatia" },
+      { id:"L5", group:"L", date:"2026-06-27", time:"17:00", startEdt:"2026-06-27T17:00:00-04:00", team1:"Panama", team2:"England" },
+      { id:"L6", group:"L", date:"2026-06-27", time:"17:00", startEdt:"2026-06-27T17:00:00-04:00", team1:"Croatia", team2:"Ghana" }
     ];
 
     // -----------------------------
-    // Local pick persistence per user
+    // Local per-user picks
     // -----------------------------
     const picksKey = "wc2026_picks_" + userId;
     let savedPicks = JSON.parse(localStorage.getItem(picksKey) || "{}");
@@ -514,7 +401,8 @@
       Object.keys(map).forEach(date => {
         map[date].sort((a, b) => {
           if (a.group !== b.group) return a.group.localeCompare(b.group);
-          return a.time.localeCompare(b.time);
+          if (a.time !== b.time) return a.time.localeCompare(b.time);
+          return a.id.localeCompare(b.id);
         });
       });
 
@@ -565,14 +453,14 @@
 
             <div class="teams-row">
               <div class="team">
-                <img class="flag" src="${match.flag1}" alt="${match.team1} flag">
+                <img class="flag" src="${teamFlagUrl[match.team1]}" alt="${match.team1} flag">
                 <span>${match.team1}</span>
               </div>
 
               <div class="vs">vs</div>
 
               <div class="team">
-                <img class="flag" src="${match.flag2}" alt="${match.team2} flag">
+                <img class="flag" src="${teamFlagUrl[match.team2]}" alt="${match.team2} flag">
                 <span>${match.team2}</span>
               </div>
             </div>
@@ -589,9 +477,7 @@
 
           if (locked) {
             status.classList.add("locked");
-            status.textContent = existingPick
-              ? "Prediction closed"
-              : "Prediction closed";
+            status.textContent = "Prediction closed";
           } else if (existingPick) {
             status.classList.add("saved");
             const label =
