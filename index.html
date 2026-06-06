@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    .box {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    input {
+      width: 200px;
+      padding: 8px;
+      margin: 8px 0;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 10px;
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Login</h2>
+
+  <input type="text" id="username" placeholder="Username"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+
+  <button onclick="login()">Login</button>
+  <button onclick="createUser()">Create User</button>
+
+  <div id="message"></div>
+</div>
+
+
+<!-- Firebase SDK -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// 🔧 REPLACE THIS WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+// ✅ LOGIN FUNCTION
+window.login = async function () {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("message");
+
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username),
+    where("password", "==", password)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const userId = snapshot.docs[0].id;
+
+    localStorage.setItem("userId", userId);
+
+    msg.style.color = "green";
+    msg.innerText = "Login success";
+
+    // go to game page
+    window.location.href = "game.html";
+
+  } else {
+    msg.style.color = "red";
+    msg.innerText = "Invalid username or password";
+  }
+};
+
+
+// ✅ CREATE USER FUNCTION
+window.createUser = async function () {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("message");
+
+  if (!username || !password) {
+    msg.innerText = "Enter username and password";
+    return;
+  }
+
+  // check if user already exists
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    msg.innerText = "Username already exists";
+    return;
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: username,
+    password: password,
+    total_score: 0
+  });
+
+  msg.style.color = "green";
+  msg.innerText = "User created! Now login.";
+};
+
+</script>
+
+</body>
+</html>
