@@ -57,109 +57,90 @@
 </div>
 
 
-<!-- ✅ FIREBASE (NON-MODULE VERSION) -->
+<!-- ✅ SIMPLE FIREBASE (NO MODULES) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 
-  // ✅ REPLACE WITH YOUR REAL CONFIG
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  // ✅ YOUR REAL CONFIG (already correct)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+    authDomain: "wc-2026-843c7.firebaseapp.com",
+    projectId: "wc-2026-843c7",
+    storageBucket: "wc-2026-843c7.firebasestorage.app",
+    messagingSenderId: "767583870499",
+    appId: "1:767583870499:web:b8ce30fe3f3481dd5a1b96",
+    measurementId: "G-VW40EYDFB8"
+  };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-  authDomain: "wc-2026-843c7.firebaseapp.com",
-  projectId: "wc-2026-843c7",
-  storageBucket: "wc-2026-843c7.firebasestorage.app",
-  messagingSenderId: "767583870499",
-  appId: "1:767583870499:web:b8ce30fe3f3481dd5a1b96",
-  measurementId: "G-VW40EYDFB8"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
 
-// ✅ LOGIN
-function login() {
+  function login() {
 
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const msg = document.getElementById("message");
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const msg = document.getElementById("message");
 
-  if (!username || !password) {
-    msg.style.color = "red";
-    msg.innerText = "Enter username and password";
-    return;
+    if (!username || !password) {
+      msg.innerText = "Enter username and password";
+      return;
+    }
+
+    db.collection("users")
+      .where("username", "==", username)
+      .where("password", "==", password)
+      .get()
+      .then(snapshot => {
+
+        if (!snapshot.empty) {
+          localStorage.setItem("userId", snapshot.docs[0].id);
+          msg.style.color = "green";
+          msg.innerText = "Login success";
+          window.location.href = "landing.html";
+        } else {
+          msg.style.color = "red";
+          msg.innerText = "Invalid login";
+        }
+
+      });
   }
 
-  db.collection("users")
-    .where("username", "==", username)
-    .where("password", "==", password)
-    .get()
-    .then(snapshot => {
 
-      if (!snapshot.empty) {
+  function createUser() {
 
-        const userId = snapshot.docs[0].id;
-        localStorage.setItem("userId", userId);
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const msg = document.getElementById("message");
+
+    if (!username || !password) {
+      msg.innerText = "Enter username and password";
+      return;
+    }
+
+    db.collection("users")
+      .where("username", "==", username)
+      .get()
+      .then(snapshot => {
+
+        if (!snapshot.empty) {
+          msg.innerText = "Username exists";
+          return;
+        }
+
+        db.collection("users").add({
+          username: username,
+          password: password,
+          total_score: 0
+        });
 
         msg.style.color = "green";
-        msg.innerText = "Login success";
+        msg.innerText = "User created";
 
-        window.location.href = "landing.html";
-
-      } else {
-        msg.style.color = "red";
-        msg.innerText = "Invalid username or password";
-      }
-
-    });
-}
-
-
-// ✅ CREATE USER
-function createUser() {
-
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const msg = document.getElementById("message");
-
-  if (!username || !password) {
-    msg.style.color = "red";
-    msg.innerText = "Enter username and password";
-    return;
-  }
-
-  db.collection("users")
-    .where("username", "==", username)
-    .get()
-    .then(snapshot => {
-
-      if (!snapshot.empty) {
-        msg.style.color = "red";
-        msg.innerText = "Username already exists";
-        return;
-      }
-
-      db.collection("users").add({
-        username: username,
-        password: password,
-        total_score: 0
       });
-
-      msg.style.color = "green";
-      msg.innerText = "User created. Now login.";
-
-    });
-}
+  }
 
 </script>
 
