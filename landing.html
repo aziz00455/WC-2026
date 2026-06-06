@@ -26,12 +26,21 @@
 
 <script>
 
+  // ✅ PROTECT PAGE (NEW)
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    window.location.href = "index.html";
+  }
+
+  // ✅ LOGOUT
   function logout() {
-    localStorage.removeItem("userId");  // clear session
-    window.location.href = "index.html"; // go back to login
+    localStorage.removeItem("userId");
+    window.location.href = "index.html";
   }
 
 </script>
 
 </body>
 </html>
+``
