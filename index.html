@@ -48,4 +48,123 @@
   <h2>WC-2026</h2>
 
   <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
 
+  <button onclick="login()">Login</button>
+  <button onclick="createUser()">Create User</button>
+
+  <div id="message"></div>
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+// ✅ 🔴 IMPORTANT: REPLACE WITH YOUR REAL FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+// ✅ LOGIN FUNCTION
+async function login() {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("message");
+
+  if (!username || !password) {
+    msg.style.color = "red";
+    msg.innerText = "Enter username and password";
+    return;
+  }
+
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username),
+    where("password", "==", password)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+
+    const userId = snapshot.docs[0].id;
+    localStorage.setItem("userId", userId);
+
+    msg.style.color = "green";
+    msg.innerText = "Login success";
+
+    // ✅ REDIRECT TO YOUR LEADERBOARD PAGE
+    window.location.href = "landing.html";
+
+  } else {
+    msg.style.color = "red";
+    msg.innerText = "Invalid username or password";
+  }
+}
+
+
+// ✅ CREATE USER FUNCTION
+async function createUser() {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("message");
+
+  if (!username || !password) {
+    msg.style.color = "red";
+    msg.innerText = "Enter username and password";
+    return;
+  }
+
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    msg.style.color = "red";
+    msg.innerText = "Username already exists";
+    return;
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: username,
+    password: password,
+    total_score: 0
+  });
+
+  msg.style.color = "green";
+  msg.innerText = "User created. Now login.";
+}
+
+
+// ✅ ✅ CRITICAL FIX (this makes buttons work)
+window.login = login;
+window.createUser = createUser;
+
+</script>
+
+</body>
+</html>
