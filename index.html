@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WC 2026 Login</title>
+  <title>WC-2026 Login</title>
 
   <style>
     body {
@@ -19,7 +19,7 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
-      width: 250px;
+      width: 260px;
     }
 
     input {
@@ -45,115 +45,7 @@
 <body>
 
 <div class="box">
-  <h2>WC 2026</h2>
+  <h2>WC-2026</h2>
 
   <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
 
-  <button onclick="login()">Login</button>
-  <button onclick="createUser()">Create User</button>
-
-  <div id="message"></div>
-</div>
-
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// 🔥 YOU WILL REPLACE THIS AFTER FIREBASE SETUP
-const firebaseConfig = {
-  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-  authDomain: "wc-2026-843c7.firebaseapp.com",
-  projectId: "wc-2026-843c7",
-  storageBucket: "wc-2026-843c7.firebasestorage.app",
-  messagingSenderId: "767583870499",
-  appId: "1:767583870499:web:b8ce30fe3f3481dd5a1b96",
-  measurementId: "G-VW40EYDFB8"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-
-// ✅ LOGIN
-window.login = async function () {
-
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const msg = document.getElementById("message");
-
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", username),
-    where("password", "==", password)
-  );
-
-  const snapshot = await getDocs(q);
-
-  if (!snapshot.empty) {
-    const userId = snapshot.docs[0].id;
-
-    localStorage.setItem("userId", userId);
-
-    msg.style.color = "green";
-    msg.innerText = "Login success";
-
-    // go to landing page
-    window.location.href = "landing.html";
-
-  } else {
-    msg.style.color = "red";
-    msg.innerText = "Invalid login";
-  }
-};
-
-
-// ✅ CREATE USER
-window.createUser = async function () {
-
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const msg = document.getElementById("message");
-
-  if (!username || !password) {
-    msg.innerText = "Enter username & password";
-    return;
-  }
-
-  // check existing user
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", username)
-  );
-
-  const snapshot = await getDocs(q);
-
-  if (!snapshot.empty) {
-    msg.innerText = "Username already exists";
-    return;
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: username,
-    password: password,
-    total_score: 0
-  });
-
-  msg.style.color = "green";
-  msg.innerText = "User created. Now login.";
-};
-
-</script>
-
-</body>
-</html>
