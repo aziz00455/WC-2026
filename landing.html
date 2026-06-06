@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WC-2026 Leaderboard</title>
 
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f4f4f4;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 400px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background: #333;
+      color: white;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>WC-2026 Leaderboard</h2>
+
+<button class="btn" onclick="goToPredict()">Predict</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Username</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+
+  <tbody id="leaderboard"></tbody>
+</table>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ✅ SAME CONFIG AS index.html
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+// ✅ LOAD USERS
+async function loadLeaderboard() {
+
+  const snapshot = await getDocs(collection(db, "users"));
+
+  let users = [];
+
+  snapshot.forEach(doc => {
+    users.push(doc.data());
+  });
+
+  // ✅ SORT LOGIC
+  users.sort((a, b) => {
+    // sort by score descending
+    if (b.total_score !== a.total_score) {
+      return b.total_score - a.total_score;
+    }
+    // tie → alphabetical username
+    return a.username.localeCompare(b.username);
+  });
+
+  // ✅ DISPLAY
+  const table = document.getElementById("leaderboard");
+  table.innerHTML = "";
+
+  users.forEach((user, index) => {
+
+    const row = `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${user.username}</td>
+        <td>${user.total_score}</td>
+      </tr>
+    `;
+
+    table.innerHTML += row;
+  });
+}
+
+
+// ✅ NAVIGATION
+window.goToPredict = function() {
+  window.location.href = "predict.html";  // we'll create this next
+};
+
+
+// ✅ RUN
+loadLeaderboard();
+
+</script>
+
+</body>
+</html>
