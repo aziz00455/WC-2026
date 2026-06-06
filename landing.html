@@ -1,34 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Landing</title>
+  <title>WC-2026 Leaderboard</title>
 
   <style>
     body {
       font-family: Arial;
       text-align: center;
-      margin-top: 100px;
+      margin-top: 40px;
+      background: #f4f4f4;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 8px 12px;
+      margin: 5px;
       cursor: pointer;
-      font-size: 16px;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 300px;
+      font-size: 12px;   /* ✅ small font as requested */
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+
+    th {
+      background: #333;
+      color: white;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Landing Page</h2>
+<h2>Leaderboard</h2>
 
-<button onclick="logout()">Logout</button>
+<!-- ✅ TOP BUTTONS -->
+<div>
+  <button onclick="goToGame()">Predict</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- ✅ TABLE -->
+<table>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Name</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody id="leaderboard"></tbody>
+</table>
+
+
+<!-- ✅ FIREBASE (CORRECT FORMAT) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 
-  // ✅ PROTECT PAGE (NEW)
-  const userId = localStorage.getItem("userId");
+  // ✅ YOUR CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+    authDomain: "wc-2026-843c7.firebaseapp.com",
+    projectId: "wc-2026-843c7"
+  };
 
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ✅ LOGIN PROTECTION
+  const userId = localStorage.getItem("userId");
   if (!userId) {
     window.location.href = "index.html";
   }
@@ -39,8 +88,53 @@
     window.location.href = "index.html";
   }
 
+  // ✅ NAVIGATION
+  function goToGame() {
+    window.location.href = "game.html";
+  }
+
+  // ✅ LOAD USERS + SORT
+  function loadLeaderboard() {
+
+    db.collection("users").get().then(snapshot => {
+
+      let users = [];
+
+      snapshot.forEach(doc => {
+        users.push(doc.data());
+      });
+
+      // ✅ SORT: score desc, username asc
+      users.sort((a, b) => {
+        if (b.total_score !== a.total_score) {
+          return b.total_score - a.total_score;
+        }
+        return a.username.localeCompare(b.username);
+      });
+
+      const table = document.getElementById("leaderboard");
+      table.innerHTML = "";
+
+      users.forEach((user, index) => {
+
+        const row = `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${user.username}</td>
+            <td>${user.total_score}</td>
+          </tr>
+        `;
+
+        table.innerHTML += row;
+      });
+
+    });
+  }
+
+  // ✅ RUN
+  loadLeaderboard();
+
 </script>
 
 </body>
 </html>
-``
