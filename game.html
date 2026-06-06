@@ -1,82 +1,636 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Game</title>
+  <meta charset="utf-8" />
+  <title>My Prediction</title>
 
   <style>
-
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       margin: 0;
-      font-size: 10pt;   /* ✅ all content */
+      padding: 0;
+      font-size: 10pt; /* all contents */
+      background: #f5f5f5;
+      color: #222;
     }
 
-    /* ✅ HEADER */
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 20px;
+      padding: 16px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
-    /* ✅ TITLE */
     .title {
-      font-size: 14pt;
-      font-weight: bold;
+      font-size: 14pt;   /* heading */
+      font-weight: bold; /* heading */
     }
 
-    /* ✅ BUTTON GROUP */
-    .buttons {
+    .topbar-buttons {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     button {
       font-size: 10pt;
-      padding: 6px 12px;
+      padding: 6px 10px;
       cursor: pointer;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
     }
 
+    button:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .page-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 32px 14px;
+    }
+
+    .date-section {
+      margin-bottom: 24px;
+    }
+
+    .date-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 8px 0 12px 0;
+    }
+
+    .group-heading {
+      font-size: 10pt;
+      font-weight: bold;
+      margin: 10px 0 8px 0;
+      color: #333;
+    }
+
+    .match-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .match-time {
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .teams-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 150px;
+      justify-content: center;
+    }
+
+    .flag {
+      width: 22px;
+      height: 16px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .vs {
+      color: #666;
+      font-weight: bold;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pick-btn.selected {
+      background: #d8e9ff;
+      border-color: #5c92d9;
+      font-weight: bold;
+    }
+
+    .status-line {
+      margin-top: 10px;
+      text-align: center;
+      color: #666;
+    }
+
+    .status-line.locked {
+      color: #b00000;
+    }
+
+    .status-line.saved {
+      color: #006400;
+    }
   </style>
 </head>
-
 <body>
 
-<!-- ✅ HEADER -->
-<div class="topbar">
+  <div class="topbar">
+    <div class="title">My Prediction</div>
 
-  <!-- ✅ TITLE -->
-  <div class="title">My Prediction</div>
-
-  <!-- ✅ BUTTONS -->
-  <div class="buttons">
-    <button onclick="goBack()">Back to Leaderboard</button>
-    <button onclick="logout()">Logout</button>
+    <div class="topbar-buttons">
+      <button onclick="goBack()">Back to Leaderboard</button>
+      <button onclick="logout()">Logout</button>
+    </div>
   </div>
 
-</div>
+  <div class="page-wrap" id="app"></div>
 
-<script>
+  <script>
+    // -----------------------------
+    // Login/session handling
+    // -----------------------------
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      window.location.href = "index.html";
+    }
 
-  // ✅ LOGIN PROTECTION
-  const userId = localStorage.getItem("userId");
+    function goBack() {
+      window.location.href = "landing.html";
+    }
 
-  if (!userId) {
-    window.location.href = "index.html";
-  }
+    function logout() {
+      localStorage.removeItem("userId");
+      window.location.href = "index.html";
+    }
 
-  // ✅ NAVIGATION
-  function goBack() {
-    window.location.href = "landing.html";
-  }
+    // -----------------------------
+    // Hardcoded FIFA World Cup 2026 fixtures
+    // Groups A-D only, sorted by date then group
+    // Times displayed as EDT for this project
+    // -----------------------------
+    const matches = [
+      {
+        id: "A1",
+        group: "A",
+        date: "2026-06-11",
+        time: "14:00",
+        startEdt: "2026-06-11T14:00:00-04:00",
+        team1: "Mexico",
+        team2: "South Africa",
+        flag1: "https://flagcdn.com/w40/mx.png",
+        flag2: "https://flagcdn.com/w40/za.png"
+      },
 
-  // ✅ LOGOUT
-  function logout() {
-    localStorage.removeItem("userId");
-    window.location.href = "index.html";
-  }
+      {
+        id: "A2",
+        group: "A",
+        date: "2026-06-11",
+        time: "22:00",
+        startEdt: "2026-06-11T22:00:00-04:00",
+        team1: "Korea Republic",
+        team2: "Czechia",
+        flag1: "https://flagcdn.com/w40/kr.png",
+        flag2: "https://flagcdn.com/w40/cz.png"
+      },
+      {
+        id: "B1",
+        group: "B",
+        date: "2026-06-12",
+        time: "19:00",
+        startEdt: "2026-06-12T19:00:00-04:00",
+        team1: "Canada",
+        team2: "Bosnia and Herzegovina",
+        flag1: "https://flagcdn.com/w40/ca.png",
+        flag2: "https://flagcdn.com/w40/ba.png"
+      },
 
-</script>
+      {
+        id: "D1",
+        group: "D",
+        date: "2026-06-12",
+        time: "21:00",
+        startEdt: "2026-06-12T21:00:00-04:00",
+        team1: "USA",
+        team2: "Paraguay",
+        flag1: "https://flagcdn.com/w40/us.png",
+        flag2: "https://flagcdn.com/w40/py.png"
+      },
+      {
+        id: "B2",
+        group: "B",
+        date: "2026-06-13",
+        time: "19:00",
+        startEdt: "2026-06-13T19:00:00-04:00",
+        team1: "Qatar",
+        team2: "Switzerland",
+        flag1: "https://flagcdn.com/w40/qa.png",
+        flag2: "https://flagcdn.com/w40/ch.png"
+      },
+      {
+        id: "C1",
+        group: "C",
+        date: "2026-06-13",
+        time: "18:00",
+        startEdt: "2026-06-13T18:00:00-04:00",
+        team1: "Brazil",
+        team2: "Morocco",
+        flag1: "https://flagcdn.com/w40/br.png",
+        flag2: "https://flagcdn.com/w40/ma.png"
+      },
 
+      {
+        id: "C2",
+        group: "C",
+        date: "2026-06-13",
+        time: "21:00",
+        startEdt: "2026-06-13T21:00:00-04:00",
+        team1: "Haiti",
+        team2: "Scotland",
+        flag1: "https://flagcdn.com/w40/ht.png",
+        flag2: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png"
+      },
+      {
+        id: "D2",
+        group: "D",
+        date: "2026-06-13",
+        time: "23:00",
+        startEdt: "2026-06-13T23:00:00-04:00",
+        team1: "Australia",
+        team2: "Türkiye",
+        flag1: "https://flagcdn.com/w40/au.png",
+        flag2: "https://flagcdn.com/w40/tr.png"
+      },
+
+      {
+        id: "A3",
+        group: "A",
+        date: "2026-06-18",
+        time: "16:00",
+        startEdt: "2026-06-18T16:00:00-04:00",
+        team1: "Czechia",
+        team2: "South Africa",
+        flag1: "https://flagcdn.com/w40/cz.png",
+        flag2: "https://flagcdn.com/w40/za.png"
+      },
+      {
+        id: "B3",
+        group: "B",
+        date: "2026-06-18",
+        time: "19:00",
+        startEdt: "2026-06-18T19:00:00-04:00",
+        team1: "Switzerland",
+        team2: "Bosnia and Herzegovina",
+        flag1: "https://flagcdn.com/w40/ch.png",
+        flag2: "https://flagcdn.com/w40/ba.png"
+      },
+      {
+        id: "B4",
+        group: "B",
+        date: "2026-06-18",
+        time: "22:00",
+        startEdt: "2026-06-18T22:00:00-04:00",
+        team1: "Canada",
+        team2: "Qatar",
+        flag1: "https://flagcdn.com/w40/ca.png",
+        flag2: "https://flagcdn.com/w40/qa.png"
+      },
+
+      {
+        id: "A4",
+        group: "A",
+        date: "2026-06-18",
+        time: "21:00",
+        startEdt: "2026-06-18T21:00:00-04:00",
+        team1: "Mexico",
+        team2: "Korea Republic",
+        flag1: "https://flagcdn.com/w40/mx.png",
+        flag2: "https://flagcdn.com/w40/kr.png"
+      },
+      {
+        id: "C3",
+        group: "C",
+        date: "2026-06-19",
+        time: "18:00",
+        startEdt: "2026-06-19T18:00:00-04:00",
+        team1: "Scotland",
+        team2: "Morocco",
+        flag1: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
+        flag2: "https://flagcdn.com/w40/ma.png"
+      },
+      {
+        id: "D3",
+        group: "D",
+        date: "2026-06-19",
+        time: "19:00",
+        startEdt: "2026-06-19T19:00:00-04:00",
+        team1: "USA",
+        team2: "Australia",
+        flag1: "https://flagcdn.com/w40/us.png",
+        flag2: "https://flagcdn.com/w40/au.png"
+      },
+
+      {
+        id: "C4",
+        group: "C",
+        date: "2026-06-19",
+        time: "20:30",
+        startEdt: "2026-06-19T20:30:00-04:00",
+        team1: "Brazil",
+        team2: "Haiti",
+        flag1: "https://flagcdn.com/w40/br.png",
+        flag2: "https://flagcdn.com/w40/ht.png"
+      },
+      {
+        id: "D4",
+        group: "D",
+        date: "2026-06-19",
+        time: "23:00",
+        startEdt: "2026-06-19T23:00:00-04:00",
+        team1: "Türkiye",
+        team2: "Paraguay",
+        flag1: "https://flagcdn.com/w40/tr.png",
+        flag2: "https://flagcdn.com/w40/py.png"
+      },
+
+      {
+        id: "B5",
+        group: "B",
+        date: "2026-06-24",
+        time: "19:00",
+        startEdt: "2026-06-24T19:00:00-04:00",
+        team1: "Bosnia and Herzegovina",
+        team2: "Qatar",
+        flag1: "https://flagcdn.com/w40/ba.png",
+        flag2: "https://flagcdn.com/w40/qa.png"
+      },
+      {
+        id: "B6",
+        group: "B",
+        date: "2026-06-24",
+        time: "19:00",
+        startEdt: "2026-06-24T19:00:00-04:00",
+        team1: "Switzerland",
+        team2: "Canada",
+        flag1: "https://flagcdn.com/w40/ch.png",
+        flag2: "https://flagcdn.com/w40/ca.png"
+      },
+      {
+        id: "C5",
+        group: "C",
+        date: "2026-06-24",
+        time: "18:00",
+        startEdt: "2026-06-24T18:00:00-04:00",
+        team1: "Morocco",
+        team2: "Haiti",
+        flag1: "https://flagcdn.com/w40/ma.png",
+        flag2: "https://flagcdn.com/w40/ht.png"
+      },
+      {
+        id: "C6",
+        group: "C",
+        date: "2026-06-24",
+        time: "18:00",
+        startEdt: "2026-06-24T18:00:00-04:00",
+        team1: "Scotland",
+        team2: "Brazil",
+        flag1: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
+        flag2: "https://flagcdn.com/w40/br.png"
+      },
+
+      {
+        id: "A5",
+        group: "A",
+        date: "2026-06-24",
+        time: "21:00",
+        startEdt: "2026-06-24T21:00:00-04:00",
+        team1: "South Africa",
+        team2: "Korea Republic",
+        flag1: "https://flagcdn.com/w40/za.png",
+        flag2: "https://flagcdn.com/w40/kr.png"
+      },
+      {
+        id: "A6",
+        group: "A",
+        date: "2026-06-24",
+        time: "21:00",
+        startEdt: "2026-06-24T21:00:00-04:00",
+        team1: "Czechia",
+        team2: "Mexico",
+        flag1: "https://flagcdn.com/w40/cz.png",
+        flag2: "https://flagcdn.com/w40/mx.png"
+      },
+
+      {
+        id: "D5",
+        group: "D",
+        date: "2026-06-25",
+        time: "22:00",
+        startEdt: "2026-06-25T22:00:00-04:00",
+        team1: "Paraguay",
+        team2: "Australia",
+        flag1: "https://flagcdn.com/w40/py.png",
+        flag2: "https://flagcdn.com/w40/au.png"
+      },
+      {
+        id: "D6",
+        group: "D",
+        date: "2026-06-25",
+        time: "22:00",
+        startEdt: "2026-06-25T22:00:00-04:00",
+        team1: "Türkiye",
+        team2: "USA",
+        flag1: "https://flagcdn.com/w40/tr.png",
+        flag2: "https://flagcdn.com/w40/us.png"
+      }
+    ];
+
+    // -----------------------------
+    // Local pick persistence per user
+    // -----------------------------
+    const picksKey = "wc2026_picks_" + userId;
+    let savedPicks = JSON.parse(localStorage.getItem(picksKey) || "{}");
+
+    function savePick(matchId, choice) {
+      savedPicks[matchId] = choice;
+      localStorage.setItem(picksKey, JSON.stringify(savedPicks));
+    }
+
+    function getPick(matchId) {
+      return savedPicks[matchId] || null;
+    }
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function formatPrettyDate(dateStr) {
+      const dt = new Date(dateStr + "T00:00:00");
+      return dt.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    function isLocked(match) {
+      return Date.now() >= new Date(match.startEdt).getTime();
+    }
+
+    function groupMatchesByDate(data) {
+      const map = {};
+      data.forEach(m => {
+        if (!map[m.date]) map[m.date] = [];
+        map[m.date].push(m);
+      });
+
+      Object.keys(map).forEach(date => {
+        map[date].sort((a, b) => {
+          if (a.group !== b.group) return a.group.localeCompare(b.group);
+          return a.time.localeCompare(b.time);
+        });
+      });
+
+      return map;
+    }
+
+    // -----------------------------
+    // Render
+    // -----------------------------
+    function render() {
+      const app = document.getElementById("app");
+      app.innerHTML = "";
+
+      const byDate = groupMatchesByDate(matches);
+      const dates = Object.keys(byDate).sort();
+
+      dates.forEach(date => {
+        const dateSection = document.createElement("div");
+        dateSection.className = "date-section";
+
+        const dateHeading = document.createElement("div");
+        dateHeading.className = "date-heading";
+        dateHeading.textContent = formatPrettyDate(date);
+        dateSection.appendChild(dateHeading);
+
+        let currentGroup = null;
+
+        byDate[date].forEach(match => {
+          if (match.group !== currentGroup) {
+            currentGroup = match.group;
+            const groupHeading = document.createElement("div");
+            groupHeading.className = "group-heading";
+            groupHeading.textContent = "Group " + currentGroup;
+            dateSection.appendChild(groupHeading);
+          }
+
+          const locked = isLocked(match);
+          const existingPick = getPick(match.id);
+
+          const card = document.createElement("div");
+          card.className = "match-card";
+
+          card.innerHTML = `
+            <div class="match-top">
+              <div><strong>Group ${match.group}</strong></div>
+              <div class="match-time">${match.time} EDT</div>
+            </div>
+
+            <div class="teams-row">
+              <div class="team">
+                <img class="flag" src="${match.flag1}" alt="${match.team1} flag">
+                <span>${match.team1}</span>
+              </div>
+
+              <div class="vs">vs</div>
+
+              <div class="team">
+                <img class="flag" src="${match.flag2}" alt="${match.team2} flag">
+                <span>${match.team2}</span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="pick-btn ${existingPick === "team1" ? "selected" : ""}" ${locked ? "disabled" : ""} data-choice="team1">${match.team1}</button>
+              <button class="pick-btn ${existingPick === "tie" ? "selected" : ""}" ${locked ? "disabled" : ""} data-choice="tie">Tie</button>
+              <button class="pick-btn ${existingPick === "team2" ? "selected" : ""}" ${locked ? "disabled" : ""} data-choice="team2">${match.team2}</button>
+            </div>
+          `;
+
+          const status = document.createElement("div");
+          status.className = "status-line";
+
+          if (locked) {
+            status.classList.add("locked");
+            status.textContent = existingPick
+              ? "Prediction closed"
+              : "Prediction closed";
+          } else if (existingPick) {
+            status.classList.add("saved");
+            const label =
+              existingPick === "team1" ? match.team1 :
+              existingPick === "team2" ? match.team2 : "Tie";
+            status.textContent = "Saved pick: " + label;
+          } else {
+            status.textContent = "";
+          }
+
+          card.appendChild(status);
+
+          const buttons = card.querySelectorAll(".pick-btn");
+          buttons.forEach(btn => {
+            if (!locked) {
+              btn.addEventListener("click", function () {
+                const choice = btn.getAttribute("data-choice");
+                savePick(match.id, choice);
+
+                buttons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                status.className = "status-line saved";
+                status.textContent =
+                  "Saved pick: " +
+                  (choice === "team1" ? match.team1 :
+                   choice === "team2" ? match.team2 : "Tie");
+              });
+            }
+          });
+
+          dateSection.appendChild(card);
+        });
+
+        app.appendChild(dateSection);
+      });
+    }
+
+    render();
+  </script>
 </body>
 </html>
