@@ -27,9 +27,9 @@
       color: white;
     }
 
-    .btn {
-      margin-top: 20px;
-      padding: 10px 20px;
+    button {
+      padding: 10px 15px;
+      margin: 5px;
       cursor: pointer;
     }
   </style>
@@ -39,8 +39,13 @@
 
 <h2>WC-2026 Leaderboard</h2>
 
-<button class="btn" onclick="goToPredict()">Predict</button>
+<!-- ✅ TOP BUTTONS -->
+<div style="margin-top:20px;">
+  <button onclick="goToPredict()">Predict</button>
+  <button onclick="logout()">Logout</button>
+</div>
 
+<!-- ✅ TABLE -->
 <table>
   <thead>
     <tr>
@@ -54,76 +59,42 @@
 </table>
 
 
-<script type="module">
+<!-- ✅ FIREBASE SIMPLE VERSION -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
 
-// ✅ SAME CONFIG AS index.html
-const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID"
-};
+  // ✅ YOUR CONFIG (already correct)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+    authDomain: "wc-2026-843c7.firebaseapp.com",
+    projectId: "wc-2026-843c7"
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
 
-// ✅ LOAD USERS
-async function loadLeaderboard() {
-
-  const snapshot = await getDocs(collection(db, "users"));
-
-  let users = [];
-
-  snapshot.forEach(doc => {
-    users.push(doc.data());
-  });
-
-  // ✅ SORT LOGIC
-  users.sort((a, b) => {
-    // sort by score descending
-    if (b.total_score !== a.total_score) {
-      return b.total_score - a.total_score;
-    }
-    // tie → alphabetical username
-    return a.username.localeCompare(b.username);
-  });
-
-  // ✅ DISPLAY
-  const table = document.getElementById("leaderboard");
-  table.innerHTML = "";
-
-  users.forEach((user, index) => {
-
-    const row = `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${user.username}</td>
-        <td>${user.total_score}</td>
-      </tr>
-    `;
-
-    table.innerHTML += row;
-  });
-}
+  // ✅ LOGIN CHECK (protect page)
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "index.html";
+  }
 
 
-// ✅ NAVIGATION
-window.goToPredict = function() {
-  window.location.href = "predict.html";  // we'll create this next
-};
+  // ✅ LOAD LEADERBOARD
+  function loadLeaderboard() {
 
+    db.collection("users").get().then(snapshot => {
 
-// ✅ RUN
-loadLeaderboard();
+      let users = [];
 
-</script>
+      snapshot.forEach(doc => {
+        users.push(doc.data());
+      });
 
-</body>
-</html>
+      // ✅ SORT: score DESC → username ASC
+      users.sort((a, b) => {
+        if (b.total_score !== a.total_score) {
+
