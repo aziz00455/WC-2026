@@ -6,40 +6,63 @@
   <style>
     body {
       font-family: Arial;
-      text-align: center;
-      margin-top: 100px;
+      margin: 0;
+    }
+
+    /* ✅ TOP BAR */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+    }
+
+    .title {
+      font-size: 20px;
     }
 
     .buttons {
       display: flex;
-      justify-content: center;
       gap: 10px;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 6px 12px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>Game Page</h2>
+<!-- ✅ HEADER -->
+<div class="topbar">
 
-<div class="buttons">
-  <button onclick="goBack()">Back to Leaderboard</button>
-  <button onclick="logout()">Logout</button>
+  <!-- ✅ TITLE -->
+  <div class="title" id="title"></div>
+
+  <!-- ✅ BUTTONS (RIGHT SIDE) -->
+  <div class="buttons">
+    <button onclick="goBack()">Back to Leaderboard</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
 </div>
+
 
 <script>
 
-  // ✅ LOGIN CHECK (optional but recommended)
+  // ✅ LOGIN CHECK
   const userId = localStorage.getItem("userId");
   if (!userId) {
     window.location.href = "index.html";
   }
+
+  // ✅ SET TITLE: username Prediction
+  // (for now using userId — later we can replace with username)
+  document.getElementById("title").innerText = userId + " Prediction";
+
 
   // ✅ NAVIGATION
   function goBack() {
