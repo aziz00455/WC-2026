@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>WC 2026 Login</title>
 
   <style>
     body {
@@ -19,23 +19,25 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
+      width: 250px;
     }
 
     input {
-      width: 200px;
+      width: 100%;
       padding: 8px;
       margin: 8px 0;
     }
 
     button {
-      padding: 8px 16px;
-      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
       cursor: pointer;
     }
 
     #message {
       margin-top: 10px;
-      color: red;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -43,10 +45,10 @@
 <body>
 
 <div class="box">
-  <h2>Login</h2>
+  <h2>WC 2026</h2>
 
-  <input type="text" id="username" placeholder="Username"><br>
-  <input type="password" id="password" placeholder="Password"><br>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
 
   <button onclick="login()">Login</button>
   <button onclick="createUser()">Create User</button>
@@ -55,7 +57,6 @@
 </div>
 
 
-<!-- Firebase SDK -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -68,7 +69,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 🔧 REPLACE THIS WITH YOUR FIREBASE CONFIG
+// 🔥 YOU WILL REPLACE THIS AFTER FIREBASE SETUP
 const firebaseConfig = {
   apiKey: "YOUR_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -79,7 +80,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// ✅ LOGIN FUNCTION
+// ✅ LOGIN
 window.login = async function () {
 
   const username = document.getElementById("username").value;
@@ -107,12 +108,12 @@ window.login = async function () {
 
   } else {
     msg.style.color = "red";
-    msg.innerText = "Invalid username or password";
+    msg.innerText = "Invalid login";
   }
 };
 
 
-// ✅ CREATE USER FUNCTION
+// ✅ CREATE USER
 window.createUser = async function () {
 
   const username = document.getElementById("username").value;
@@ -120,11 +121,11 @@ window.createUser = async function () {
   const msg = document.getElementById("message");
 
   if (!username || !password) {
-    msg.innerText = "Enter username and password";
+    msg.innerText = "Enter username & password";
     return;
   }
 
-  // check if user already exists
+  // check existing user
   const q = query(
     collection(db, "users"),
     where("username", "==", username)
@@ -144,7 +145,7 @@ window.createUser = async function () {
   });
 
   msg.style.color = "green";
-  msg.innerText = "User created! Now login.";
+  msg.innerText = "User created. Now login.";
 };
 
 </script>
