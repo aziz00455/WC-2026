@@ -57,35 +57,25 @@
 </div>
 
 
-<script type="module">
+<!-- ✅ FIREBASE (NON-MODULE VERSION) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
 
+  // ✅ REPLACE WITH YOUR REAL CONFIG
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID"
+  };
 
-// ✅ 🔴 IMPORTANT: REPLACE WITH YOUR REAL FIREBASE CONFIG
-const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
 
-// ✅ LOGIN FUNCTION
-async function login() {
+// ✅ LOGIN
+function login() {
 
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -97,34 +87,33 @@ async function login() {
     return;
   }
 
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", username),
-    where("password", "==", password)
-  );
+  db.collection("users")
+    .where("username", "==", username)
+    .where("password", "==", password)
+    .get()
+    .then(snapshot => {
 
-  const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
 
-  if (!snapshot.empty) {
+        const userId = snapshot.docs[0].id;
+        localStorage.setItem("userId", userId);
 
-    const userId = snapshot.docs[0].id;
-    localStorage.setItem("userId", userId);
+        msg.style.color = "green";
+        msg.innerText = "Login success";
 
-    msg.style.color = "green";
-    msg.innerText = "Login success";
+        window.location.href = "landing.html";
 
-    // ✅ REDIRECT TO YOUR LEADERBOARD PAGE
-    window.location.href = "landing.html";
+      } else {
+        msg.style.color = "red";
+        msg.innerText = "Invalid username or password";
+      }
 
-  } else {
-    msg.style.color = "red";
-    msg.innerText = "Invalid username or password";
-  }
+    });
 }
 
 
-// ✅ CREATE USER FUNCTION
-async function createUser() {
+// ✅ CREATE USER
+function createUser() {
 
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -136,33 +125,28 @@ async function createUser() {
     return;
   }
 
-  const q = query(
-    collection(db, "users"),
-    where("username", "==", username)
-  );
+  db.collection("users")
+    .where("username", "==", username)
+    .get()
+    .then(snapshot => {
 
-  const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        msg.style.color = "red";
+        msg.innerText = "Username already exists";
+        return;
+      }
 
-  if (!snapshot.empty) {
-    msg.style.color = "red";
-    msg.innerText = "Username already exists";
-    return;
-  }
+      db.collection("users").add({
+        username: username,
+        password: password,
+        total_score: 0
+      });
 
-  await addDoc(collection(db, "users"), {
-    username: username,
-    password: password,
-    total_score: 0
-  });
+      msg.style.color = "green";
+      msg.innerText = "User created. Now login.";
 
-  msg.style.color = "green";
-  msg.innerText = "User created. Now login.";
+    });
 }
-
-
-// ✅ ✅ CRITICAL FIX (this makes buttons work)
-window.login = login;
-window.createUser = createUser;
 
 </script>
 
