@@ -1,272 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WC-2026 Predictions</title>
-  <meta charset="utf-8" />
+  <title>Game</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 24px;
-      color: #222;
+      font-family: Arial;
+      text-align: center;
+      margin-top: 100px;
     }
 
-    .topbar {
+    .buttons {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 980px;
-      margin: 0 auto 20px auto;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .topbar button {
-      padding: 8px 14px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      background: white;
-      border-radius: 6px;
-    }
-
-    #status {
-      max-width: 980px;
-      margin: 0 auto 12px auto;
-      font-size: 13px;
-      color: #444;
-    }
-
-    .match-list {
-      max-width: 980px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .match-card {
-      background: white;
-      border-radius: 8px;
-      padding: 14px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-
-    .match-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .teams {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .team {
-      display: flex;
-      align-items: center;
+      justify-content: center;
       gap: 10px;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 600;
     }
 
-    .team img {
-      width: 28px;
-      height: 20px;
-      object-fit: cover;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      background: #fff;
-    }
-
-    .vs {
-      font-size: 14px;
-      color: #777;
-      font-weight: bold;
-    }
-
-    .actions {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .pick-btn {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #fafafa;
+    button {
+      padding: 10px 20px;
       cursor: pointer;
-      min-width: 90px;
-    }
-
-    .pick-btn:hover:not(:disabled) {
-      background: #eef5ff;
-      border-color: #8db8ff;
-    }
-
-    .pick-btn.selected {
-      background: #d9ecff;
-      border-color: #4f8fe8;
-      font-weight: 700;
-    }
-
-    .pick-btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-    }
-
-    .locked {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #b10000;
-      text-align: center;
-    }
-
-    .saved {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #006400;
-      text-align: center;
-    }
-
-    .empty {
-      text-align: center;
-      color: #666;
-      background: white;
-      padding: 18px;
-      border-radius: 8px;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
-  <div class="topbar">
-    <h1>WC-2026 Predictions</h1>
-    <button onclick="goBack()">Back to Leaderboard</button>
-  </div>
 
-  <div id="status">Loading matches...</div>
+<h2>Game Page</h2>
 
-  <div id="matchList" class="match-list"></div>
+<div class="buttons">
+  <button onclick="goBack()">Back to Leaderboard</button>
+  <button onclick="logout()">Logout</button>
+</div>
 
-  <!-- Firebase compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 
-  <script>
-    // ----- Firebase config -----
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-      authDomain: "wc-2026-843c7.firebaseapp.com",
-      projectId: "wc-2026-843c7",
-      storageBucket: "wc-2026-843c7.firebasestorage.app",
-      messagingSenderId: "767583870499",
-      appId: "1:767583870499:web:b8ce30fe3f3481dd5a1b96"
-    };
+  // ✅ LOGIN CHECK (optional but recommended)
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    window.location.href = "index.html";
+  }
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  // ✅ NAVIGATION
+  function goBack() {
+    window.location.href = "landing.html";
+  }
 
-    // ----- Login guard -----
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      window.location.href = "index.html";
-    }
+  // ✅ LOGOUT
+  function logout() {
+    localStorage.removeItem("userId");
+    window.location.href = "index.html";
+  }
 
-    function goBack() {
-      window.location.href = "landing.html";
-    }
+</script>
 
-    // ----- Public World Cup 2026 API endpoints from the open-source repo -----
-    const GAMES_URL = "https://worldcup26.ir/get/games";
-    const TEAMS_URL = "https://worldcup26.ir/get/teams";
-
-    // Convert "06/11/2026 13:00" to a JS Date.
-    // NOTE: This assumes the API's local_date can be interpreted in the browser's local timezone.
-    // If you later move to a UTC-based feed, replace this parser with the API's UTC field.
-    function parseLocalDate(dateStr) {
-      if (!dateStr) return null;
-      const [datePart, timePart] = dateStr.split(" ");
-      if (!datePart || !timePart) return null;
-
-      const [month, day, year] = datePart.split("/").map(Number);
-      const [hour, minute] = timePart.split(":").map(Number);
-
-      return new Date(year, month - 1, day, hour, minute, 0, 0);
-    }
-
-    function isPastMatch(match) {
-      const dt = parseLocalDate(match.local_date);
-      if (!dt) return false;
-      return dt.getTime() <= Date.now();
-    }
-
-    function safeText(value, fallback = "") {
-      if (value === null || value === undefined) return fallback;
-      return String(value);
-    }
-
-    async function fetchJson(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch " + url);
-      return res.json();
-    }
-
-    async function loadExistingPredictions() {
-      const snapshot = await db.collection("predictions")
-        .where("user_id", "==", userId)
-        .get();
-
-      const map = {};
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        map[String(data.match_id)] = {
-          prediction: data.prediction,
-          docId: doc.id
-        };
-      });
-
-      return map;
-    }
-
-    async function savePrediction(matchId, choice) {
-      const docId = `${userId}_${matchId}`;
-
-      await db.collection("predictions").doc(docId).set({
-        user_id: userId,
-        match_id: String(matchId),
-        prediction: choice,
-        updated_at: new Date().toISOString()
-      }, { merge: true });
-    }
-
-    function renderMatches(games, teamsById, existingPredictions) {
-      const matchList = document.getElementById("matchList");
-      const status = document.getElementById("status");
-      matchList.innerHTML = "";
-
-      // Keep only concrete fixture rows that have both team IDs
-      const visibleGames = games.filter(g =>
-        safeText(g.home_team_id) !== "0" &&
-        safeText(g.away_team_id) !== "0"
-      );
-
-      if (!visibleGames.length) {
-        status.textContent = "No games available.";
-        matchList.innerHTML = `<div class="empty">No games found.</div>`;
-        return;
-      }
-
+</body>
+</html>
