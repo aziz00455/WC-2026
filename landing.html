@@ -1,151 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WC-2026 Leaderboard</title>
+  <title>Landing</title>
 
   <style>
     body {
       font-family: Arial;
       text-align: center;
-      background: #f4f4f4;
-    }
-
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 400px;
-      background: white;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-    }
-
-    th {
-      background: #333;
-      color: white;
+      margin-top: 100px;
     }
 
     button {
-      padding: 10px 15px;
-      margin: 5px;
+      padding: 10px 20px;
       cursor: pointer;
+      font-size: 16px;
     }
   </style>
 </head>
 
 <body>
 
-<h2>WC-2026 Leaderboard</h2>
+<h2>Landing Page</h2>
 
-<!-- ✅ BUTTONS -->
-<div style="margin-top:20px;">
-  <button onclick="goToPredict()">Predict</button>
-  <button onclick="logout()">Logout</button>
-</div>
-
-<!-- ✅ TABLE -->
-<table>
-  <thead>
-    <tr>
-      <th>Rank</th>
-      <th>Username</th>
-      <th>Score</th>
-    </tr>
-  </thead>
-  <tbody id="leaderboard"></tbody>
-</table>
-
-
-<!-- ✅ ✅ CORRECT FIREBASE SCRIPT LOAD (THIS FIXES YOUR ISSUE) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<button onclick="logout()">Logout</button>
 
 <script>
 
-  // ✅ YOUR CONFIG (correct as given)
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-  authDomain: "wc-2026-843c7.firebaseapp.com",
-  projectId: "wc-2026-843c7",
-  storageBucket: "wc-2026-843c7.firebasestorage.app",
-  messagingSenderId: "767583870499",
-  appId: "1:767583870499:web:b8ce30fe3f3481dd5a1b96",
-  measurementId: "G-VW40EYDFB8"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-  // ✅ LOGIN PROTECTION
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    window.location.href = "index.html";
-  }
-
-
-  // ✅ LOAD LEADERBOARD
-  function loadLeaderboard() {
-
-    db.collection("users").get().then(snapshot => {
-
-      let users = [];
-
-      snapshot.forEach(doc => {
-        users.push(doc.data());
-      });
-
-      // ✅ SORT: score DESC → username ASC
-      users.sort((a, b) => {
-        if (b.total_score !== a.total_score) {
-          return b.total_score - a.total_score;
-        }
-        return a.username.localeCompare(b.username);
-      });
-
-      const table = document.getElementById("leaderboard");
-      table.innerHTML = "";
-
-      users.forEach((user, index) => {
-
-        const row = `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${user.username}</td>
-            <td>${user.total_score}</td>
-          </tr>
-        `;
-
-        table.innerHTML += row;
-      });
-
-    });
-  }
-
-
-  // ✅ NAVIGATION
-  function goToPredict() {
-    window.location.href = "predict.html";
-  }
-
   function logout() {
-    localStorage.removeItem("userId");   // ✅ CLEAR SESSION
-    window.location.href = "index.html"; // ✅ BACK TO LOGIN
+    localStorage.removeItem("userId");  // clear session
+    window.location.href = "index.html"; // go back to login
   }
-
-
-  // ✅ RUN
-  loadLeaderboard();
 
 </script>
 
