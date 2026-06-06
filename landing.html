@@ -39,7 +39,7 @@
 
 <h2>WC-2026 Leaderboard</h2>
 
-<!-- ✅ TOP BUTTONS -->
+<!-- ✅ BUTTONS -->
 <div style="margin-top:20px;">
   <button onclick="goToPredict()">Predict</button>
   <button onclick="logout()">Logout</button>
@@ -54,18 +54,17 @@
       <th>Score</th>
     </tr>
   </thead>
-
   <tbody id="leaderboard"></tbody>
 </table>
 
 
-<!-- ✅ FIREBASE SIMPLE VERSION -->
+<!-- ✅ ✅ CORRECT FIREBASE SCRIPT LOAD (THIS FIXES YOUR ISSUE) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 
-  // ✅ YOUR CONFIG (already correct)
+  // ✅ YOUR CONFIG (correct as given)
   const firebaseConfig = {
     apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
     authDomain: "wc-2026-843c7.firebaseapp.com",
@@ -76,7 +75,7 @@
   const db = firebase.firestore();
 
 
-  // ✅ LOGIN CHECK (protect page)
+  // ✅ LOGIN PROTECTION
   const userId = localStorage.getItem("userId");
   if (!userId) {
     window.location.href = "index.html";
@@ -97,4 +96,46 @@
       // ✅ SORT: score DESC → username ASC
       users.sort((a, b) => {
         if (b.total_score !== a.total_score) {
+          return b.total_score - a.total_score;
+        }
+        return a.username.localeCompare(b.username);
+      });
 
+      const table = document.getElementById("leaderboard");
+      table.innerHTML = "";
+
+      users.forEach((user, index) => {
+
+        const row = `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${user.username}</td>
+            <td>${user.total_score}</td>
+          </tr>
+        `;
+
+        table.innerHTML += row;
+      });
+
+    });
+  }
+
+
+  // ✅ NAVIGATION
+  function goToPredict() {
+    window.location.href = "predict.html";
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");   // ✅ CLEAR SESSION
+    window.location.href = "index.html"; // ✅ BACK TO LOGIN
+  }
+
+
+  // ✅ RUN
+  loadLeaderboard();
+
+</script>
+
+</body>
+</html>
