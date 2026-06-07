@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>World Cup 2026 - Predictions</title>
+  <meta charset="utf-8" />
+  <title>World Cup 2026 - My Prediction</title>
 
   <style>
     body {
-      font-family: Arial;
-      margin: 20px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #222;
       font-size: 10pt;
     }
 
     .topbar {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
+      align-items: center;
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .title {
@@ -21,141 +31,138 @@
       font-weight: bold;
     }
 
-    .match {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
+    .top-buttons {
+      display: flex;
+      gap: 8px;
     }
 
     button {
-      margin: 3px;
-      padding: 6px;
+      font-size: 10pt;
+      padding: 6px 10px;
       cursor: pointer;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
     }
 
-    .selected {
-      background-color: #4CAF50;
-      color: white;
+    button:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .page-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 32px 14px;
+    }
+
+    .date-section {
+      margin-bottom: 24px;
+    }
+
+    .date-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 8px 0 12px 0;
+    }
+
+    .group-heading {
+      font-size: 10pt;
+      font-weight: bold;
+      margin: 10px 0 8px 0;
+      color: #333;
+    }
+
+    .match-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .match-time {
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .teams-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 170px;
+      justify-content: center;
+    }
+
+    .flag {
+      width: 22px;
+      height: 16px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .vs {
+      color: #666;
+      font-weight: bold;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pick-btn.selected {
+      background: #d8e9ff;
+      border-color: #5c92d9;
+      font-weight: bold;
+    }
+
+    .status-line {
+      margin-top: 10px;
+      text-align: center;
+      color: #666;
+    }
+
+    .status-line.locked {
+      color: #b00000;
+    }
+
+    .status-line.saved {
+      color: #006400;
     }
   </style>
 </head>
-
 <body>
 
-<div class="topbar">
-  <div class="title">My Predictions</div>
-  <div>
-    <button onclick="goBack()">Back</button>
-    <button onclick="logout()">Logout</button>
-  </div>
-</div>
+  <div class="topbar">
+    <div class="title">My Prediction</div>
 
-<div id="matches"></div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-<script>
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-  authDomain: "wc-2026-843c7.firebaseapp.com",
-  projectId: "wc-2026-843c7"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-const userId = localStorage.getItem("userId");
-if (!userId) window.location.href = "index.html";
-
-function logout() {
-  localStorage.removeItem("userId");
-  window.location.href = "index.html";
-}
-
-function goBack() {
-  window.location.href = "landing.html";
-}
-
-/* ✅ SAMPLE MATCHES — REPLACE WITH YOUR FULL 72 */
-const matches = [
-  { id: "A1", team1: "Team A", team2: "Team B" },
-  { id: "A2", team1: "Team C", team2: "Team D" }
-];
-
-function renderMatches() {
-  const container = document.getElementById("matches");
-  container.innerHTML = "";
-
-  matches.forEach(m => {
-    const div = document.createElement("div");
-    div.className = "match";
-
-    div.innerHTML = `
-      <div><b>${m.team1}</b> vs <b>${m.team2}</b></div>
-      <button id="${m.id}_team1" onclick="pick('${m.id}','team1')">${m.team1}</button>
-      <button id="${m.id}_tie" onclick="pick('${m.id}','tie')">Tie</button>
-      <button id="${m.id}_team2" onclick="pick('${m.id}','team2')">${m.team2}</button>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-function clearSelection(matchId) {
-  ["team1","tie","team2"].forEach(opt => {
-    document.getElementById(matchId + "_" + opt)?.classList.remove("selected");
-  });
-}
-
-function highlightSelection(matchId, value) {
-  clearSelection(matchId);
-  document.getElementById(matchId + "_" + value)?.classList.add("selected");
-}
-
-/* ✅ SAVE TO FIRESTORE */
-function savePrediction(matchId, value) {
-
-  const docId = userId + "_" + matchId;
-
-  db.collection("predictions").doc(docId).set({
-    user_id: userId,
-    match_id: matchId,
-    prediction: value,
-    updated_at: new Date()
-  });
-
-}
-
-/* ✅ USER CLICK */
-function pick(matchId, value) {
-  highlightSelection(matchId, value);
-  savePrediction(matchId, value);
-}
-
-/* ✅ LOAD USER SAVED PICKS */
-function loadUserPredictions() {
-
-  db.collection("predictions")
-    .where("user_id", "==", userId)
-    .get()
-    .then(snapshot => {
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        highlightSelection(data.match_id, data.prediction);
-      });
-
-    });
-}
-
-/* ✅ INIT */
-renderMatches();
-loadUserPredictions();
-
-</script>
-
-</body>
-</html>
+    <div class="top-buttons">
