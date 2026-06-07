@@ -5,201 +5,557 @@
   <title>World Cup 2026 - My Predictions</title>
 
   <style>
-    body { font-family: Arial; margin:0; background:#f5f5f5; font-size:10pt; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #222;
+      font-size: 10pt;
+    }
 
     .topbar {
-      display:flex; justify-content:space-between;
-      padding:16px 20px; background:white;
-      border-bottom:1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
-    .page-wrap { max-width:980px; margin:auto; padding:18px; }
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      font-size: 10pt;
+      padding: 6px 10px;
+      cursor: pointer;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    button:hover:not(:disabled) {
+      background: #f0f0f0;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .page-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 32px 14px;
+    }
+
+    .date-section {
+      margin-bottom: 24px;
+    }
+
+    .date-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 8px 0 12px 0;
+    }
+
+    .group-heading {
+      font-size: 10pt;
+      font-weight: bold;
+      margin: 10px 0 8px 0;
+      color: #333;
+    }
 
     .match-card {
-      background:#fff; border:1px solid #ddd;
-      border-radius:6px; padding:12px; margin-bottom:10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
-    /* ✅ NEW: result coloring */
-    .match-card.correct { background:#e8f5e9; }
-    .match-card.incorrect { background:#ffebee; }
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
 
-    .team { display:flex; align-items:center; gap:6px; }
-    .teams-row { display:flex; justify-content:center; gap:12px; margin-bottom:10px; }
+    .match-time {
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .teams-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 170px;
+      justify-content: center;
+    }
+
+    .flag {
+      width: 22px;
+      height: 16px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .vs {
+      color: #666;
+      font-weight: bold;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
     .pick-btn.selected {
-      background:#d8e9ff;
+      background: #d8e9ff;
+      border-color: #5c92d9;
+      font-weight: bold;
     }
 
-    .status-line { margin-top:10px; text-align:center; }
-    .status-line.locked { color:#b00000; }
+    .status-line {
+      margin-top: 10px;
+      text-align: center;
+      color: #666;
+    }
+
+    .status-line.locked {
+      color: #b00000;
+    }
+
+    .status-line.saved {
+      color: #006400;
+    }
   </style>
 </head>
-
 <body>
 
-<div class="topbar">
-  <div><b>World Cup Predictions</b></div>
-  <button onclick="goBack()">Save My Predictions</button>
-</div>
+  <div class="topbar">
+    <div class="title">World Cup 2026 - My Predictions</div>
 
-<div id="app" class="page-wrap"></div>
+    <div class="top-buttons">
+      <button onclick="goBack()">Save My Predictions</button>
+    </div>
+  </div>
 
-<!-- ✅ FIXED FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <div class="page-wrap" id="app"></div>
 
-<script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
 
-// Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-  authDomain: "wc-2026-843c7.firebaseapp.com",
-  projectId: "wc-2026-843c7"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  <script>
+    // -----------------------------
+    // Firebase
+    // -----------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+      authDomain: "wc-2026-843c7.firebaseapp.com",
+      projectId: "wc-2026-843c7"
+    };
 
-// Session
-const userId = localStorage.getItem("userId");
-if (!userId) window.location.href="index.html";
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-function goBack(){ window.location.href="landing.html"; }
-
-// ✅ FIXED FLAGS
-const teamFlagUrl = {
-  "Mexico":"https://flagcdn.com/w40/mx.png",
-  "South Africa":"https://flagcdn.com/w40/za.png",
-  "USA":"https://flagcdn.com/w40/us.png"
-};
-
-// ✅ KEEP YOUR MATCHES ARRAY EXACTLY AS IS
-const matches = [ /* your full dataset here */ ];
-
-// ✅ ✅ NEW: STATIC MATCH RESULTS
-const matchResults = {
-  "A1": { score1:2, score2:1, outcome:"team1", status:"completed" },
-  "A2": { score1:1, score2:1, outcome:"tie", status:"completed" }
-};
-
-// Firestore helpers
-function predictionDocId(id){ return userId+"_"+id; }
-
-function savePrediction(matchId,value){
-  return db.collection("predictions").doc(predictionDocId(matchId)).set({
-    user_id:userId,
-    match_id:matchId,
-    prediction:value
-  });
-}
-
-async function loadUserPredictions(){
-  const snap = await db.collection("predictions")
-    .where("user_id","==",userId).get();
-
-  const map={};
-  snap.forEach(doc=>{
-    const d=doc.data();
-    map[d.match_id]=d.prediction;
-  });
-
-  return map;
-}
-
-// Lock rule
-function isLocked(match){
-  const kickoff=new Date(match.kickoffEdt).getTime();
-  return Date.now() >= kickoff - 3600000;
-}
-
-// ✅ helper label
-function label(choice,match){
-  if(choice==="team1") return match.team1;
-  if(choice==="team2") return match.team2;
-  if(choice==="tie") return "Tie";
-  return "No Pick";
-}
-
-// Render
-async function render(){
-
-  const app=document.getElementById("app");
-  app.innerHTML="";
-
-  const saved=await loadUserPredictions();
-
-  matches.forEach(match=>{
-
-    const result = matchResults[match.id] || null;
-    const isCompleted = result && result.status==="completed";
-
-    const pick = saved[match.id] || null;
-    const locked = isLocked(match);
-
-    const card=document.createElement("div");
-    card.className="match-card";
-
-    // ✅ NEW: color logic
-    if(isCompleted && pick){
-      if(pick===result.outcome){
-        card.classList.add("correct");
-      } else {
-        card.classList.add("incorrect");
-      }
+    // -----------------------------
+    // Session
+    // -----------------------------
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      window.location.href = "index.html";
     }
 
-    const t1 = isCompleted
-      ? `${match.team1} (${result.score1})`
-      : match.team1;
-
-    const t2 = isCompleted
-      ? `${match.team2} (${result.score2})`
-      : match.team2;
-
-    card.innerHTML=`
-      <div class="teams-row">
-        <div class="team">${t1}</div>
-        <b>vs</b>
-        <div class="team">${t2}</div>
-      </div>
-
-      <div>
-        <button class="${pick==="team1"?"selected":""}" ${locked?"disabled":""}
-          onclick="pickFn('${match.id}','team1')">${match.team1}</button>
-
-        <button class="${pick==="tie"?"selected":""}" ${locked?"disabled":""}
-          onclick="pickFn('${match.id}','tie')">Tie</button>
-
-        <button class="${pick==="team2"?"selected":""}" ${locked?"disabled":""}
-          onclick="pickFn('${match.id}','team2')">${match.team2}</button>
-      </div>
-    `;
-
-    const status=document.createElement("div");
-    status.className="status-line";
-
-    if(locked){
-      status.classList.add("locked");
-      status.textContent = "Locked: " + label(pick,match);
-    } else if(pick){
-      status.textContent = "Saved: " + label(pick,match);
-    } else {
-      status.textContent = "Pick before lock";
+    function goBack() {
+      window.location.href = "landing.html";
     }
 
-    card.appendChild(status);
-    app.appendChild(card);
-  });
-}
+    // -----------------------------
+    // Flag map
+    // -----------------------------
+    const teamFlagUrl = {
+      "Mexico": "https://flagcdn.com/w40/mx.png",
+      "South Africa": "https://flagcdn.com/w40/za.png",
+      "Korea Republic": "https://flagcdn.com/w40/kr.png",
+      "Czechia": "https://flagcdn.com/w40/cz.png",
 
-async function pickFn(matchId,val){
-  await savePrediction(matchId,val);
-  render();
-}
+      "Canada": "https://flagcdn.com/w40/ca.png",
+      "Bosnia and Herzegovina": "https://flagcdn.com/w40/ba.png",
+      "Qatar": "https://flagcdn.com/w40/qa.png",
+      "Switzerland": "https://flagcdn.com/w40/ch.png",
 
-render();
+      "Brazil": "https://flagcdn.com/w40/br.png",
+      "Morocco": "https://flagcdn.com/w40/ma.png",
+      "Haiti": "https://flagcdn.com/w40/ht.png",
+      "Scotland": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_Scotland.svg/40px-Flag_of_Scotland.svg.png",
 
-</script>
+      "USA": "https://flagcdn.com/w40/us.png",
+      "Paraguay": "https://flagcdn.com/w40/py.png",
+      "Australia": "https://flagcdn.com/w40/au.png",
+      "Türkiye": "https://flagcdn.com/w40/tr.png",
+
+      "Germany": "https://flagcdn.com/w40/de.png",
+      "Curaçao": "https://flagcdn.com/w40/cw.png",
+      "Côte d'Ivoire": "https://flagcdn.com/w40/ci.png",
+      "Ecuador": "https://flagcdn.com/w40/ec.png",
+
+      "Netherlands": "https://flagcdn.com/w40/nl.png",
+      "Japan": "https://flagcdn.com/w40/jp.png",
+      "Tunisia": "https://flagcdn.com/w40/tn.png",
+      "Sweden": "https://flagcdn.com/w40/se.png",
+
+      "Belgium": "https://flagcdn.com/w40/be.png",
+      "Egypt": "https://flagcdn.com/w40/eg.png",
+      "IR Iran": "https://flagcdn.com/w40/ir.png",
+      "New Zealand": "https://flagcdn.com/w40/nz.png",
+
+      "Spain": "https://flagcdn.com/w40/es.png",
+      "Cabo Verde": "https://flagcdn.com/w40/cv.png",
+      "Saudi Arabia": "https://flagcdn.com/w40/sa.png",
+      "Uruguay": "https://flagcdn.com/w40/uy.png",
+
+      "France": "https://flagcdn.com/w40/fr.png",
+      "Senegal": "https://flagcdn.com/w40/sn.png",
+      "Iraq": "https://flagcdn.com/w40/iq.png",
+      "Norway": "https://flagcdn.com/w40/no.png",
+
+      "Argentina": "https://flagcdn.com/w40/ar.png",
+      "Algeria": "https://flagcdn.com/w40/dz.png",
+      "Austria": "https://flagcdn.com/w40/at.png",
+      "Jordan": "https://flagcdn.com/w40/jo.png",
+
+      "Portugal": "https://flagcdn.com/w40/pt.png",
+      "Congo DR": "https://flagcdn.com/w40/cd.png",
+      "Uzbekistan": "https://flagcdn.com/w40/uz.png",
+      "Colombia": "https://flagcdn.com/w40/co.png",
+
+      "England": "https://upload.wikimedia.org/wikipedia/en/thumb/b/be/Flag_of_England.svg/40px-Flag_of_England.svg.png",
+      "Croatia": "https://flagcdn.com/w40/hr.png",
+      "Ghana": "https://flagcdn.com/w40/gh.png",
+      "Panama": "https://flagcdn.com/w40/pa.png"
+    };
+
+    // -----------------------------
+    // Full 72-match dataset
+    // Times are displayed in EDT for this project
+    // lockAtEdt = 1 hour before kickoff
+    // -----------------------------
+    const matches = [
+      // Group A
+      { id:"A1", group:"A", date:"2026-06-11", time:"15:00", kickoffEdt:"2026-06-01T15:00:00-04:00", team1:"Mexico", team2:"South Africa" },
+      { id:"A2", group:"A", date:"2026-06-11", time:"22:00", kickoffEdt:"2026-06-01T22:00:00-04:00", team1:"Korea Republic", team2:"Czechia" },
+      { id:"A3", group:"A", date:"2026-06-18", time:"12:00", kickoffEdt:"2026-06-08T12:00:00-04:00", team1:"Czechia", team2:"South Africa" },
+      { id:"A4", group:"A", date:"2026-06-18", time:"23:00", kickoffEdt:"2026-06-08T23:00:00-04:00", team1:"Mexico", team2:"Korea Republic" },
+      { id:"A5", group:"A", date:"2026-06-24", time:"21:00", kickoffEdt:"2026-06-14T21:00:00-04:00", team1:"South Africa", team2:"Korea Republic" },
+      { id:"A6", group:"A", date:"2026-06-24", time:"21:00", kickoffEdt:"2026-06-14T21:00:00-04:00", team1:"Czechia", team2:"Mexico" },
+
+      // Group B
+      { id:"B1", group:"B", date:"2026-06-12", time:"15:00", kickoffEdt:"2026-06-02T15:00:00-04:00", team1:"Canada", team2:"Bosnia and Herzegovina" },
+      { id:"B2", group:"B", date:"2026-06-13", time:"15:00", kickoffEdt:"2026-06-03T15:00:00-04:00", team1:"Qatar", team2:"Switzerland" },
+      { id:"B3", group:"B", date:"2026-06-18", time:"15:00", kickoffEdt:"2026-06-08T15:00:00-04:00", team1:"Switzerland", team2:"Bosnia and Herzegovina" },
+      { id:"B4", group:"B", date:"2026-06-18", time:"18:00", kickoffEdt:"2026-06-08T18:00:00-04:00", team1:"Canada", team2:"Qatar" },
+      { id:"B5", group:"B", date:"2026-06-24", time:"15:00", kickoffEdt:"2026-06-14T15:00:00-04:00", team1:"Bosnia and Herzegovina", team2:"Qatar" },
+      { id:"B6", group:"B", date:"2026-06-24", time:"15:00", kickoffEdt:"2026-06-14T15:00:00-04:00", team1:"Switzerland", team2:"Canada" },
+
+      // Group C
+      { id:"C1", group:"C", date:"2026-06-13", time:"18:00", kickoffEdt:"2026-06-03T18:00:00-04:00", team1:"Brazil", team2:"Morocco" },
+      { id:"C2", group:"C", date:"2026-06-13", time:"21:00", kickoffEdt:"2026-06-03T21:00:00-04:00", team1:"Haiti", team2:"Scotland" },
+      { id:"C3", group:"C", date:"2026-06-19", time:"18:00", kickoffEdt:"2026-06-09T18:00:00-04:00", team1:"Scotland", team2:"Morocco" },
+      { id:"C4", group:"C", date:"2026-06-19", time:"20:30", kickoffEdt:"2026-06-09T20:30:00-04:00", team1:"Brazil", team2:"Haiti" },
+      { id:"C5", group:"C", date:"2026-06-24", time:"18:00", kickoffEdt:"2026-06-14T18:00:00-04:00", team1:"Morocco", team2:"Haiti" },
+      { id:"C6", group:"C", date:"2026-06-24", time:"18:00", kickoffEdt:"2026-06-14T18:00:00-04:00", team1:"Scotland", team2:"Brazil" },
+
+      // Group D
+      { id:"D1", group:"D", date:"2026-06-12", time:"21:00", kickoffEdt:"2026-06-02T21:00:00-04:00", team1:"USA", team2:"Paraguay" },
+      { id:"D2", group:"D", date:"2026-06-14", time:"00:00", kickoffEdt:"2026-06-04T00:00:00-04:00", team1:"Australia", team2:"Türkiye" },
+      { id:"D3", group:"D", date:"2026-06-19", time:"15:00", kickoffEdt:"2026-06-09T15:00:00-04:00", team1:"USA", team2:"Australia" },
+      { id:"D4", group:"D", date:"2026-06-20", time:"00:00", kickoffEdt:"2026-06-10T00:00:00-04:00", team1:"Türkiye", team2:"Paraguay" },
+      { id:"D5", group:"D", date:"2026-06-25", time:"22:00", kickoffEdt:"2026-06-15T22:00:00-04:00", team1:"Paraguay", team2:"Australia" },
+      { id:"D6", group:"D", date:"2026-06-25", time:"22:00", kickoffEdt:"2026-06-15T22:00:00-04:00", team1:"Türkiye", team2:"USA" },
+
+      // Group E
+      { id:"E1", group:"E", date:"2026-06-14", time:"13:00", kickoffEdt:"2026-06-04T13:00:00-04:00", team1:"Germany", team2:"Curaçao" },
+      { id:"E2", group:"E", date:"2026-06-14", time:"19:00", kickoffEdt:"2026-06-04T19:00:00-04:00", team1:"Côte d'Ivoire", team2:"Ecuador" },
+      { id:"E3", group:"E", date:"2026-06-20", time:"16:00", kickoffEdt:"2026-06-10T16:00:00-04:00", team1:"Germany", team2:"Côte d'Ivoire" },
+      { id:"E4", group:"E", date:"2026-06-20", time:"20:00", kickoffEdt:"2026-06-10T20:00:00-04:00", team1:"Ecuador", team2:"Curaçao" },
+      { id:"E5", group:"E", date:"2026-06-25", time:"16:00", kickoffEdt:"2026-06-15T16:00:00-04:00", team1:"Curaçao", team2:"Côte d'Ivoire" },
+      { id:"E6", group:"E", date:"2026-06-25", time:"16:00", kickoffEdt:"2026-06-15T16:00:00-04:00", team1:"Ecuador", team2:"Germany" },
+
+      // Group F
+      { id:"F1", group:"F", date:"2026-06-14", time:"16:00", kickoffEdt:"2026-06-04T16:00:00-04:00", team1:"Netherlands", team2:"Japan" },
+      { id:"F2", group:"F", date:"2026-06-14", time:"22:00", kickoffEdt:"2026-06-04T22:00:00-04:00", team1:"Sweden", team2:"Tunisia" },
+      { id:"F3", group:"F", date:"2026-06-20", time:"13:00", kickoffEdt:"2026-06-10T13:00:00-04:00", team1:"Netherlands", team2:"Sweden" },
+      { id:"F4", group:"F", date:"2026-06-21", time:"00:00", kickoffEdt:"2026-06-11T00:00:00-04:00", team1:"Tunisia", team2:"Japan" },
+      { id:"F5", group:"F", date:"2026-06-25", time:"19:00", kickoffEdt:"2026-06-15T19:00:00-04:00", team1:"Tunisia", team2:"Netherlands" },
+      { id:"F6", group:"F", date:"2026-06-25", time:"19:00", kickoffEdt:"2026-06-15T19:00:00-04:00", team1:"Japan", team2:"Sweden" },
+
+      // Group G
+      { id:"G1", group:"G", date:"2026-06-15", time:"15:00", kickoffEdt:"2026-06-05T15:00:00-04:00", team1:"Belgium", team2:"Egypt" },
+      { id:"G2", group:"G", date:"2026-06-15", time:"21:00", kickoffEdt:"2026-06-05T21:00:00-04:00", team1:"IR Iran", team2:"New Zealand" },
+      { id:"G3", group:"G", date:"2026-06-21", time:"15:00", kickoffEdt:"2026-06-11T15:00:00-04:00", team1:"Belgium", team2:"IR Iran" },
+      { id:"G4", group:"G", date:"2026-06-21", time:"21:00", kickoffEdt:"2026-06-11T21:00:00-04:00", team1:"New Zealand", team2:"Egypt" },
+      { id:"G5", group:"G", date:"2026-06-26", time:"23:00", kickoffEdt:"2026-06-16T23:00:00-04:00", team1:"New Zealand", team2:"Belgium" },
+      { id:"G6", group:"G", date:"2026-06-26", time:"23:00", kickoffEdt:"2026-06-16T23:00:00-04:00", team1:"Egypt", team2:"IR Iran" },
+
+      // Group H
+      { id:"H1", group:"H", date:"2026-06-15", time:"12:00", kickoffEdt:"2026-06-05T12:00:00-04:00", team1:"Spain", team2:"Cabo Verde" },
+      { id:"H2", group:"H", date:"2026-06-15", time:"18:00", kickoffEdt:"2026-06-05T18:00:00-04:00", team1:"Saudi Arabia", team2:"Uruguay" },
+      { id:"H3", group:"H", date:"2026-06-21", time:"12:00", kickoffEdt:"2026-06-11T12:00:00-04:00", team1:"Spain", team2:"Saudi Arabia" },
+      { id:"H4", group:"H", date:"2026-06-21", time:"18:00", kickoffEdt:"2026-06-11T18:00:00-04:00", team1:"Uruguay", team2:"Cabo Verde" },
+      { id:"H5", group:"H", date:"2026-06-26", time:"20:00", kickoffEdt:"2026-06-16T20:00:00-04:00", team1:"Uruguay", team2:"Spain" },
+      { id:"H6", group:"H", date:"2026-06-26", time:"20:00", kickoffEdt:"2026-06-16T20:00:00-04:00", team1:"Cabo Verde", team2:"Saudi Arabia" },
+
+      // Group I
+      { id:"I1", group:"I", date:"2026-06-16", time:"15:00", kickoffEdt:"2026-06-06T15:00:00-04:00", team1:"France", team2:"Senegal" },
+      { id:"I2", group:"I", date:"2026-06-16", time:"18:00", kickoffEdt:"2026-06-06T18:00:00-04:00", team1:"Iraq", team2:"Norway" },
+      { id:"I3", group:"I", date:"2026-06-22", time:"17:00", kickoffEdt:"2026-06-12T17:00:00-04:00", team1:"France", team2:"Iraq" },
+      { id:"I4", group:"I", date:"2026-06-22", time:"20:00", kickoffEdt:"2026-06-12T20:00:00-04:00", team1:"Norway", team2:"Senegal" },
+      { id:"I5", group:"I", date:"2026-06-26", time:"15:00", kickoffEdt:"2026-06-16T15:00:00-04:00", team1:"Senegal", team2:"Iraq" },
+      { id:"I6", group:"I", date:"2026-06-26", time:"15:00", kickoffEdt:"2026-06-16T15:00:00-04:00", team1:"Norway", team2:"France" },
+
+      // Group J
+      { id:"J1", group:"J", date:"2026-06-16", time:"21:00", kickoffEdt:"2026-06-06T21:00:00-04:00", team1:"Argentina", team2:"Algeria" },
+      { id:"J2", group:"J", date:"2026-06-17", time:"00:00", kickoffEdt:"2026-06-07T00:00:00-04:00", team1:"Austria", team2:"Jordan" },
+      { id:"J3", group:"J", date:"2026-06-22", time:"13:00", kickoffEdt:"2026-06-12T13:00:00-04:00", team1:"Argentina", team2:"Austria" },
+      { id:"J4", group:"J", date:"2026-06-22", time:"23:00", kickoffEdt:"2026-06-12T23:00:00-04:00", team1:"Jordan", team2:"Algeria" },
+      { id:"J5", group:"J", date:"2026-06-27", time:"22:00", kickoffEdt:"2026-06-17T22:00:00-04:00", team1:"Algeria", team2:"Austria" },
+      { id:"J6", group:"J", date:"2026-06-27", time:"22:00", kickoffEdt:"2026-06-17T22:00:00-04:00", team1:"Jordan", team2:"Argentina" },
+
+      // Group K
+      { id:"K1", group:"K", date:"2026-06-17", time:"13:00", kickoffEdt:"2026-06-07T13:00:00-04:00", team1:"Portugal", team2:"Congo DR" },
+      { id:"K2", group:"K", date:"2026-06-17", time:"22:00", kickoffEdt:"2026-06-07T22:00:00-04:00", team1:"Uzbekistan", team2:"Colombia" },
+      { id:"K3", group:"K", date:"2026-06-23", time:"13:00", kickoffEdt:"2026-06-13T13:00:00-04:00", team1:"Portugal", team2:"Uzbekistan" },
+      { id:"K4", group:"K", date:"2026-06-23", time:"22:00", kickoffEdt:"2026-06-13T22:00:00-04:00", team1:"Colombia", team2:"Congo DR" },
+      { id:"K5", group:"K", date:"2026-06-27", time:"19:30", kickoffEdt:"2026-06-17T19:30:00-04:00", team1:"Congo DR", team2:"Uzbekistan" },
+      { id:"K6", group:"K", date:"2026-06-27", time:"19:30", kickoffEdt:"2026-06-17T19:30:00-04:00", team1:"Colombia", team2:"Portugal" },
+
+      // Group L
+      { id:"L1", group:"L", date:"2026-06-17", time:"16:00", kickoffEdt:"2026-06-07T16:00:00-04:00", team1:"England", team2:"Croatia" },
+      { id:"L2", group:"L", date:"2026-06-17", time:"19:00", kickoffEdt:"2026-06-07T19:00:00-04:00", team1:"Ghana", team2:"Panama" },
+      { id:"L3", group:"L", date:"2026-06-23", time:"16:00", kickoffEdt:"2026-06-13T16:00:00-04:00", team1:"England", team2:"Ghana" },
+      { id:"L4", group:"L", date:"2026-06-23", time:"19:00", kickoffEdt:"2026-06-13T19:00:00-04:00", team1:"Panama", team2:"Croatia" },
+      { id:"L5", group:"L", date:"2026-06-27", time:"17:00", kickoffEdt:"2026-06-17T17:00:00-04:00", team1:"Panama", team2:"England" },
+      { id:"L6", group:"L", date:"2026-06-27", time:"17:00", kickoffEdt:"2026-06-17T17:00:00-04:00", team1:"Croatia", team2:"Ghana" }
+    ];
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function formatPrettyDate(dateStr) {
+      const dt = new Date(dateStr + "T00:00:00");
+      return dt.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    function isLocked(match) {
+      const kickoff = new Date(match.kickoffEdt).getTime();
+      const lockTime = kickoff - (60 * 60 * 1000); // 1 hour before kickoff
+      return Date.now() >= lockTime;
+    }
+
+    function groupMatchesByDate(data) {
+      const map = {};
+      data.forEach(m => {
+        if (!map[m.date]) map[m.date] = [];
+        map[m.date].push(m);
+      });
+
+      Object.keys(map).forEach(date => {
+        map[date].sort((a, b) => {
+          if (a.group !== b.group) return a.group.localeCompare(b.group);
+          if (a.time !== b.time) return a.time.localeCompare(b.time);
+          return a.id.localeCompare(b.id);
+        });
+      });
+
+      return map;
+    }
+
+    // -----------------------------
+    // Firestore integration
+    // -----------------------------
+    function predictionDocId(matchId) {
+      return userId + "_" + matchId;
+    }
+
+    function savePrediction(matchId, predictionValue) {
+      const docId = predictionDocId(matchId);
+
+      return db.collection("predictions").doc(docId).set({
+        user_id: userId,
+        match_id: matchId,
+        prediction: predictionValue,
+        updated_at: new Date()
+      });
+    }
+
+    function loadUserPredictions() {
+      return db.collection("predictions")
+        .where("user_id", "==", userId)
+        .get()
+        .then(snapshot => {
+          const map = {};
+          snapshot.forEach(doc => {
+            const d = doc.data();
+            if (d.match_id && d.prediction) {
+              map[d.match_id] = d.prediction;
+            }
+          });
+          return map;
+        });
+    }
+
+    // -----------------------------
+    // Render
+    // -----------------------------
+    async function render() {
+      const app = document.getElementById("app");
+      app.innerHTML = "";
+
+      const savedPredictions = await loadUserPredictions();
+      const byDate = groupMatchesByDate(matches);
+      const dates = Object.keys(byDate).sort();
+
+      dates.forEach(date => {
+        const dateSection = document.createElement("div");
+        dateSection.className = "date-section";
+
+        const dateHeading = document.createElement("div");
+        dateHeading.className = "date-heading";
+        dateHeading.textContent = formatPrettyDate(date);
+        dateSection.appendChild(dateHeading);
+
+        let currentGroup = null;
+
+        byDate[date].forEach(match => {
+          if (match.group !== currentGroup) {
+            currentGroup = match.group;
+            const groupHeading = document.createElement("div");
+            groupHeading.className = "group-heading";
+            groupHeading.textContent = "Group " + currentGroup;
+            dateSection.appendChild(groupHeading);
+          }
+
+          const locked = isLocked(match);
+          const existingPick = savedPredictions[match.id] || null;
+
+          const card = document.createElement("div");
+          card.className = "match-card";
+
+          card.innerHTML = `
+            <div class="match-top">
+              <div><strong>Group ${match.group}</strong></div>
+              <div class="match-time">${match.time} EDT</div>
+            </div>
+
+            <div class="teams-row">
+              <div class="team">
+                <img class="flag" src="${teamFlagUrl[match.team1]}" alt="${match.team1} flag">
+                <span>${match.team1}</span>
+              </div>
+
+              <div class="vs">vs</div>
+
+              <div class="team">
+                <img class="flag" src="${teamFlagUrl[match.team2]}" alt="${match.team2} flag">
+                <span>${match.team2}</span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="pick-btn ${existingPick === "team1" ? "selected" : ""}" ${locked ? "disabled" : ""} id="${match.id}_team1" data-match="${match.id}" data-choice="team1">${match.team1}</button>
+              <button class="pick-btn ${existingPick === "tie" ? "selected" : ""}" ${locked ? "disabled" : ""} id="${match.id}_tie" data-match="${match.id}" data-choice="tie">Tie</button>
+              <button class="pick-btn ${existingPick === "team2" ? "selected" : ""}" ${locked ? "disabled" : ""} id="${match.id}_team2" data-match="${match.id}" data-choice="team2">${match.team2}</button>
+            </div>
+          `;
+
+          const status = document.createElement("div");
+          status.className = "status-line";
+
+          if (locked) {
+            status.classList.add("locked");
+            status.textContent = existingPick
+              ? "Locked — your last saved pick is kept"
+              : "Locked — prediction window closed";
+          } else if (existingPick) {
+            status.classList.add("saved");
+            const label =
+              existingPick === "team1" ? match.team1 :
+              existingPick === "team2" ? match.team2 : "Tie";
+            status.textContent = "Saved pick: " + label;
+          } else {
+            status.textContent = "You can change your selection until 1 hour before kickoff.";
+          }
+
+          card.appendChild(status);
+
+          const buttons = card.querySelectorAll(".pick-btn");
+
+          buttons.forEach(btn => {
+            if (!locked) {
+              btn.addEventListener("click", async function () {
+                const choice = btn.getAttribute("data-choice");
+
+                // Update UI
+                buttons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                // Save to Firestore
+                await savePrediction(match.id, choice);
+
+                status.className = "status-line saved";
+                status.textContent =
+                  "Saved pick: " +
+                  (choice === "team1" ? match.team1 :
+                   choice === "team2" ? match.team2 : "Tie");
+              });
+            }
+          });
+
+          dateSection.appendChild(card);
+        });
+
+        app.appendChild(dateSection);
+      });
+    }
+
+    render();
+  </script>
 
 </body>
 </html>
