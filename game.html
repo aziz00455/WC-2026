@@ -167,7 +167,6 @@
 
     <div class="top-buttons">
       <button onclick="goBack()">Save My Predictions</button>
-      <button onclick="logout()">Logout</button>
     </div>
   </div>
 
@@ -200,11 +199,6 @@
 
     function goBack() {
       window.location.href = "landing.html";
-    }
-
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.href = "index.html";
     }
 
     // -----------------------------
