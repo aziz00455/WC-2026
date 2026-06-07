@@ -1,140 +1,227 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WC-2026 Leaderboard</title>
+  <meta charset="utf-8" />
+  <title>World Cup 2026 Leaderboard</title>
 
   <style>
     body {
       font-family: Arial;
-      text-align: center;
-      margin-top: 40px;
-      background: #f4f4f4;
+      margin: 0;
+      background: #f5f5f5;
+      font-size: 10pt;
+      color: #222;
+    }
+
+    /* ✅ TOP BAR (same as rules.html) */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 8px;
     }
 
     button {
-      padding: 8px 12px;
-      margin: 5px;
+      padding: 6px 10px;
+      font-size: 10pt;
       cursor: pointer;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #f0f0f0;
+    }
+
+    /* ✅ MAIN CONTENT */
+    .container {
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 0 15px;
+      text-align: center;
+    }
+
+    .main-title {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #555;
+      margin-bottom: 20px;
     }
 
     table {
-      margin: 20px auto;
+      margin: 0 auto;
       border-collapse: collapse;
-      width: 300px;
-      font-size: 12px;   /* ✅ small font as requested */
+      width: 500px;
       background: white;
     }
 
     th, td {
       border: 1px solid #ccc;
-      padding: 6px;
+      padding: 8px;
     }
 
     th {
       background: #333;
       color: white;
     }
+
   </style>
 </head>
 
 <body>
 
-<h2>Leaderboard</h2>
+  <!-- ✅ TOP BAR -->
+  <div class="topbar">
+    <div class="title">World Cup 2026</div>
 
-<!-- ✅ TOP BUTTONS -->
-<div>
-  <button onclick="goToGame()">Predict</button>
-  <button onclick="logout()">Logout</button>
-</div>
+    <div class="top-buttons">
+      <button onclick="goToGame()">Play</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
 
-<!-- ✅ TABLE -->
-<table>
-  <thead>
-    <tr>
-      <th>Rank</th>
-      <th>Name</th>
-      <th>Score</th>
-    </tr>
-  </thead>
-  <tbody id="leaderboard"></tbody>
-</table>
+  <div class="container">
+
+    <!-- ✅ HEADER -->
+    <div class="main-title">Current Leaderboard</div>
+    <div class="subtitle" id="gamesPlayed">
+      Total games played: Loading...
+    </div>
+
+    <!-- ✅ TABLE -->
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th># Picks</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard"></tbody>
+    </table>
+
+  </div>
 
 
-<!-- ✅ FIREBASE (CORRECT FORMAT) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- ✅ FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<script>
+  <script>
 
-  // ✅ YOUR CONFIG
-  const firebaseConfig = {
-    apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-    authDomain: "wc-2026-843c7.firebaseapp.com",
-    projectId: "wc-2026-843c7"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+      authDomain: "wc-2026-843c7.firebaseapp.com",
+      projectId: "wc-2026-843c7"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  // ✅ LOGIN PROTECTION
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    window.location.href = "index.html";
-  }
+    // ✅ LOGIN CHECK
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      window.location.href = "index.html";
+    }
 
-  // ✅ LOGOUT
-  function logout() {
-    localStorage.removeItem("userId");
-    window.location.href = "index.html";
-  }
+    function logout() {
+      localStorage.removeItem("userId");
+      window.location.href = "index.html";
+    }
 
-  // ✅ NAVIGATION
-  function goToGame() {
-    window.location.href = "game.html";
-  }
+    function goToGame() {
+      window.location.href = "game.html";
+    }
 
-  // ✅ LOAD USERS + SORT
-  function loadLeaderboard() {
+    // ✅ MATCH DATA (only start time needed for "games played")
+    const matches = [
+      { id:"A1", start:"2026-06-11T15:00:00-04:00" },
+      { id:"A2", start:"2026-06-11T22:00:00-04:00" }
+      // 👉 keep adding all 72 matches (same ones used in game.html)
+    ];
 
-    db.collection("users").get().then(snapshot => {
+    // ✅ CALCULATE COMPLETED MATCHES
+    function updateGamesPlayed() {
+      const now = new Date();
 
-      let users = [];
+      let completed = matches.filter(m => new Date(m.start) < now).length;
 
-      snapshot.forEach(doc => {
-        users.push(doc.data());
+      document.getElementById("gamesPlayed").innerText =
+        "Total games played: " + completed + " of 72";
+    }
+
+    // ✅ LOAD LEADERBOARD
+    function loadLeaderboard() {
+
+      db.collection("users").get().then(snapshot => {
+
+        let users = [];
+
+        snapshot.forEach(doc => {
+          let data = doc.data();
+
+          // ✅ count predictions (if stored as object)
+          let picksCount = data.picks ? Object.keys(data.picks).length : 0;
+
+          users.push({
+            username: data.username,
+            score: data.total_score || 0,
+            picks: picksCount
+          });
+        });
+
+        // ✅ sort
+        users.sort((a, b) => {
+          if (b.score !== a.score) {
+            return b.score - a.score;
+          }
+          return a.username.localeCompare(b.username);
+        });
+
+        const table = document.getElementById("leaderboard");
+        table.innerHTML = "";
+
+        users.forEach((user, index) => {
+
+          const row = `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${user.username}</td>
+              <td>${user.picks}</td>
+              <td>${user.score}</td>
+            </tr>
+          `;
+
+          table.innerHTML += row;
+        });
+
       });
+    }
 
-      // ✅ SORT: score desc, username asc
-      users.sort((a, b) => {
-        if (b.total_score !== a.total_score) {
-          return b.total_score - a.total_score;
-        }
-        return a.username.localeCompare(b.username);
-      });
+    // ✅ RUN
+    updateGamesPlayed();
+    loadLeaderboard();
 
-      const table = document.getElementById("leaderboard");
-      table.innerHTML = "";
-
-      users.forEach((user, index) => {
-
-        const row = `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${user.username}</td>
-            <td>${user.total_score}</td>
-          </tr>
-        `;
-
-        table.innerHTML += row;
-      });
-
-    });
-  }
-
-  // ✅ RUN
-  loadLeaderboard();
-
-</script>
+  </script>
 
 </body>
 </html>
+``
