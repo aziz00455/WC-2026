@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
   <title>World Cup 2026 Leaderboard</title>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       margin: 0;
       background: #f5f5f5;
       font-size: 10pt;
-      color: #222;
     }
 
-    /* Top bar */
     .topbar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       padding: 16px 20px;
       background: white;
       border-bottom: 1px solid #ddd;
@@ -28,47 +24,19 @@
       font-weight: bold;
     }
 
-    .top-buttons {
-      display: flex;
-      gap: 8px;
+    .top-buttons button {
+      margin-left: 5px;
     }
 
-    button {
-      font-size: 10pt;
-      padding: 6px 10px;
-      cursor: pointer;
-      border: 1px solid #bbb;
-      background: #fff;
-      border-radius: 4px;
-    }
-
-    button:hover {
-      background: #f0f0f0;
-    }
-
-    /* Main content */
     .container {
-      max-width: 900px;
-      margin: 25px auto;
-      padding: 0 15px 30px 15px;
       text-align: center;
-    }
-
-    .main-title {
-      font-size: 14pt;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      color: #555;
-      margin-bottom: 20px;
+      margin-top: 20px;
     }
 
     table {
       margin: 0 auto;
       border-collapse: collapse;
-      width: 620px;
+      width: 600px;
       background: white;
     }
 
@@ -81,217 +49,148 @@
       background: #333;
       color: white;
     }
+
   </style>
 </head>
 
 <body>
 
-  <div class="topbar">
-    <div class="title">World Cup 2026</div>
-
-    <div class="top-buttons">
-      <button onclick="goToGame()">Play</button>
-      <button onclick="logout()">Logout</button>
-    </div>
+<div class="topbar">
+  <div class="title">World Cup 2026</div>
+  <div class="top-buttons">
+    <button onclick="goToGame()">Play</button>
+    <button onclick="logout()">Logout</button>
   </div>
+</div>
 
-  <div class="container">
-    <div class="main-title">Current Leaderboard</div>
-    <div class="subtitle" id="gamesPlayed">Total games played: Loading...</div>
+<div class="container">
 
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Name</th>
-          <th>Number of Matches Predicted</th>
-          <th>Score</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard"></tbody>
-    </table>
-  </div>
+  <h3>Current Leaderboard</h3>
+  <div id="gamesPlayed">Loading...</div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th># Picks</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard"></tbody>
+  </table>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
-      authDomain: "wc-2026-843c7.firebaseapp.com",
-      projectId: "wc-2026-843c7"
-    };
+</div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-    // Login protection
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      window.location.href = "index.html";
-    }
+<script>
 
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.href = "index.html";
-    }
+const firebaseConfig = {
+  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+  authDomain: "wc-2026-843c7.firebaseapp.com",
+  projectId: "wc-2026-843c7"
+};
 
-    function goToGame() {
-      window.location.href = "game.html";
-    }
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-    // -----------------------------------------
-    // Count completed matches from Firestore
-    // Source of truth: matchResults collection
-    //
-    // Expected matchResults document examples:
-    // {
-    //   match_id: "A1",
-    //   status: "completed"
-    // }
-    //
-    // OR
-    // {
-    //   match_id: "A1",
-    //   isCompleted: true
-    // }
-    //
-    // OR
-    // {
-    //   match_id: "A1",
-    //   final: true
-    // }
-    // -----------------------------------------
-    function countCompletedMatches(matchResultsSnapshot) {
-      let completed = 0;
+const userId = localStorage.getItem("userId");
+if (!userId) window.location.href = "index.html";
 
-      matchResultsSnapshot.forEach(doc => {
-        const data = doc.data();
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "index.html";
+}
 
-        const isCompleted =
-          data.status === "completed" ||
-          data.status === "final" ||
-          data.isCompleted === true ||
-          data.final === true;
+function goToGame() {
+  window.location.href = "game.html";
+}
 
-        if (isCompleted) {
-          completed++;
-        }
-      });
+/* ✅ Count completed matches */
+function countCompleted(snapshot) {
+  let count = 0;
 
-      return completed;
-    }
+  snapshot.forEach(doc => {
+    const data = doc.data();
 
-    // -----------------------------------------
-    // Count user picks from Firestore
-    // Source of truth: predictions collection
-    //
-    // Expected prediction document examples:
-    // {
-    //   user_id: "<userDocId>",
-    //   match_id: "A1",
-    //   prediction: "team1"
-    // }
-    //
-    // A match counts as picked only if there is a real prediction value.
-    // If multiple docs exist for same user + same match, count it once.
-    // -----------------------------------------
-    function buildPickCountMap(predictionsSnapshot) {
-      const picksByUser = {};
+    const done =
+      data.status === "completed" ||
+      data.final === true ||
+      data.isCompleted === true ||
+      Object.keys(data).length === 0;
 
-      predictionsSnapshot.forEach(doc => {
-        const data = doc.data();
+    if (done) count++;
+  });
 
-        const predictionValue = data.prediction;
-        const matchId = data.match_id;
-        const userKey = data.user_id || data.userId || null;
+  return count;
+}
 
-        const hasSelection =
-          predictionValue !== undefined &&
-          predictionValue !== null &&
-          predictionValue !== "";
+/* ✅ Count picks */
+function buildPickMap(snapshot) {
+  const map = {};
 
-        if (!userKey || !matchId || !hasSelection) return;
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    if (!d.user_id || !d.match_id || !d.prediction) return;
 
-        if (!picksByUser[userKey]) {
-          picksByUser[userKey] = new Set();
-        }
+    if (!map[d.user_id]) map[d.user_id] = new Set();
+    map[d.user_id].add(d.match_id);
+  });
 
-        picksByUser[userKey].add(String(matchId));
-      });
+  return map;
+}
 
-      return picksByUser;
-    }
+async function loadLeaderboard() {
 
-    async function loadLeaderboard() {
-      try {
-        const [usersSnapshot, predictionsSnapshot, matchResultsSnapshot] = await Promise.all([
-          db.collection("users").get(),
-          db.collection("predictions").get(),
-          db.collection("matchResults").get()
-        ]);
+  const [usersSnap, predSnap, matchSnap] = await Promise.all([
+    db.collection("users").get(),
+    db.collection("predictions").get(),
+    db.collection("matchResults").get()
+  ]);
 
-        // Update completed games count
-        const completedGames = countCompletedMatches(matchResultsSnapshot);
-        document.getElementById("gamesPlayed").innerText =
-          "Total games played: " + completedGames + " of 72";
+  const completed = countCompleted(matchSnap);
+  document.getElementById("gamesPlayed").innerText =
+    "Total games played: " + completed + " of 72";
 
-        // Build picks map
-        const picksByUser = buildPickCountMap(predictionsSnapshot);
+  const pickMap = buildPickMap(predSnap);
 
-        // Build leaderboard rows
-        let users = [];
+  let users = [];
 
-        usersSnapshot.forEach(doc => {
-          const data = doc.data();
-          const userDocId = doc.id;
+  usersSnap.forEach(doc => {
+    const d = doc.data();
 
-          const picksCount = picksByUser[userDocId]
-            ? picksByUser[userDocId].size
-            : 0;
+    users.push({
+      username: d.username,
+      score: d.total_score || 0,
+      picks: pickMap[doc.id] ? pickMap[doc.id].size : 0
+    });
+  });
 
-          users.push({
-            username: data.username || "(no name)",
-            score: data.total_score || 0,
-            picks: picksCount
-          });
-        });
+  users.sort((a,b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.username.localeCompare(b.username);
+  });
 
-        // Sort by score desc, then username asc
-        users.sort((a, b) => {
-          if (b.score !== a.score) {
-            return b.score - a.score;
-          }
-          return a.username.localeCompare(b.username);
-        });
+  const table = document.getElementById("leaderboard");
+  table.innerHTML = "";
 
-        // Render table
-        const table = document.getElementById("leaderboard");
-        table.innerHTML = "";
+  users.forEach((u,i) => {
+    table.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${u.username}</td>
+        <td>${u.picks}</td>
+        <td>${u.score}</td>
+      </tr>
+    `;
+  });
+}
 
-        users.forEach((user, index) => {
-          const row = `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${user.username}</td>
-              <td>${user.picks}</td>
-              <td>${user.score}</td>
-            </tr>
-          `;
-          table.innerHTML += row;
-        });
+loadLeaderboard();
 
-      } catch (error) {
-        console.error("Error loading leaderboard:", error);
-        document.getElementById("gamesPlayed").innerText =
-          "Total games played: unavailable";
-      }
-    }
-
-    loadLeaderboard();
-
-  </script>
+</script>
 
 </body>
 </html>
