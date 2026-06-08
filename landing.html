@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>World Cup 2026 Leaderboard</title>
+  <meta charset="utf-8" />
+  <title>World Cup 2026 - Leaderboard</title>
 
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       margin: 0;
       background: #f5f5f5;
       font-size: 10pt;
@@ -14,9 +15,12 @@
     .topbar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       padding: 16px 20px;
       background: white;
       border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
     }
 
     .title {
@@ -24,30 +28,85 @@
       font-weight: bold;
     }
 
-    .top-buttons button {
-      margin-left: 5px;
+    .top-buttons {
+      display: flex;
+      gap: 8px;
     }
 
-    .container {
-      text-align: center;
-      margin-top: 20px;
+    button {
+      font-size: 10pt;
+      padding: 6px 10px;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .page-wrap {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
     }
 
     table {
-      margin: 0 auto;
+      width: 100%;
       border-collapse: collapse;
-      width: 600px;
       background: white;
+      border: 1px solid #ddd;
+      table-layout: fixed;   /* ✅ KEY: uniform columns */
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      padding: 6px 6px;     /* ✅ tighter spacing */
+      border-bottom: 1px solid #eee;
+      font-size: 10pt;
     }
 
     th {
-      background: #333;
-      color: white;
+      background: #fafafa;
+      text-align: center;
+    }
+
+    td {
+      text-align: center;
+    }
+
+    /* ✅ Specific column widths */
+    th:nth-child(1), td:nth-child(1) { width: 50px; }   /* Rank */
+    th:nth-child(2), td:nth-child(2) { 
+      width: 180px; 
+      text-align: left; 
+      padding-left: 10px;
+    } /* Name */
+
+    th:nth-child(n+3), td:nth-child(n+3) {
+      width: 80px;   /* ✅ uniform numeric columns */
+    }
+
+    .score-col {
+      background: #fff7cc;
+      font-weight: bold;
+    }
+
+    tr.my-row {
+      background: #d8e9ff;
+      font-weight: bold;
+    }
+
+    .matches-completed {
+      margin-bottom: 10px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
 
   </style>
@@ -56,28 +115,32 @@
 <body>
 
 <div class="topbar">
-  <div class="title">World Cup 2026</div>
+  <div class="title">World Cup 2026 - Leaderboard</div>
+
   <div class="top-buttons">
-    <button onclick="goToGame()">Play</button>
+    <button onclick="goToGame()">Predict</button>
     <button onclick="logout()">Logout</button>
   </div>
 </div>
 
-<div class="container">
+<div class="page-wrap">
 
-  <h3>Current Leaderboard</h3>
-  <div id="gamesPlayed">Loading...</div>
+  <div id="matchesCompleted" class="matches-completed"></div>
 
   <table>
     <thead>
       <tr>
         <th>Rank</th>
         <th>Name</th>
-        <th># Picks</th>
-        <th>Score</th>
+        <th class="score-col">Score</th>
+        <th>Picks</th>
+        <th>Pending</th>
+        <th>Correct</th>
+        <th>Incorrect</th>
+        <th>Not Picked</th>
       </tr>
     </thead>
-    <tbody id="leaderboard"></tbody>
+    <tbody id="leaderboardBody"></tbody>
   </table>
 
 </div>
@@ -97,100 +160,161 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const userId = localStorage.getItem("userId");
-if (!userId) window.location.href = "index.html";
+
+function goToGame() {
+  window.location.href = "game.html";
+}
 
 function logout() {
   localStorage.removeItem("userId");
   window.location.href = "index.html";
 }
 
-function goToGame() {
-  window.location.href = "game.html";
-}
-
-/* ✅ Count completed matches */
-function countCompleted(snapshot) {
-  let count = 0;
-
-  snapshot.forEach(doc => {
-    const data = doc.data();
-
-    const done =
-      data.status === "completed" ||
-      data.final === true ||
-      data.isCompleted === true ||
-      Object.keys(data).length === 0;
-
-    if (done) count++;
-  });
-
-  return count;
-}
-
-/* ✅ Count picks */
-function buildPickMap(snapshot) {
+function buildResultsMap(snapshot) {
   const map = {};
+  let completed = 0;
 
   snapshot.forEach(doc => {
     const d = doc.data();
-    if (!d.user_id || !d.match_id || !d.prediction) return;
-
-    if (!map[d.user_id]) map[d.user_id] = new Set();
-    map[d.user_id].add(d.match_id);
+    map[doc.id] = d;
+    if (d.status === "completed") completed++;
   });
 
-  return map;
+  return { map, completed };
+}
+
+function buildUserStats(predSnap, resultsMap) {
+
+  const stats = {};
+
+  predSnap.forEach(doc => {
+    const d = doc.data();
+
+    if (!stats[d.user_id]) {
+      stats[d.user_id] = {
+        picks: 0,
+        correct: 0,
+        incorrect: 0,
+        pending: 0,
+        completedPicks: 0,
+        score: 0
+      };
+    }
+
+    stats[d.user_id].picks++;
+
+    const result = resultsMap[d.match_id];
+
+    if (!result || result.status !== "completed") {
+      stats[d.user_id].pending++;
+      return;
+    }
+
+    stats[d.user_id].completedPicks++;
+
+    if (d.prediction === result.outcome) {
+      stats[d.user_id].correct++;
+      stats[d.user_id].score += 1;
+    } else {
+      stats[d.user_id].incorrect++;
+    }
+  });
+
+  return stats;
+}
+
+function renderLeaderboard(rows) {
+
+  const tbody = document.getElementById("leaderboardBody");
+  tbody.innerHTML = "";
+
+  let rank = 0;
+  let lastScore = null;
+
+  rows.forEach((row, i) => {
+
+    if (row.score !== lastScore) {
+      rank = i + 1;
+      lastScore = row.score;
+    }
+
+    const tr = document.createElement("tr");
+
+    if (row.user_id === userId) {
+      tr.classList.add("my-row");
+    }
+
+    const nameLink =
+      row.user_id === userId
+        ? `<a href="game.html">${row.username}</a>`
+        : `<a href="showpick.html?uid=${row.user_id}&name=${encodeURIComponent(row.username)}">${row.username}</a>`;
+
+    tr.innerHTML = `
+      <td>${rank}</td>
+      <td>${nameLink}</td>
+      <td class="score-col">${row.score}</td>
+      <td>${row.picks}</td>
+      <td>${row.pending}</td>
+      <td>${row.correct}</td>
+      <td>${row.incorrect}</td>
+      <td>${row.notPicked}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
 async function loadLeaderboard() {
 
-  const [usersSnap, predSnap, matchSnap] = await Promise.all([
+  const [usersSnap, predSnap, resultsSnap] = await Promise.all([
     db.collection("users").get(),
     db.collection("predictions").get(),
     db.collection("matchResults").get()
   ]);
 
-  const completed = countCompleted(matchSnap);
-  document.getElementById("gamesPlayed").innerText =
-    "Total games played: " + completed + " of 72";
+  const { map: resultsMap, completed } = buildResultsMap(resultsSnap);
+  const statsMap = buildUserStats(predSnap, resultsMap);
 
-  const pickMap = buildPickMap(predSnap);
+  document.getElementById("matchesCompleted").textContent =
+    `Matches Completed: ${completed} / 72`;
 
-  let users = [];
+  const rows = [];
 
   usersSnap.forEach(doc => {
+
     const d = doc.data();
 
-    users.push({
-      username: d.username,
-      score: d.total_score || 0,
-      picks: pickMap[doc.id] ? pickMap[doc.id].size : 0
+    const stats = statsMap[doc.id] || {
+      picks: 0, correct: 0, incorrect: 0,
+      pending: 0, completedPicks: 0, score: 0
+    };
+
+    const notPicked = completed - stats.completedPicks;
+    const finalScore = (stats.score || 0) + (notPicked * -0.25);
+
+    rows.push({
+      user_id: doc.id,
+      username: d.username || "(no name)",
+      score: Number(finalScore.toFixed(2)),
+      picks: stats.picks,
+      pending: stats.pending,
+      correct: stats.correct,
+      incorrect: stats.incorrect,
+      notPicked: notPicked
     });
+
   });
 
-  users.sort((a,b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    return a.username.localeCompare(b.username);
-  });
+  rows.sort((a, b) => b.score - a.score);
 
-  const table = document.getElementById("leaderboard");
-  table.innerHTML = "";
-
-  users.forEach((u,i) => {
-    table.innerHTML += `
-      <tr>
-        <td>${i+1}</td>
-        <td>${u.username}</td>
-        <td>${u.picks}</td>
-        <td>${u.score}</td>
-      </tr>
-    `;
-  });
+  renderLeaderboard(rows);
 }
 
 loadLeaderboard();
+setInterval(loadLeaderboard, 5000);
 
 </script>
 
 </body>
 </html>
+``
