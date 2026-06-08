@@ -49,10 +49,9 @@
 
   <input type="text" id="username" placeholder="Username">
   <input type="password" id="password" placeholder="Password">
-
+  <p>Use a simple password</p>
   <button onclick="login()">Login</button>
   <button onclick="createUser()">Create User</button>
-
   <div id="message"></div>
 </div>
 
@@ -137,7 +136,7 @@
         });
 
         msg.style.color = "green";
-        msg.innerText = "User created";
+        msg.innerText = "User created. Click Login";
 
       });
   }
