@@ -1,88 +1,90 @@
 /*
-  syncResults.js
+:  syncResults.js
+    1. Load matches.js first
+    2. Load this file next
+    3. Call:
+         await syncResultsFromAPI(db, matches);
 
-  Usage in landing.html:
-    <script src="matches.js"></script>
-    <script src="syncResults.js"></script>
-    ...
-    await syncResultsFromAPI(db, matches);
-
-  IMPORTANT:
-  - Replace YOUR_API_SPORTS_KEY with your real key.
-  - matches.js must be loaded before this file.
-  - Firebase db instance must already exist.
+  Requirements:
+    - Firebase Firestore instance already initialized as `db`
+    - matches.js already loaded and defines: const matches = [...]
+    - Replace YOUR_API_SPORTS_KEY below
 */
 
-const API_SPORTS_KEY = "YOUR_API_SPORTS_KEY"; // <-- replace this
-const API_SPORTS_BASE = "https://v3.football.api-sports.io";
-const API_TIMEZONE = "America/New_York";
+const API_KEY = "YOUR_API_SPORTS_KEY";
+const API_BASE_URL = "https://v3.football.api-sports.io";
 const API_SEASON = 2026;
+const API_TIMEZONE = "America/New_York";
 
-// Completed statuses we treat as final
-const COMPLETED_STATUS_CODES = new Set(["FT", "AET", "PEN"]);
+// API-Football completed statuses
+const COMPLETED_STATUSES = new Set(["FT", "AET", "PEN"]);
 
 // -----------------------------
-// Name normalization
+// Team name normalization
 // -----------------------------
 function normalizeTeamName(name) {
   if (!name) return "";
 
-  const v = name.trim().toLowerCase();
+  const value = name.trim().toLowerCase();
 
   const aliases = {
     "south korea": "korea republic",
     "korea republic": "korea republic",
+
     "czech republic": "czechia",
     "czechia": "czechia",
+
     "ivory coast": "côte d'ivoire",
     "cote d'ivoire": "côte d'ivoire",
     "côte d'ivoire": "côte d'ivoire",
+
     "curacao": "curaçao",
     "curaçao": "curaçao",
+
     "turkey": "türkiye",
     "turkiye": "türkiye",
     "türkiye": "türkiye",
+
     "cape verde": "cabo verde",
     "cabo verde": "cabo verde",
+
     "iran": "ir iran",
     "ir iran": "ir iran",
+
     "dr congo": "congo dr",
     "congo dr": "congo dr",
+
     "united states": "usa",
     "usa": "usa"
   };
 
-  return aliases[v] || v;
+  return aliases[value] || value;
 }
 
 // -----------------------------
 // Helpers
 // -----------------------------
-function scoreToOutcome(score1, score2) {
+function getOutcome(score1, score2) {
   if (score1 > score2) return "team1";
   if (score2 > score1) return "team2";
   return "tie";
 }
 
-function getDatePart(isoLike) {
-  // Returns YYYY-MM-DD from an ISO string or date-like string
-  return String(isoLike).slice(0, 10);
+function getDatePart(isoString) {
+  return String(isoString).slice(0, 10);
 }
 
-function formatCompletionTimeFromFixture(fixtureObj) {
-  // Prefer fixture date if API has it; if completed, it is the match kickoff time,
-  // so we approximate completion_at by adding 95 minutes to kickoff.
-  // This matches your existing logic for completion timestamp.
-  const kickoff = new Date(fixtureObj.fixture.date).getTime();
-  const completedAt = kickoff + (95 * 60 * 1000);
-  return new Date(completedAt).toISOString();
+function getCompletedAtFromKickoff(kickoffIso) {
+  const kickoffMs = new Date(kickoffIso).getTime();
+  const completedMs = kickoffMs + (95 * 60 * 1000); // 95 minutes after kickoff
+  return new Date(completedMs).toISOString();
 }
 
 // -----------------------------
-// Build an index from your matches.js
-// Key: date|team1|team2
+// Build internal index from matches.js
+// key = date|team1|team2
 // -----------------------------
-function buildInternalMatchIndex(matches) {
+function buildMatchIndex(matches) {
   const index = {};
 
   matches.forEach(match => {
@@ -99,150 +101,161 @@ function buildInternalMatchIndex(matches) {
 }
 
 // -----------------------------
-// Fetch fixtures from API-Football
-// We query by date range + season + timezone.
-// Official docs show the fixtures endpoint and these parameters. [1](https://www.api-football.com/documentation-v3)[2](https://api-sports.io/documentation/football/v3)[3](https://www.educative.io/courses/getting-soccer-data-with-api-football-in-javascript/fixtures-information)
+// Pull fixtures from API-Football
+// The official docs describe the fixtures endpoint and support
+// parameters like season, from, to, date, and timezone. 
 // -----------------------------
-async function fetchFixturesRange(fromDate, toDate) {
+async function fetchFixtures(fromDate, toDate) {
   const url =
-    `${API_SPORTS_BASE}/fixtures` +
-    `?from=${encodeURIComponent(fromDate)}` +
+    `${API_BASE_URL}/fixtures` +
+    `?season=${encodeURIComponent(API_SEASON)}` +
+    `&from=${encodeURIComponent(fromDate)}` +
     `&to=${encodeURIComponent(toDate)}` +
-    `&season=${encodeURIComponent(API_SEASON)}` +
     `&timezone=${encodeURIComponent(API_TIMEZONE)}`;
 
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      "x-apisports-key": API_SPORTS_KEY
+      "x-apisports-key": API_KEY
     }
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`API-Football error ${response.status}: ${body}`);
+    const errorText = await response.text();
+    throw new Error(`API request failed (${response.status}): ${errorText}`);
   }
 
   const json = await response.json();
 
   if (!json || !Array.isArray(json.response)) {
-    throw new Error("Unexpected API-Football response shape");
+    throw new Error("Unexpected API response shape");
   }
 
   return json.response;
 }
 
 // -----------------------------
-// Convert one API fixture -> your Firestore schema
+// Convert one fixture object to your Firestore schema
 // -----------------------------
-function buildResultDoc(match, fixtureObj) {
-  const homeGoals = fixtureObj.goals && fixtureObj.goals.home != null
-    ? fixtureObj.goals.home
-    : null;
-
-  const awayGoals = fixtureObj.goals && fixtureObj.goals.away != null
-    ? fixtureObj.goals.away
-    : null;
-
+function buildResultDoc(match, fixture) {
   const shortStatus =
-    fixtureObj.fixture &&
-    fixtureObj.fixture.status &&
-    fixtureObj.fixture.status.short
-      ? fixtureObj.fixture.status.short
+    fixture.fixture &&
+    fixture.fixture.status &&
+    fixture.fixture.status.short
+      ? fixture.fixture.status.short
       : "";
 
-  const isCompleted = COMPLETED_STATUS_CODES.has(shortStatus);
+  const isCompleted = COMPLETED_STATUSES.has(shortStatus);
 
-  let outcome = "pending";
-  if (isCompleted && homeGoals != null && awayGoals != null) {
-    outcome = scoreToOutcome(homeGoals, awayGoals);
-  }
+  const score1 =
+    isCompleted &&
+    fixture.goals &&
+    fixture.goals.home != null
+      ? fixture.goals.home
+      : null;
+
+  const score2 =
+    isCompleted &&
+    fixture.goals &&
+    fixture.goals.away != null
+      ? fixture.goals.away
+      : null;
+
+  const outcome =
+    isCompleted && score1 != null && score2 != null
+      ? getOutcome(score1, score2)
+      : "pending";
 
   return {
     match_id: match.id,
     team1: match.team1,
     team2: match.team2,
-    score1: isCompleted ? homeGoals : null,
-    score2: isCompleted ? awayGoals : null,
-    outcome: isCompleted ? outcome : "pending",
+    score1: score1,
+    score2: score2,
+    outcome: outcome,
     status: isCompleted ? "completed" : "pending",
-    completed_at: isCompleted ? formatCompletionTimeFromFixture(fixtureObj) : null,
+    completed_at: isCompleted
+      ? getCompletedAtFromKickoff(fixture.fixture.date)
+      : null,
+
+    // helpful audit/debug fields
     fixture_api_id:
-      fixtureObj.fixture && fixtureObj.fixture.id ? fixtureObj.fixture.id : null,
+      fixture.fixture && fixture.fixture.id ? fixture.fixture.id : null,
     api_status: shortStatus || null,
     updated_at: new Date().toISOString()
   };
 }
 
 // -----------------------------
-// Main sync function
+// Main exported sync function
 // -----------------------------
 async function syncResultsFromAPI(db, matches) {
-  if (!db) throw new Error("syncResultsFromAPI: db is required");
+  if (!db) {
+    throw new Error("syncResultsFromAPI: Firestore db is required");
+  }
+
   if (!Array.isArray(matches) || matches.length === 0) {
     throw new Error("syncResultsFromAPI: matches array is required");
   }
-  if (!API_SPORTS_KEY || API_SPORTS_KEY === "YOUR_API_SPORTS_KEY") {
-    throw new Error("syncResultsFromAPI: set your real API_SPORTS_KEY first");
+
+  if (!API_KEY || API_KEY === "YOUR_API_SPORTS_KEY") {
+    throw new Error("syncResultsFromAPI: set your real API key first");
   }
 
-  // Determine date range from your internal schedule
-  const allDates = matches.map(m => m.date).sort();
-  const fromDate = allDates[0];
-  const toDate = allDates[allDates.length - 1];
+  // Determine date range from your schedule
+  const dates = matches.map(m => m.date).sort();
+  const fromDate = dates[0];
+  const toDate = dates[dates.length - 1];
 
-  // Build internal lookup
-  const internalIndex = buildInternalMatchIndex(matches);
+  const matchIndex = buildMatchIndex(matches);
+  const fixtures = await fetchFixtures(fromDate, toDate);
 
-  // Pull fixtures from API
-  const fixtures = await fetchFixturesRange(fromDate, toDate);
-
-  // Batch writes to Firestore
   let batch = db.batch();
-  let writes = 0;
+  let writeCount = 0;
+  let syncedCount = 0;
 
-  for (const fixtureObj of fixtures) {
-    const fixtureDate = getDatePart(
-      fixtureObj.fixture && fixtureObj.fixture.date
-        ? fixtureObj.fixture.date
-        : ""
-    );
+  fixtures.forEach(fixture => {
+    const fixtureDate =
+      fixture.fixture && fixture.fixture.date
+        ? getDatePart(fixture.fixture.date)
+        : "";
 
     const homeName =
-      fixtureObj.teams && fixtureObj.teams.home && fixtureObj.teams.home.name
-        ? normalizeTeamName(fixtureObj.teams.home.name)
+      fixture.teams && fixture.teams.home && fixture.teams.home.name
+        ? normalizeTeamName(fixture.teams.home.name)
         : "";
 
     const awayName =
-      fixtureObj.teams && fixtureObj.teams.away && fixtureObj.teams.away.name
-        ? normalizeTeamName(fixtureObj.teams.away.name)
+      fixture.teams && fixture.teams.away && fixture.teams.away.name
+        ? normalizeTeamName(fixture.teams.away.name)
         : "";
 
     const key = [fixtureDate, homeName, awayName].join("|");
-    const match = internalIndex[key];
+    const match = matchIndex[key];
 
-    // If no match found, skip silently
-    if (!match) continue;
+    // Skip anything we can't map to your internal fixture list
+    if (!match) return;
 
-    const docData = buildResultDoc(match, fixtureObj);
+    const data = buildResultDoc(match, fixture);
     const ref = db.collection("matchResults").doc(match.id);
 
-    batch.set(ref, docData, { merge: true });
-    writes++;
+    batch.set(ref, data, { merge: true });
+    writeCount++;
+    syncedCount++;
+  });
 
-    // Firestore batch limit safety
-    if (writes % 400 === 0) {
-      await batch.commit();
-      batch = db.batch();
-    }
-  }
-
-  if (writes % 400 !== 0) {
+  if (writeCount > 0) {
     await batch.commit();
   }
 
-  return { syncedMatches: writes, fromDate, toDate };
+  return {
+    synced: syncedCount,
+    from: fromDate,
+    to: toDate
+  };
 }
 
-// Expose globally for browser use
+// expose globally for browser use
 window.syncResultsFromAPI = syncResultsFromAPI;
+``
+
