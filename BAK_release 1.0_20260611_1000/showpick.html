@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Player Picks</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f5f5f5;
+      font-size: 10pt;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+    }
+
+    button {
+      font-size: 10pt;
+      padding: 6px 10px;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .date-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 20px 0 12px;
+    }
+
+    .group-heading {
+      font-weight: bold;
+      margin: 10px 0 6px;
+      color: #333;
+    }
+
+    .match {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+
+    .pick {
+      margin-top: 6px;
+      font-weight: bold;
+    }
+
+    .none {
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="title" id="pageTitle"></div>
+  <button onclick="goBack()">Return</button>
+</div>
+
+<div class="page-wrap" id="app"></div>
+
+<script src="matches.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+// ✅ Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDpqwUsHn1qdUANh45tnW-e8aHVt8EF0Fk",
+  authDomain: "wc-2026-843c7.firebaseapp.com",
+  projectId: "wc-2026-843c7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ✅ Params (from landing.html link)
+const params = new URLSearchParams(window.location.search);
+const userId = params.get("uid");
+const username = decodeURIComponent(params.get("name") || "Player");
+
+// ✅ Set title
+document.getElementById("pageTitle").textContent =
+  `World Cup 2026 - ${username}'s Picks`;
+
+// ✅ Return button
+function goBack() {
+  window.location.href = "landing.html";
+}
+
+// ✅ Helpers
+function formatPrettyDate(dateStr) {
+  const dt = new Date(dateStr + "T00:00:00");
+  return dt.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+function groupMatchesByDate(data) {
+  const map = {};
+
+  data.forEach(m => {
+    if (!map[m.date]) map[m.date] = [];
+    map[m.date].push(m);
+  });
+
+  Object.keys(map).forEach(date => {
+    map[date].sort((a,b) => {
+      if (a.group !== b.group) return a.group.localeCompare(b.group);
+      if (a.time !== b.time) return a.time.localeCompare(b.time);
+      return a.id.localeCompare(b.id);
+    });
+  });
+
+  return map;
+}
+
+// ✅ Load player picks
+async function loadPicks() {
+  const snap = await db.collection("predictions")
+    .where("user_id", "==", userId)
+    .get();
+
+  const map = {};
+  snap.forEach(doc => {
+    const d = doc.data();
+    map[d.match_id] = d.prediction;
+  });
+
+  return map;
+}
+
+// ✅ Render page
+async function render() {
+
+  const app = document.getElementById("app");
+  app.innerHTML = "Loading...";
+
+  const picks = await loadPicks();
+
+  app.innerHTML = "";
+
+  const byDate = groupMatchesByDate(matches);
+  const dates = Object.keys(byDate).sort();
+
+  dates.forEach(date => {
+
+    const dateDiv = document.createElement("div");
+
+    // ✅ Date heading
+    const dateHeading = document.createElement("div");
+    dateHeading.className = "date-heading";
+    dateHeading.textContent = formatPrettyDate(date);
+    dateDiv.appendChild(dateHeading);
+
+    let currentGroup = null;
+
+    byDate[date].forEach(match => {
+
+      // ✅ Group heading
+      if (match.group !== currentGroup) {
+        currentGroup = match.group;
+
+        const groupHeading = document.createElement("div");
+        groupHeading.className = "group-heading";
+        groupHeading.textContent = "Group " + currentGroup;
+        dateDiv.appendChild(groupHeading);
+      }
+
+      const pick = picks[match.id];
+
+      let pickText = "No selection";
+
+      if (pick === "team1") pickText = match.team1;
+      else if (pick === "team2") pickText = match.team2;
+      else if (pick === "tie") pickText = "Tie";
+
+      const div = document.createElement("div");
+      div.className = "match";
+
+      div.innerHTML = `
+        <div>${match.team1} vs ${match.team2}</div>
+        <div class="pick ${!pick ? "none" : ""}">
+          Pick: ${pickText}
+        </div>
+      `;
+
+      dateDiv.appendChild(div);
+    });
+
+    app.appendChild(dateDiv);
+  });
+}
+
+render();
+
+</script>
+
+</body>
+</html>
