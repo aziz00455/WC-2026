@@ -250,6 +250,8 @@ async function syncPendingMatchResults(db, matches) {
 
     if (incoming.score1 === null || incoming.score2 === null) return;
 
+    if (incoming.status !== "completed") return;
+    
     const existing = results[matchId] || {};
 
     const next = {
