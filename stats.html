@@ -196,7 +196,7 @@ async function load(){
     matches.forEach(m=>{
       const r=results[m.id];
       if(!r) return;
-      applyResult(map,m.team1,m.team2,r.homeScore,r.awayScore);
+      applyResult(map,m.team1,m.team2,r.score1,r.score2);
     });
   }
 
