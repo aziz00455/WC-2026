@@ -2,7 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Compare Picks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+  <title>WC 2026 - Compare Picks</title>
   <link rel="stylesheet" href="../WC_common/styles.css">
 </head>
 
@@ -48,7 +49,7 @@ const params = new URLSearchParams(window.location.search);
 const initialSelectedUser = params.get("uid");
 
 renderTopbar(
-  "World Cup 2026 - Compare Picks",
+  "Compare Picks",
   `
     <button onclick="goBack()">Return</button>
     <button onclick="logout()">Logout</button>
