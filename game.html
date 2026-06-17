@@ -32,6 +32,19 @@ const SESSION_KEY = "session_" + GAME_ID;
 const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
 
+let pendingPickSave = Promise.resolve();
+
+async function saveAndGoToLanding() {
+  try {
+    await pendingPickSave;
+    window.location.href = "landing.html";
+  } catch (err) {
+    console.error("save before leaving failed:", err);
+    alert("Failed to save pick. Please try again.");
+  }
+}
+  
+
 function goToLanding() { window.location.href = "landing.html"; }
 function logout() {
   localStorage.removeItem(SESSION_KEY);
@@ -41,7 +54,7 @@ function logout() {
 renderTopbar(
   "World Cup 2026 - My Picks",
   `
-    <button onclick="goToLanding()">Save Picks</button>
+    <button onclick="saveAndgoToLanding()">Save Picks</button>
     <button onclick="logout()">Logout</button>
   `
 );
@@ -50,8 +63,13 @@ renderTopbar(
    PICK HANDLER
 ========================= */
 async function handlePick({ matchId, choice }) {
-  const idx = getMatchIndex(matches, matchId);
-  await saveUserPick(db, userId, matchID, choice);
+  pendingPickSave = saveUserPick(db, userId, matchId, choice)
+    .catch(err => {
+      console.error("pick save error:", err);
+      throw err;
+    });
+
+  await pendingPickSave;
 }
 
 /* =========================
