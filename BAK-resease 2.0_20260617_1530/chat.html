@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>World Cup 2026 - Chat</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f5f5f5;
+  font-size: 10pt;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+.title {
+  font-size: 14pt;
+  font-weight: bold;
+}
+
+.page-wrap {
+  max-width: 980px;
+  margin: auto;
+  padding: 20px;
+}
+
+.chat-box {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  height: 400px;
+  overflow-y: auto;
+}
+
+.message {
+  margin-bottom: 10px;
+  max-width: 70%;
+}
+
+.left {
+  text-align: left;
+}
+
+.right {
+  text-align: right;
+  margin-left: auto;
+}
+
+.name {
+  color: #1a73e8;
+  font-weight: bold;
+}
+
+.time {
+  color: #777;
+  font-size: 9pt;
+  margin-left: 5px;
+}
+
+.text {
+  margin-top: 2px;
+}
+
+.loading {
+  text-align: center;
+  color: #888;
+  font-size: 9pt;
+  margin: 5px 0;
+}
+
+/* ✅ NEW INDICATOR */
+.new-message-bar {
+  display: none;
+  text-align: center;
+  margin-top: 6px;
+  color: #1a73e8;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.input-row {
+  margin-top: 10px;
+}
+
+.input-line {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;          /* ✅ slightly bigger for better feel */
+  font-size: 10pt;
+}
+``
+
+.top-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  font-size: 10pt;
+  padding: 6px 10px;
+  border: 1px solid #bbb;
+  background: #fff;
+  border-radius: 4px;
+  c
+
+
+input {
+  flex: 1;
+  padding: 6px;
+  font-size: 10pt;
+}
+</style>
+</head>
+
+<body>
+
+
+<div class="topbar">
+  <div class="title">World Cup 2026 - Chat</div>
+
+  <div class="top-buttons">
+    <button onclick="goBack()">Return</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+
+
+<div class="page-wrap">
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div class="input-row">
+
+    <div class="input-line">
+      <input id="msgInput" placeholder="Type message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- ✅ NEW MESSAGE INDICATOR HERE -->
+    <div id="newMsgBar" class="new-message-bar">
+      New message ↓
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCddw-B6fRbAQ7bdKBhCup-RSqewYD9PeA",
+    authDomain: "wc2026-prd.firebaseapp.com",
+    projectId: "wc2026-prd",
+    storageBucket: "wc2026-prd.firebasestorage.app",
+    messagingSenderId: "998282277656",
+    appId: "1:998282277656:web:466a8efd85c8217c20e46d",
+    measurementId: "G-5TQ671ZHQ4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const userId = localStorage.getItem("userId");
+if (!userId) window.location.href = "index.html";
+
+function goBack() {
+  window.location.href = "landing.html";
+}
+
+let oldestDoc = null;
+let loadingOlder = false;
+let noMoreMessages = false;
+let unsubscribe = null;
+let isAtBottom = true;
+
+// ✅ format time
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString([], {
+    month:"short",
+    day:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+// ✅ render message
+function addMessage(m, container, prepend=false) {
+
+  const div = document.createElement("div");
+  div.className = "message";
+
+  if (m.userId === userId) div.classList.add("right");
+  else div.classList.add("left");
+
+  div.innerHTML = `
+    <div>
+      <span class="name">${m.username}</span>
+      <span class="time">${formatTime(m.timestamp)}</span>
+    </div>
+    <div class="text">${m.text}</div>
+  `;
+
+  if (prepend) container.prepend(div);
+  else container.appendChild(div);
+}
+
+// ✅ send message
+async function sendMessage() {
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const doc = await db.collection("users").doc(userId).get();
+  const username = doc.exists ? doc.data().username : "User";
+
+  await db.collection("chatMessages").add({
+    userId,
+    username,
+    text,
+    timestamp: Date.now()
+  });
+
+  input.value = "";
+}
+
+// ✅ enter key
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("msgInput").addEventListener("keypress", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+});
+
+function get24hAgo() {
+  return Date.now() - 24*60*60*1000;
+}
+
+// ✅ LISTENER
+function startListener() {
+
+  unsubscribe = db.collection("chatMessages")
+    .where("timestamp", ">=", get24hAgo())
+    .orderBy("timestamp", "desc")
+    .limit(30)
+    .onSnapshot(snapshot => {
+
+      const box = document.getElementById("chatBox");
+
+      const atBottomBefore = isAtBottom;
+
+      box.innerHTML = "";
+
+      const messages = [];
+
+      snapshot.forEach(doc => {
+        messages.push({ data:doc.data(), id:doc.id });
+      });
+
+      messages.reverse();
+
+      if (messages.length > 0) {
+        oldestDoc = messages[0].id;
+      }
+
+      messages.forEach(m => addMessage(m.data, box));
+
+      if (atBottomBefore) {
+        box.scrollTop = box.scrollHeight;
+      } else {
+        // ✅ SHOW indicator
+        document.getElementById("newMsgBar").style.display = "block";
+      }
+
+    });
+}
+
+// ✅ click indicator
+document.getElementById("newMsgBar").onclick = () => {
+  const box = document.getElementById("chatBox");
+  box.scrollTop = box.scrollHeight;
+  document.getElementById("newMsgBar").style.display = "none";
+};
+
+// ✅ scroll handling
+document.addEventListener("DOMContentLoaded", () => {
+
+  const box = document.getElementById("chatBox");
+
+  box.addEventListener("scroll", () => {
+
+    const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+    isAtBottom = nearBottom;
+
+    if (nearBottom) {
+      document.getElementById("newMsgBar").style.display = "none";
+    }
+
+    if (box.scrollTop <= 2) {
+      loadOlder();
+    }
+
+  });
+
+});
+
+
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.href = "index.html";
+}
+
+
+// ✅ load older (unchanged)
+async function loadOlder() {
+
+  if (!oldestDoc || loadingOlder || noMoreMessages) return;
+
+  loadingOlder = true;
+
+  const box = document.getElementById("chatBox");
+  const prevHeight = box.scrollHeight;
+
+  const loadingDiv = document.createElement("div");
+  loadingDiv.className = "loading";
+  loadingDiv.textContent = "Loading older messages...";
+  box.prepend(loadingDiv);
+
+  const start = Date.now();
+
+  const docRef = await db.collection("chatMessages").doc(oldestDoc).get();
+
+  const snapshot = await db.collection("chatMessages")
+    .where("timestamp", ">=", get24hAgo())
+    .orderBy("timestamp", "desc")
+    .startAfter(docRef)
+    .limit(10)
+    .get();
+
+  const elapsed = Date.now() - start;
+  if (elapsed < 1000) {
+    await new Promise(res => setTimeout(res, 1000 - elapsed));
+  }
+
+  loadingDiv.remove();
+
+  if (snapshot.empty) {
+    noMoreMessages = true;
+
+    const endDiv = document.createElement("div");
+    endDiv.className = "loading";
+    endDiv.textContent = "All previous messages are deleted";
+    box.prepend(endDiv);
+
+    loadingOlder = false;
+    return;
+  }
+
+  const messages = [];
+
+  snapshot.forEach(doc => {
+    messages.push({ data:doc.data(), id:doc.id });
+  });
+
+  messages.reverse();
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    addMessage(messages[i].data, box, true);
+  }
+
+  box.scrollTop = box.scrollHeight - prevHeight;
+
+  oldestDoc = messages[0].id;
+
+  loadingOlder = false;
+}
+
+// ✅ pause/resume
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && unsubscribe) unsubscribe();
+  else startListener();
+});
+
+// ✅ init
+startListener();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Compare Picks</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #222;
+      font-size: 10pt;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .title {
+      font-size: 14pt;
+      font-weight: bold;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button, select {
+      font-size: 10pt;
+      padding: 6px 10px;
+      cursor: pointer;
+      border: 1px solid #bbb;
+      background: #fff;
+      border-radius: 4px;
+    }
+
+    .page-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 32px 14px;
+    }
+
+    .controls-wrap {
+      margin-bottom: 16px;
+    }
+
+    .compare-selects {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .common {
+      text-align: center;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .date-section {
+      margin-bottom: 24px;
+    }
+
+    .date-heading {
+      font-size: 14pt;
+      font-weight: bold;
+      margin: 8px 0 12px 0;
+    }
+
+    .group-heading {
+      font-size: 10pt;
+      font-weight: bold;
+      margin: 10px 0 8px 0;
+      color: #333;
+    }
+
+    .match-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .match-time {
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .teams-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 170px;
+      justify-content: center;
+    }
+
+    .flag {
+      width: 22px;
+      height: 16px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .vs {
+      color: #666;
+      font-weight: bold;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .pick-line {
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .correct { color: green; }
+    .wrong { color: red; }
+    .pending { color: #222; }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="title" id="title"></div>
+
+    <div class="top-buttons">
+      <button onclick="goToChat()">Chat</button>
+      <button onclick="goBack()">Return</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+
+    <div class="controls-wrap">
+      <div class="compare-selects">
+        <select id="user1"></select>
+        <select id="user2"></select>
+      </div>
+
+      <div id="commonCount" class="common"></div>
+    </div>
+
+    <div id="app"></div>
+
+  </div>
+
+  <script src="matches.js"></script>
+  <script src="teamFlag.js"></script>
+  <script src="fetchScores.js"></script>
+
+  <!-- ✅ FIXED Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyCddw-B6fRbAQ7bdKBhCup-RSqewYD9PeA",
+    authDomain: "wc2026-prd.firebaseapp.com",
+    projectId: "wc2026-prd",
+    storageBucket: "wc2026-prd.firebasestorage.app",
+    messagingSenderId: "998282277656",
+    appId: "1:998282277656:web:466a8efd85c8217c20e46d",
+    measurementId: "G-5TQ671ZHQ4"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const loggedInUser = localStorage.getItem("userId");
+
+    let users = {};
+    let resultsMap = {};
+
+    function goBack() { window.location.href = "landing.html"; }
+    function goToChat() { window.location.href = "chat.html"; }
+    function logout() {
+      localStorage.removeItem("userId");
+      window.location.href = "index.html";
+    }
+
+    function formatPrettyDate(dateStr) {
+      const dt = new Date(dateStr + "T00:00:00");
+      return dt.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    function groupMatchesByDate(data) {
+      const map = {};
+      data.forEach(m => {
+        if (!map[m.date]) map[m.date] = [];
+        map[m.date].push(m);
+      });
+
+      Object.keys(map).forEach(date => {
+        map[date].sort((a, b) => {
+          if (a.group !== b.group) return a.group.localeCompare(b.group);
+          if (a.time !== b.time) return a.time.localeCompare(b.time);
+          return a.id.localeCompare(b.id);
+        });
+      });
+
+      return map;
+    }
+
+    function pickToText(val, match) {
+      if (val === 1) return match.team1;
+      if (val === 2) return match.team2;
+      if (val === 3) return "Tie";
+      return "No pick";
+    }
+
+    function getOutcomeClass(pick, result) {
+      if (!result || result.status !== "completed") return "pending";
+
+      const predicted =
+        pick === 1 ? "team1" :
+        pick === 2 ? "team2" :
+        pick === 3 ? "tie" : null;
+
+      if (!predicted) return "wrong";
+      return predicted === result.outcome ? "correct" : "wrong";
+    }
+
+    async function getPicks(uid) {
+      const doc = await db.collection("users").doc(uid).get();
+      if (!doc.exists) return new Array(73).fill(0);
+      return doc.data().picks || new Array(73).fill(0);
+    }
+
+    async function loadData() {
+
+      const [usersSnap, summaryDoc] = await Promise.all([
+        db.collection("users").get(),
+        db.collection("matchResults").doc("main").get()
+      ]);
+
+      users = {};
+      usersSnap.forEach(doc => {
+        users[doc.id] = doc.data().username || "User";
+      });
+
+      resultsMap = summaryDoc.exists
+        ? (summaryDoc.data().results || {})
+        : {};
+
+      initDropdowns();
+    }
+
+    function initDropdowns() {
+      const u1 = document.getElementById("user1");
+      const u2 = document.getElementById("user2");
+
+      u1.innerHTML = "";
+      u2.innerHTML = "";
+
+      Object.keys(users).forEach(id => {
+        u1.add(new Option(users[id], id));
+        u2.add(new Option(users[id], id));
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const defaultUser = params.get("uid");
+
+      u1.value = defaultUser || loggedInUser;
+      u2.value = loggedInUser;
+
+      u1.onchange = render;
+      u2.onchange = render;
+
+      render();
+    }
+
+    async function render() {
+
+      const u1 = document.getElementById("user1").value;
+      const u2 = document.getElementById("user2").value;
+
+      document.getElementById("title").textContent =
+        `World Cup 2026 - ${users[u1]} vs ${users[u2]}`;
+
+      const picks1 = await getPicks(u1);
+      const picks2 = await getPicks(u2);
+
+      let common = 0;
+      matches.forEach((m, i) => {
+        if (picks1[i] && picks1[i] === picks2[i]) common++;
+      });
+
+      document.getElementById("commonCount").textContent =
+        `Common Picks: ${common} / 72`;
+
+      const app = document.getElementById("app");
+      app.innerHTML = "";
+
+      const byDate = groupMatchesByDate(matches);
+      const dates = Object.keys(byDate).sort();
+
+      dates.forEach(date => {
+
+        const section = document.createElement("div");
+        section.className = "date-section";
+
+        const heading = document.createElement("div");
+        heading.className = "date-heading";
+        heading.textContent = formatPrettyDate(date);
+        section.appendChild(heading);
+
+        let currentGroup = null;
+
+        byDate[date].forEach(match => {
+
+          if (match.group !== currentGroup) {
+            currentGroup = match.group;
+            const g = document.createElement("div");
+            g.className = "group-heading";
+            g.textContent = "Group " + currentGroup;
+            section.appendChild(g);
+          }
+
+          const resultDoc = resultsMap[match.id];
+
+          let displayTime = "Kickoff: " + match.time;
+          if (resultDoc && resultDoc.status === "completed") {
+            displayTime = "Final";
+          }
+
+          const p1 = picks1[matches.findIndex(m => m.id === match.id)];
+          const p2 = picks2[matches.findIndex(m => m.id === match.id)];
+
+          const res1 = getOutcomeClass(p1, resultDoc);
+          const res2 = getOutcomeClass(p2, resultDoc);
+
+          const card = document.createElement("div");
+          card.className = "match-card";
+
+          card.innerHTML = `
+            <div class="match-top">
+              <div><strong>Group ${match.group}</strong></div>
+              <div class="match-time">
+                ${displayTime === "Final" ? "FINAL" : displayTime + " EDT"}
+              </div>
+            </div>
+
+            <div class="teams-row">
+              <div class="team">
+                <img class="flag" src="${getTeamFlagUrl(match.team1)}">
+                ${match.team1}
+              </div>
+
+              <div class="vs">${
+                resultDoc && resultDoc.status === "completed"
+                  ? resultDoc.homeScore + " - " + resultDoc.awayScore
+                  : "vs"
+              }</div>
+
+              <div class="team">
+                <img class="flag" src="${getTeamFlagUrl(match.team2)}">
+                ${match.team2}
+              </div>
+            </div>
+
+            <div class="pick-line">
+              ${users[u1]} Pick:
+              <span class="${res1}">${pickToText(p1, match)}</span>
+              &nbsp; | &nbsp;
+              ${users[u2]} Pick:
+              <span class="${res2}">${pickToText(p2, match)}</span>
+            </div>
+          `;
+
+          section.appendChild(card);
+        });
+
+        app.appendChild(section);
+      });
+    }
+
+    async function init() {
+      try {
+        await syncPendingMatchResults(db, matches);
+      } catch (e) {
+        console.error(e);
+      }
+
+      await loadData();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

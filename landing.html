@@ -3,169 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <title>World Cup 2026 - Leaderboard</title>
-
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; font-size: 10pt; }
-
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px 20px; background: white; border-bottom: 1px solid #ddd;
-      position: sticky; top: 0;
-    }
-
-    .title { font-size: 14pt; font-weight: bold; }
-    .top-buttons { display: flex; gap: 8px; }
-
-    button {
-      font-size: 10pt; padding: 6px 10px;
-      border: 1px solid #bbb; background: #fff;
-      border-radius: 4px; cursor: pointer;
-    }
-
-    .page-wrap { max-width: 1000px; margin: auto; padding: 20px; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border: 1px solid #ddd;
-      table-layout: fixed;
-    }
-
-    th, td {
-      padding: 6px;
-      border-bottom: 1px solid #eee;
-      font-size: 10pt;
-      text-align: center;
-    }
-
-    th { background: #fafafa; }
-
-    /* ✅ column sizing */
-    th:nth-child(1), td:nth-child(1) { width: 45px; }
-
-    th:nth-child(2), td:nth-child(2) {
-      width: 220px;
-      text-align: left;
-      padding-left: 10px;
-      white-space: nowrap;
-    }
-
-    th:nth-child(3), td:nth-child(3) { width: 60px; }
-    th:nth-child(4), td:nth-child(4) { width: 70px; }
-    th:nth-child(5), td:nth-child(5) { width: 70px; }
-    th:nth-child(6), td:nth-child(6) { width: 70px; }
-    th:nth-child(7), td:nth-child(7) { width: 90px; }
-
-    .score-col { background: #fff7cc; font-weight: bold; }
-
-    tr.my-row { background: #d8e9ff; font-weight: bold; }
-
-    a {
-      color: #1a73e8;
-      text-decoration: none;
-    }
-
-    .matches-completed {
-      margin-bottom: 10px;
-      text-align: right;
-      font-weight: bold;
-    }
-  </style>
+  <link rel="stylesheet" href="../WC_common/styles.css">
 </head>
 
 <body>
 
-<div class="topbar">
-  <div class="title">World Cup 2026 - Leaderboard</div>
-  <div class="top-buttons">
-    <button onclick="goToStats()">Stats</button>
-    <button onclick="goToChat()">Chat</button>
-    <button onclick="goToGame()">Pick</button>
-    <button onclick="logout()">Logout</button>
-  </div>
-</div>
+<div id="topbar"></div>
 
 <div class="page-wrap">
+
+  <div id="featuredMatch" class="featured-match"></div>
+
   <div id="matchesCompleted" class="matches-completed"></div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Name</th>
-        <th>Picks</th>
-        <th class="score-col">Score</th>
-        <th>Correct<br>(+1 pt)</th>
-        <th>Incorrect<br>(0 pt)</th>
-        <th>Not Picked<br>(-0.25 pt)</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboardBody"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Picks</th>
+          <th class="score-col">Score</th>
+          <th>✅<br><span class="subtext">(+1 pt)</span></th>
+          <th>❌<br><span class="subtext">(+0 pt)</span></th>
+          <th>NP<br><span class="subtext">(-¼ pt)</span></th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script>
-  window.global = window;
-  window.process = window.process || { env: {} };
+window.global = window;
+window.process = window.process || { env: {} };
 </script>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
 
-<!-- Data + Sync Service -->
-
-
-
-<script src="matches.js"></script>
-<script src="fetchScores.js"></script>
+<!-- shared -->
+<script src="../WC_common/utils.js"></script>
+<script src="../WC_common/matches.js"></script>
+<script src="../WC_common/teams.js"></script>
+<script src="../WC_common/fetchScores.js"></script>
+<script src="../WC_common/matchCards.js"></script>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyCddw-B6fRbAQ7bdKBhCup-RSqewYD9PeA",
-    authDomain: "wc2026-prd.firebaseapp.com",
-    projectId: "wc2026-prd",
-    storageBucket: "wc2026-prd.firebasestorage.app",
-    messagingSenderId: "998282277656",
-    appId: "1:998282277656:web:466a8efd85c8217c20e46d",
-    measurementId: "G-5TQ671ZHQ4"
-};
+const SESSION_KEY = "session_" + GAME_ID;
+const userId = localStorage.getItem(SESSION_KEY);
+if (!userId) window.location.href = "index.html";
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+function goToGame() { window.location.href = "game.html"; }
+function goToChat() { window.location.href = "chat.html"; }
+function goToStats() { window.location.href = "stats.html"; }
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  window.location.href = "index.html";
+}
 
-const userId = localStorage.getItem("userId");
+renderTopbar(
+  "World Cup 2026 - Leaderboard",
+  `
+    <button onclick="goToStats()">Stats</button>
+    <button id="chatBtn" onclick="goToChat()">Chat</button>
+    <button onclick="goToGame()">Pick</button>
+    <button onclick="logout()">Logout</button>
+  `
+);
 
-function goToGame(){ window.location.href="game.html"; }
-function goToChat(){ window.location.href="chat.html"; }
-function goToStats(){ window.location.href="stats.html"; }
-function logout(){
-  localStorage.removeItem("userId");
-  window.location.href="index.html";
+/* =========================
+   ✅ NEW CHAT CHECK (SIMPLIFIED)
+========================= */
+async function checkNewChat(userId) {
+  const [userDoc, metaDoc] = await Promise.all([
+    db.collection("users").doc(userId).get(),
+    db.collection("__meta").doc("chat").get()
+  ]);
+
+  const lastChatTime = userDoc.data()?.lastChatTime;
+  const lastMessageTime = metaDoc.data()?.lastMessageTime;
+
+  if (!lastChatTime || !lastMessageTime) return false;
+
+  const seen = lastChatTime.toDate().getTime();
+  const latest = lastMessageTime.toDate().getTime();
+
+  return latest > seen;
+}
+
+/* =========================
+   FEATURED MATCH
+========================= */
+function renderFeaturedMatch(context) {
+  const container = document.getElementById("featuredMatch");
+  const { results, serverNow } = context;
+
+  const sorted = matches.slice().sort((a, b) =>
+    new Date(a.kickoffUtc) - new Date(b.kickoffUtc)
+  );
+
+  let lastMatch = null;
+  let nextMatch = null;
+
+  for (const match of sorted) {
+    const resultDoc = results[match.id];
+
+    const completed = resultDoc && (
+      resultDoc.status === "complete" || resultDoc.status === "completed"
+    );
+
+    if (isStarted(match, serverNow) || completed) {
+      lastMatch = match;
+    } else if (!nextMatch) {
+      nextMatch = match;
+    }
+  }
+
+  const list = [lastMatch, nextMatch].filter(Boolean);
+  if (!list.length) return;
+
+  let index = 0;
+
+  async function renderCard(match) {
+    const card = await createMatchCardFromDb({
+      matchId: match.id,
+      userId,
+      showActions: false,
+      context
+    });
+
+    container.innerHTML = "";
+    card.classList.add("fade");
+    container.appendChild(card);
+  }
+
+  renderCard(list[index]);
+
+  if (list.length < 2) return;
+
+  setInterval(() => {
+    index = (index + 1) % list.length;
+    renderCard(list[index]);
+  }, 4000);
 }
 
 /* =========================
    LEADERBOARD LOGIC
 ========================= */
-
 function buildResultsMap(summary) {
   const map = summary.results || {};
   let completed = 0;
 
   Object.values(map).forEach(d => {
-    if (d?.status === "completed") completed++;
+    if (d?.status === "complete" || d?.status === "completed") completed++;
   });
 
   return { map, completed };
 }
 
 function buildStats(usersSnap, resultsMap) {
-
   const stats = {};
 
   usersSnap.forEach(doc => {
-
     const data = doc.data();
     const picks = data.picks || new Array(73).fill(0);
 
@@ -173,29 +176,27 @@ function buildStats(usersSnap, resultsMap) {
       picks: picks[72] || 0,
       correct: 0,
       incorrect: 0,
-      pending: 0,
       completed: 0,
       score: 0
     };
 
     for (let i = 0; i < 72; i++) {
-
       if (!picks[i]) continue;
 
       const result = resultsMap[matches[i].id];
-
-      if (!result || result.status !== "completed") {
-        stats[doc.id].pending++;
-        continue;
-      }
+      if (!result || result.status !== "complete") continue;
 
       stats[doc.id].completed++;
 
-      const predicted =
-        picks[i] === 1 ? "team1" :
-        picks[i] === 2 ? "team2" : "tie";
+      const predicted = picks[i] === 1 ? "team1" :
+                        picks[i] === 2 ? "team2" : "tie";
 
-      if (predicted === result.outcome) {
+      let outcome;
+      if (result.score1 > result.score2) outcome = "team1";
+      else if (result.score1 < result.score2) outcome = "team2";
+      else outcome = "tie";
+
+      if (predicted === outcome) {
         stats[doc.id].correct++;
         stats[doc.id].score++;
       } else {
@@ -208,7 +209,6 @@ function buildStats(usersSnap, resultsMap) {
 }
 
 function render(rows) {
-
   const tbody = document.getElementById("leaderboardBody");
   tbody.innerHTML = "";
 
@@ -216,7 +216,6 @@ function render(rows) {
   let lastScore = null;
 
   rows.forEach((r, i) => {
-
     if (r.score !== lastScore) {
       rank = i + 1;
       lastScore = r.score;
@@ -224,14 +223,11 @@ function render(rows) {
 
     const tr = document.createElement("tr");
 
-    if (r.uid === userId) {
-      tr.classList.add("my-row");
-    }
+    if (r.uid === userId) tr.classList.add("my-row");
 
-    const nameLink =
-      r.uid === userId
-        ? `<a href="game.html">${r.name}</a>`
-        : `<a href="showpick.html?uid=${r.uid}&name=${encodeURIComponent(r.name)}">${r.name}</a>`;
+    const nameLink = r.uid === userId
+      ? `<a href="game.html">${r.name}</a>`
+      : `<a href="showpick.html?uid=${r.uid}&name=${encodeURIComponent(r.name)}">${r.name}</a>`;
 
     tr.innerHTML = `
       <td>${rank}</td>
@@ -248,24 +244,40 @@ function render(rows) {
 }
 
 /* =========================
-   LOAD FLOW (SIMPLE)
+   LOAD
 ========================= */
 
-async function load() {
+let usersSnap = null;
+let saved = null;
 
-  // ✅ FULL SYNC handled by fetchScores.js
-  const syncResult = await syncPendingMatchResults(db, matches);
+async function loadInitial() {
 
-  console.log("Sync:", syncResult);
+  /* ✅ NEW CHAT CHECK */
+  const hasNewChat = await checkNewChat(userId);
+  if (hasNewChat) {
+    const chatBtn = document.getElementById("chatBtn");
+    if (chatBtn) chatBtn.classList.add("blink");
+  }
 
-  const [usersSnap, summaryDoc] = await Promise.all([
-    db.collection("users").get(),
-    db.collection("matchResults").doc("main").get()
-  ]);
+  const { results, serverNow } = await ensureScoresUpToDate();
 
-  const summary = summaryDoc.exists ? summaryDoc.data() : { results: {} };
+  usersSnap = await db.collection("users").get();
+  saved = await loadUserPredictions(db, userId);
 
-  const { map, completed } = buildResultsMap(summary);
+  renderPage(results, serverNow);
+}
+
+async function refreshScores() {
+  const { results, serverNow } = await ensureScoresUpToDate();
+  renderPage(results, serverNow);
+}
+
+function renderPage(results, serverNow) {
+  const context = { results, serverNow, usersSnap, saved };
+
+  renderFeaturedMatch(context);
+
+  const { map, completed } = buildResultsMap({ results });
   const stats = buildStats(usersSnap, map);
 
   document.getElementById("matchesCompleted").textContent =
@@ -274,7 +286,6 @@ async function load() {
   const rows = [];
 
   usersSnap.forEach(doc => {
-
     const s = stats[doc.id];
     const notPicked = completed - s.completed;
     const finalScore = s.score + (notPicked * -0.25);
@@ -291,11 +302,11 @@ async function load() {
   });
 
   rows.sort((a, b) => b.score - a.score);
-
   render(rows);
 }
 
-load();
+loadInitial();
+setInterval(refreshScores, 5 * 60 * 1000);
 </script>
 
 </body>
