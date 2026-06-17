@@ -51,7 +51,7 @@ renderTopbar(
 ========================= */
 async function handlePick({ matchId, choice }) {
   const idx = getMatchIndex(matches, matchId);
-  await saveUserPick(db, userId, idx, choice);
+  await saveUserPick(db, userId, matchID, choice);
 }
 
 /* =========================
