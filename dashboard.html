@@ -2,112 +2,92 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>World Cup 2026 Tournament Leaderboard</title>
-
+  <title>WC 2026 Dashboard</title>
   <style>
+    * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
-      background: #f4f4f4;
-      color: #222;
-      font-family: Arial, sans-serif;
       width: 100%;
-      min-height: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      color: #222;
     }
 
     body {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      align-items: stretch;
+      justify-content: stretch;
     }
 
-    .dashboard-frame {
-      width: min(100vw, 177.78vh); /* 16:9 friendly */
-      min-height: 100vh;
-      box-sizing: border-box;
-      padding: 18px 22px 20px 22px;
-    }
-
-    h1 {
-      margin: 0 0 14px 0;
-      text-align: center;
-      font-size: 32px;
-      line-height: 1.2;
-      font-weight: 700;
-      color: #111;
-    }
-
-    .top-area {
+    .dashboard {
+      width: 100vw;
+      height: 100vh;
+      padding: 10px;
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
+      grid-template-columns: 60% 40%;
+
+  	  grid-template-rows: 42px 1fr;
+	  grid-template-areas:
+	    "summary summary"
+	    "left right";
+
+      gap: 10px;
+      background: #f4f4f4;
     }
 
-    .featured-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 155px;
-    }
-
-    .featured-inner {
-      width: 100%;
-      max-width: 760px;
-    }
-
-    .summary-line {
-      text-align: center;
-      font-size: 18px;
-      font-weight: 700;
-      margin: 2px 0 0 0;
-    }
-
-    .tables-grid {
+    .left-pane {
+      grid-area: left;
+      min-width: 0;
+      min-height: 0;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      align-items: start;
+      gap: 10px;
     }
 
     .table-card {
+      min-width: 0;
+      min-height: 0;
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border: 1px solid #d9d9d9;
+      border-radius: 10px;
       overflow: hidden;
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
+      height: 100%;
       table-layout: fixed;
-      background: white;
+      border-collapse: collapse;
+      background: #fff;
     }
 
     thead th {
       background: #fafafa;
       border-bottom: 1px solid #ddd;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
-      padding: 7px 6px;
+      line-height: 1.1;
+      padding: 7px 4px;
       text-align: center;
-      line-height: 1.2;
+      color: #111;
     }
 
     tbody td {
       border-bottom: 1px solid #eee;
-      padding: 6px 6px;
-      font-size: 13px;
+      font-size: 15px;
+      line-height: 1.1;
+      padding: 0 4px;
       text-align: center;
       vertical-align: middle;
+      color: #222;
     }
 
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
+    tbody tr:last-child td { border-bottom: none; }
 
-    .rank-col { width: 42px; }
+    .rank-col { width: 46px; }
     .name-col {
       width: 34%;
       text-align: left;
@@ -116,23 +96,17 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .picks-col { width: 52px; }
+    .picks-col { width: 56px; }
     .score-col {
-      width: 58px;
+      width: 68px;
       background: #fff7cc;
       font-weight: 700;
     }
-    .tiny-col { width: 48px; }
+    .small-col { width: 52px; }
     .last5-col {
-      width: 100px;
+      width: 112px;
       white-space: nowrap;
       text-align: center;
-    }
-
-    .subtext {
-      font-size: 10px;
-      font-weight: normal;
-      color: #666;
     }
 
     .last5-mark {
@@ -141,10 +115,10 @@
       justify-content: center;
       width: 14px;
       height: 14px;
+      font-size: 11px;
       line-height: 1;
-      font-size: 12px;
-      vertical-align: middle;
       margin: 0 1px;
+      vertical-align: middle;
     }
 
     .n-icon {
@@ -153,460 +127,468 @@
       justify-content: center;
       width: 14px;
       height: 14px;
-      border-radius: 3px;
-      background: #111;
-      color: #fff;
       font-size: 9px;
       font-weight: 700;
       line-height: 1;
-      vertical-align: middle;
       margin: 0 1px;
+      vertical-align: middle;
+      background: #111;
+      color: #fff;
+      border-radius: 2px;
     }
 
-    .featured-match {
-      margin-bottom: 0;
+    .right-pane {
+      grid-area: right;
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      overflow: hidden;
     }
 
-    .featured-match .fade {
-      opacity: 1;
-      transition: opacity 0.5s ease;
+    .day-column {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .featured-match .fade.out {
-      opacity: 0;
+    .day-title {
+      flex: 0 0 auto;
+      text-align: left;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 8px 20px;
+      line-height: 4.0;
     }
 
-    @media (max-width: 1100px) {
-      .tables-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .dashboard-frame {
-        width: 100%;
-      }
+    .match-list {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: repeat(6, minmax(0, 1fr));
+      gap: 15px;
+      overflow: hidden;
     }
 
-    @media (max-width: 800px) {
-      h1 {
-        font-size: 24px;
-      }
+    .match-slot {
+      min-height: 0;
+    }
 
-      .summary-line {
-        font-size: 15px;
-      }
+    /* Strong dashboard-specific overrides on shared match card output */
+    .match-list .match-card {
+      width: 94% !important;
+      max-width: none !important;
+      margin: 0 auto !important;
+      padding: 7px 10px !important;
+      border-radius: 10px !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      border: 1px solid #cfcfcf !important;
+      min-height: 0;
+      height: 60%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
 
-      thead th,
-      tbody td {
-        font-size: 11px;
-        padding: 4px 3px;
-      }
+    .match-list .match-card.status-completed {
+      background: #f1f1f1 !important;
+      border: 2px solid #9d9d9d !important;
+    }
 
-      .rank-col { width: 32px; }
-      .name-col { width: 30%; }
-      .picks-col { width: 40px; }
-      .score-col { width: 46px; }
-      .tiny-col { width: 34px; }
-      .last5-col { width: 82px; }
+    .match-list .match-card.status-live {
+      background: #e3f2fd !important;
+      border: 2px solid #2196f3 !important;
+    }
 
-      .last5-mark,
-      .n-icon {
-        width: 11px;
-        height: 11px;
-        font-size: 8px;
-      }
+    .match-list .match-card.status-upcoming {
+      background: #ffffff !important;
+      border: 1px solid #cfcfcf !important;
+    }
+
+    /* neutralize result-state styling from shared css */
+    .match-list .match-card.correct,
+    .match-list .match-card.incorrect,
+    .match-list .match-card.in-play {
+      background: inherit !important;
+      border-color: inherit !important;
+    }
+
+    .match-list .match-top {
+      margin-bottom: 5px !important;
+      font-size: 14px !important;
+      font-weight: 700 !important;
+    }
+
+    .match-list .match-top-right {
+      font-size: 13px !important;
+    }
+
+    .match-list .teams-row {
+      margin-bottom: 4px !important;
+      padding: 0 2px !important;
+      column-gap: 3px !important;
+    }
+
+    .match-list .team,
+    .match-list .score,
+    .match-list .vs {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+    }
+
+    .match-list .flag {
+      width: 18px !important;
+      height: 13px !important;
+    }
+
+    .match-list .actions { display: none !important; }
+
+    .match-list .status-line {
+      margin-top: 4px !important;
+      font-size: 12px !important;
+      line-height: 1.2 !important;
+      text-align: center !important;
+      min-height: 14px;
+    }
+
+    .summary-bar {
+      grid-area: summary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
     }
   </style>
 </head>
-
 <body>
+  <div class="dashboard">
+    <div class="left-pane">
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th class="name-col">Name</th>
+              <th class="picks-col">Picks</th>
+              <th class="score-col">Score</th>
+              <th class="small-col">✅</th>
+              <th class="small-col">❌</th>
+              <th class="small-col">NP</th>
+              <th class="last5-col">Last 5</th>
+            </tr>
+          </thead>
+          <tbody id="leftTableBody"></tbody>
+        </table>
+      </div>
 
-<div class="dashboard-frame">
-  <h1>World Cup 2026 Tournament Leaderboard</h1>
-
-  <div class="top-area">
-    <div class="featured-wrap">
-      <div id="featuredMatch" class="featured-match featured-inner"></div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th class="name-col">Name</th>
+              <th class="picks-col">Picks</th>
+              <th class="score-col">Score</th>
+              <th class="small-col">✅</th>
+              <th class="small-col">❌</th>
+              <th class="small-col">NP</th>
+              <th class="last5-col">Last 5</th>
+            </tr>
+          </thead>
+          <tbody id="rightTableBody"></tbody>
+        </table>
+      </div>
     </div>
-    <div id="matchesCompleted" class="summary-line"></div>
+
+    <div id="matchesPane" class="right-pane"></div>
+    <div id="summaryBar" class="summary-bar"></div>
   </div>
 
-  <div class="tables-grid">
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th class="rank-col">Rank</th>
-            <th class="name-col">Name</th>
-            <th class="picks-col">Picks</th>
-            <th class="score-col">Score</th>
-            <th class="tiny-col">✅</th>
-            <th class="tiny-col">❌</th>
-            <th class="tiny-col">NP</th>
-            <th class="last5-col">Last 5</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboardBodyLeft"></tbody>
-      </table>
-    </div>
+  <script>
+    window.global = window;
+    window.process = window.process || { env:{} };
+  </script>
 
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th class="rank-col">Rank</th>
-            <th class="name-col">Name</th>
-            <th class="picks-col">Picks</th>
-            <th class="score-col">Score</th>
-            <th class="tiny-col">✅</th>
-            <th class="tiny-col">❌</th>
-            <th class="tiny-col">NP</th>
-            <th class="last5-col">Last 5</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboardBodyRight"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
 
-<script>
-window.global = window;
-window.process = window.process || { env: {} };
-</script>
+  <script src="../WC_common/utils.js"></script>
+  <script src="../WC_common/matches.js"></script>
+  <script src="../WC_common/teams.js"></script>
+  <script src="../WC_common/fetchScores.js"></script>
+  <script src="../WC_common/matchCards.js"></script>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="firebase.js"></script>
+  <script>
+    const DASHBOARD_REFRESH_MS = 60 * 1000;
+    let usersSnap = null;
 
-<!-- Shared data / logic -->
-<script src="../WC_common/utils.js"></script>
-<script src="../WC_common/matches.js"></script>
-<script src="../WC_common/teams.js"></script>
-<script src="../WC_common/fetchScores.js"></script>
-<script src="../WC_common/matchCards.js"></script>
+    function buildLast5(picksArr, last5Matches, results) {
+      let html = '';
+      last5Matches.forEach(match => {
+        const idx = getMatchIndex(matches, match.id);
+        const pick = picksArr[idx];
+        const r = results[match.id];
+        if (!r) return;
 
-<script>
-/* =====================================================
-   READ-ONLY DASHBOARD
-===================================================== */
-
-const DASHBOARD_REFRESH_MS = 60 * 1000; // read-only refresh
-let usersSnap = null;
-let featuredInterval = null;
-
-/* -------------------------
-   LAST 5 HELPER
-------------------------- */
-function buildLast5(picksArr, last5Matches, results) {
-  let html = "";
-
-  last5Matches.forEach(match => {
-    const idx = getMatchIndex(matches, match.id);
-    const pick = picksArr[idx];
-    const r = results[match.id];
-    if (!r) return;
-
-    const outcome =
-      r.score1 > r.score2 ? 1 :
-      r.score1 < r.score2 ? 2 : 3;
-
-    if (!pick) {
-      html += '<span class="n-icon">N</span>';
-    } else if (pick === outcome) {
-      html += '<span class="last5-mark">✅</span>';
-    } else {
-      html += '<span class="last5-mark">❌</span>';
+        const outcome = r.score1 > r.score2 ? 1 : r.score1 < r.score2 ? 2 : 3;
+        if (!pick) html += '<span class="n-icon">N</span>';
+        else if (pick === outcome) html += '<span class="last5-mark">✅</span>';
+        else html += '<span class="last5-mark">❌</span>';
+      });
+      return html;
     }
-  });
 
-  return html;
-}
+    function buildResultsMap(summary) {
+      const map = summary.results || {};
+      let completed = 0;
+      Object.values(map).forEach(d => {
+        if (d?.status === 'complete' || d?.status === 'completed') completed++;
+      });
+      return { map, completed };
+    }
 
-/* -------------------------
-   FEATURED PICKS SUMMARY
-------------------------- */
-function buildFeaturedPicksLine(matchId, usersSnap) {
-  let team1 = 0, team2 = 0, tie = 0, np = 0;
+    function buildStats(usersSnap, resultsMap) {
+      const stats = {};
+      usersSnap.forEach(doc => {
+        const picks = doc.data().picks || new Array(73).fill(0);
+        stats[doc.id] = {
+          picks: picks[72] || 0,
+          correct: 0,
+          incorrect: 0,
+          completed: 0,
+          score: 0
+        };
 
-  usersSnap.forEach(doc => {
-    const picks = doc.data().picks || [];
-    const idx = getMatchIndex(matches, matchId);
-    const raw = picks[idx];
+        for (let i = 0; i < 72; i++) {
+          if (!picks[i]) continue;
+          const result = resultsMap[matches[i].id];
+          if (!result || result.status !== 'complete') continue;
 
-    if (raw === 1) team1++;
-    else if (raw === 2) team2++;
-    else if (raw === 3) tie++;
-    else np++;
-  });
+          stats[doc.id].completed++;
+          const predicted = picks[i] === 1 ? 'team1' : picks[i] === 2 ? 'team2' : 'tie';
+          const outcome = result.score1 > result.score2 ? 'team1' : result.score1 < result.score2 ? 'team2' : 'tie';
+          if (predicted === outcome) {
+            stats[doc.id].correct++;
+            stats[doc.id].score++;
+          } else {
+            stats[doc.id].incorrect++;
+          }
+        }
+      });
+      return stats;
+    }
 
-  const match = matches.find(m => m.id === matchId);
-  if (!match) return "";
+    function renderTables(rows) {
+      const leftBody = document.getElementById('leftTableBody');
+      const rightBody = document.getElementById('rightTableBody');
+      leftBody.innerHTML = '';
+      rightBody.innerHTML = '';
 
-  const t1 = getTeam(match.team1)?.short || match.team1;
-  const t2 = getTeam(match.team2)?.short || match.team2;
+      const leftCount = Math.ceil(rows.length / 2);
+      const totalRowsPerTable = leftCount;
+      const leftRows = rows.slice(0, leftCount);
+      const rightRows = rows.slice(leftCount);
 
-  return `<b>Picks:</b> ${t1} ${team1}, Tie ${tie}, ${t2} ${team2}, NP ${np}`;
-}
+      function addRow(tbody, r, blank = false) {
+        const tr = document.createElement('tr');
+        if (blank) {
+          tr.innerHTML = `
+            <td class="rank-col">&nbsp;</td>
+            <td class="name-col">&nbsp;</td>
+            <td class="picks-col">&nbsp;</td>
+            <td class="score-col">&nbsp;</td>
+            <td class="small-col">&nbsp;</td>
+            <td class="small-col">&nbsp;</td>
+            <td class="small-col">&nbsp;</td>
+            <td class="last5-col">&nbsp;</td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td class="rank-col">${r.rank}</td>
+            <td class="name-col">${r.name}</td>
+            <td class="picks-col">${r.picks}</td>
+            <td class="score-col">${r.score}</td>
+            <td class="small-col">${r.correct}</td>
+            <td class="small-col">${r.incorrect}</td>
+            <td class="small-col">${r.np}</td>
+            <td class="last5-col">${r.last5}</td>
+          `;
+        }
+        tbody.appendChild(tr);
+      }
 
-/* -------------------------
-   FEATURED MATCH ROTATION
-------------------------- */
-function renderFeaturedMatch(context) {
-  const container = document.getElementById("featuredMatch");
+      leftRows.forEach(r => addRow(leftBody, r));
+      rightRows.forEach(r => addRow(rightBody, r));
 
-  if (featuredInterval) {
-    clearInterval(featuredInterval);
-    featuredInterval = null;
-  }
+      while (leftBody.children.length < totalRowsPerTable) addRow(leftBody, null, true);
+      while (rightBody.children.length < totalRowsPerTable) addRow(rightBody, null, true);
 
-  const { results, serverNow, usersSnap } = context;
+      fitLeaderboardRows(totalRowsPerTable);
+    }
 
-  const sorted = matches.slice().sort(
-    (a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc)
-  );
+    function fitLeaderboardRows(totalRowsPerTable) {
+      const cards = document.querySelectorAll('.table-card');
+      cards.forEach(card => {
+        const thead = card.querySelector('thead');
+        const rows = card.querySelectorAll('tbody tr');
+        if (!rows.length) return;
+        const available = card.clientHeight - thead.offsetHeight;
+        const rowH = Math.floor(available / totalRowsPerTable);
+        rows.forEach(tr => { tr.style.height = `${Math.max(rowH, 22)}px`; });
+      });
+    }
 
-  const activePool = [];
-  const futurePool = [];
+    function getYesterdayAndToday(serverNow) {
+      const oneDay = 24 * 60 * 60 * 1000;
+      return [
+        getEasternDateKey(serverNow - oneDay),
+        getEasternDateKey(serverNow)
+      ];
+    }
 
-  for (const match of sorted) {
-    const r = results[match.id];
-    const completed = r && (r.status === "complete" || r.status === "completed");
-    const inPlay = r && r.status === "in_play";
+    function buildPicksText(matchId) {
+      const p = getPickPercentages(matchId, matches, usersSnap);
+      const match = matches.find(m => m.id === matchId);
+      const t1 = getTeam(match.team1)?.short || match.team1;
+      const t2 = getTeam(match.team2)?.short || match.team2;
+      return `<b>Picks:</b> ${t1} ${p.t1}, Tie ${p.tie}, ${t2} ${p.t2}, NP ${p.np}`;
+    }
 
-    if (completed || inPlay) activePool.push(match);
-    else futurePool.push(match);
-  }
+    async function renderMatches(results, serverNow) {
+      const pane = document.getElementById('matchesPane');
+      pane.innerHTML = '';
 
-  const recent = activePool.slice(-2);
-  const upcoming = futurePool.slice(0, 2);
+      const grouped = groupMatches(matches);
+      const [yesterdayKey, todayKey] = getYesterdayAndToday(serverNow);
+      const dayKeys = [yesterdayKey, todayKey];
 
-  const missing = 2 - upcoming.length;
-  const backfill = missing > 0
-    ? activePool.slice(Math.max(0, activePool.length - 2 - missing), Math.max(0, activePool.length - 2))
-    : [];
+      for (const dayKey of dayKeys) {
+        const dayColumn = document.createElement('div');
+        dayColumn.className = 'day-column';
 
-  let featuredList = [...backfill, ...recent, ...upcoming];
+        const title = document.createElement('div');
+        title.className = 'day-title';
+        title.textContent = formatPrettyDate(dayKey);
+        dayColumn.appendChild(title);
 
-  const seenSet = new Set();
-  featuredList = featuredList.filter(m => {
-    if (!m || seenSet.has(m.id)) return false;
-    seenSet.add(m.id);
-    return true;
-  });
+        const list = document.createElement('div');
+        list.className = 'match-list';
 
-  if (!featuredList.length) {
-    container.innerHTML = "";
-    return;
-  }
+        const dayMatches = (grouped[dayKey] || []).sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc));
+        const visibleMatches = dayMatches.slice(0, 6);
 
-  let index = 0;
+        for (let i = 0; i < 6; i++) {
+          const slot = document.createElement('div');
+          slot.className = 'match-slot';
 
-  async function renderCard(match) {
-    const card = await createMatchCardFromDb({
-      matchId: match.id,
-      userId: null,
-      showActions: false,
-      context
-    });
+          const match = visibleMatches[i];
+          if (match) {
+            const card = await createMatchCardFromDb({
+              matchId: match.id,
+              userId: null,
+              showActions: false,
+              context: {
+                results,
+                serverNow,
+                usersSnap,
+                saved: []
+              }
+            });
 
-    const locked = isLocked(match, serverNow);
-    const statusLine = card.querySelector(".status-line");
+            // dashboard-specific visual/state behavior
+            card.classList.remove('correct', 'incorrect', 'in-play', 'status-completed', 'status-live', 'status-upcoming');
+            card.querySelector('.actions')?.remove();
 
-    if (statusLine) {
-      if (locked) {
-        statusLine.innerHTML = buildFeaturedPicksLine(match.id, usersSnap);
-      } else {
-        statusLine.innerHTML = "";
+            const resultDoc = results[match.id];
+            if (resultDoc?.status === 'complete' || resultDoc?.status === 'completed') {
+              card.classList.add('status-completed');
+            } else if (resultDoc?.status === 'in_play') {
+              card.classList.add('status-live');
+            } else {
+              card.classList.add('status-upcoming');
+            }
+
+            // Always show aggregate picks on dashboard, including upcoming
+            const statusLine = card.querySelector('.status-line');
+            if (statusLine) {
+              statusLine.innerHTML = buildPicksText(match.id);
+            }
+
+            slot.appendChild(card);
+          }
+
+          list.appendChild(slot);
+        }
+
+        dayColumn.appendChild(list);
+        pane.appendChild(dayColumn);
       }
     }
 
-    container.innerHTML = "";
-    card.classList.add("fade");
-    container.appendChild(card);
-  }
+    async function load() {
+      const [{ results, serverNow }, snap] = await Promise.all([
+        getResultsWithServerTime(),
+        db.collection('users').get()
+      ]);
 
-  renderCard(featuredList[index]);
+      usersSnap = snap;
 
-  if (featuredList.length < 2) return;
+      const { map, completed } = buildResultsMap({ results });
+      const stats = buildStats(usersSnap, map);
 
-  featuredInterval = setInterval(() => {
-    index = (index + 1) % featuredList.length;
-    renderCard(featuredList[index]);
-  }, 6000);
-}
+      const last5Matches = matches
+        .filter(m => {
+          const r = results[m.id];
+          return r && (r.status === 'complete' || r.status === 'completed');
+        })
+        .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
+        .slice(-5);
 
-/* -------------------------
-   BUILD RESULTS MAP
-------------------------- */
-function buildResultsMap(summary) {
-  const map = summary.results || {};
-  let completed = 0;
+      document.getElementById('summaryBar').textContent = `Matches Completed: ${completed}/72`;
 
-  Object.values(map).forEach(d => {
-    if (d?.status === "complete" || d?.status === "completed") completed++;
-  });
+      const rows = [];
+      usersSnap.forEach(doc => {
+        const s = stats[doc.id];
+        const notPicked = completed - s.completed;
+        const picksArr = doc.data().picks || new Array(73).fill(0);
 
-  return { map, completed };
-}
+        rows.push({
+          name: doc.data().username || 'User',
+          picks: s.picks,
+          correct: s.correct,
+          incorrect: s.incorrect,
+          np: notPicked,
+          score: Number((s.score + notPicked * -0.25).toFixed(2)),
+          last5: buildLast5(picksArr, last5Matches, results)
+        });
+      });
 
-/* -------------------------
-   BUILD STATS
-------------------------- */
-function buildStats(usersSnap, resultsMap) {
-  const stats = {};
+      rows.sort((a, b) => b.score - a.score);
+      let rank = 0;
+      let prev = null;
+      rows.forEach((r, i) => {
+        if (r.score !== prev) { rank = i + 1; prev = r.score; }
+        r.rank = rank;
+      });
 
-  usersSnap.forEach(doc => {
-    const picks = doc.data().picks || new Array(73).fill(0);
-
-    stats[doc.id] = {
-      picks: picks[72] || 0,
-      correct: 0,
-      incorrect: 0,
-      completed: 0,
-      score: 0
-    };
-
-    for (let i = 0; i < 72; i++) {
-      if (!picks[i]) continue;
-
-      const result = resultsMap[matches[i].id];
-      if (!result || result.status !== "complete") continue;
-
-      stats[doc.id].completed++;
-
-      const predicted = picks[i] === 1 ? "team1"
-                        : picks[i] === 2 ? "team2"
-                        : "tie";
-
-      const outcome = result.score1 > result.score2 ? "team1"
-                     : result.score1 < result.score2 ? "team2"
-                     : "tie";
-
-      if (predicted === outcome) {
-        stats[doc.id].correct++;
-        stats[doc.id].score++;
-      } else {
-        stats[doc.id].incorrect++;
-      }
+      renderTables(rows);
+      await renderMatches(results, serverNow);
     }
-  });
 
-  return stats;
-}
-
-/* -------------------------
-   RENDER TWO TABLES
-------------------------- */
-function renderTwoTables(rows) {
-  const leftBody = document.getElementById("leaderboardBodyLeft");
-  const rightBody = document.getElementById("leaderboardBodyRight");
-  if (!leftBody || !rightBody) return;
-
-  leftBody.innerHTML = "";
-  rightBody.innerHTML = "";
-
-  const midpoint = Math.ceil(rows.length / 2);
-  const leftRows = rows.slice(0, midpoint);
-  const rightRows = rows.slice(midpoint);
-
-  function fillTable(tbody, items) {
-    items.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="rank-col">${r.rank}</td>
-        <td class="name-col">${r.name}</td>
-        <td class="picks-col">${r.picks}</td>
-        <td class="score-col">${r.score}</td>
-        <td class="tiny-col">${r.correct}</td>
-        <td class="tiny-col">${r.incorrect}</td>
-        <td class="tiny-col">${r.notPicked}</td>
-        <td class="last5-col">${r.last5 || ""}</td>
-      `;
-      tbody.appendChild(tr);
+    load();
+    setInterval(load, DASHBOARD_REFRESH_MS);
+    window.addEventListener('resize', () => {
+      const totalRowsPerTable = Math.ceil(usersSnap?.size ? usersSnap.size / 2 : 1);
+      fitLeaderboardRows(totalRowsPerTable);
     });
-  }
-
-  fillTable(leftBody, leftRows);
-  fillTable(rightBody, rightRows);
-}
-
-/* -------------------------
-   LOAD + RENDER
-------------------------- */
-async function loadInitial() {
-  const [{ results, serverNow }, userSnapshot] = await Promise.all([
-    getResultsWithServerTime(),
-    db.collection("users").get()
-  ]);
-
-  usersSnap = userSnapshot;
-  renderPage(results, serverNow);
-}
-
-async function refreshDashboard() {
-  const { results, serverNow } = await getResultsWithServerTime();
-  renderPage(results, serverNow);
-}
-
-function renderPage(results, serverNow) {
-  const context = { results, serverNow, usersSnap };
-
-  renderFeaturedMatch(context);
-
-  const { map, completed } = buildResultsMap({ results });
-  const stats = buildStats(usersSnap, map);
-
-  const last5Matches = matches
-    .filter(m => {
-      const r = results[m.id];
-      return r && (r.status === "complete" || r.status === "completed");
-    })
-    .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
-    .slice(-5);
-
-  const summary = document.getElementById("matchesCompleted");
-  if (summary) {
-    summary.textContent = `Matches Completed: ${completed} / 72`;
-  }
-
-  const rows = [];
-
-  usersSnap.forEach(doc => {
-    const s = stats[doc.id];
-    const notPicked = completed - s.completed;
-    const picksArr = doc.data().picks || new Array(73).fill(0);
-
-    rows.push({
-      uid: doc.id,
-      name: doc.data().username || "User",
-      picks: s.picks,
-      correct: s.correct,
-      incorrect: s.incorrect,
-      notPicked,
-      score: Number((s.score + notPicked * -0.25).toFixed(2)),
-      last5: buildLast5(picksArr, last5Matches, results)
-    });
-  });
-
-  rows.sort((a, b) => b.score - a.score);
-
-  let rank = 0;
-  let lastScore = null;
-  rows.forEach((r, i) => {
-    if (r.score !== lastScore) {
-      rank = i + 1;
-      lastScore = r.score;
-    }
-    r.rank = rank;
-  });
-
-  renderTwoTables(rows);
-}
-
-loadInitial();
-setInterval(refreshDashboard, DASHBOARD_REFRESH_MS);
-</script>
-
+  </script>
 </body>
 </html>
