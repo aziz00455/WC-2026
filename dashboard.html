@@ -12,7 +12,7 @@
       margin: 0;
       padding: 0;
       width: 1400px;
-      height: 700px;
+      height: 680px;
 
       overflow: hidden;
       background: #f4f4f4;
@@ -29,7 +29,7 @@
     /* ✅ REDUCE ACTIVE AREA PADDING */
     .dashboard {
       width: 1400px;
-      height: 700px;
+      height: 680px;
 
       padding: 6px;            /* ✅ reduced */
       display: grid;
@@ -73,19 +73,19 @@
     thead th {
       background: #fafafa;
       border-bottom: 1px solid #ddd;
-      font-size: 15px;
+      font-size: 10px;
       font-weight: 700;
       line-height: 1.1;
-      padding: 6px 3px;   /* ✅ slightly tighter */
+      padding: 3px 2px;   /* ✅ slightly tighter */
       text-align: center;
       color: #111;
     }
 
     tbody td {
       border-bottom: 1px solid #eee;
-      font-size: 15px;
+      font-size: 10px;
       line-height: 1.1;
-      padding: 0 4px;
+      padding: 0 2px;
       text-align: center;
       vertical-align: middle;
       color: #222;
@@ -93,7 +93,7 @@
 
     tbody tr:last-child td { border-bottom: none; }
 
-    .rank-col { width: 46px; }
+    .rank-col { width: 44px; }
     .name-col {
       width: 34%;
       text-align: left;
@@ -102,13 +102,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .picks-col { width: 56px; }
+    .picks-col { width: 44px; }
     .score-col {
-      width: 68px;
+      width: 44px;
       background: #fff7cc;
-      font-weight: 700;
+      font-weight: normal;
     }
-    .small-col { width: 52px; }
+    .small-col { width: 44px; }
     .last5-col {
       width: 112px;
       white-space: nowrap;
@@ -129,13 +129,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 14px;
-      height: 14px;
-      font-size: 9px;
+      width: 10px;
+      height: 10px;
+      font-size: 8px;
       font-weight: 700;
       background: #111;
       color: #fff;
-      border-radius: 2px;
+      border-radius: 1px;
     }
 
     .right-pane {
@@ -166,7 +166,7 @@
       flex: 1;
       display: grid;
       grid-template-rows: repeat(6, minmax(0, 1fr));
-      gap: 12px;              /* ✅ reduced slightly */
+      gap: 8px;              /* ✅ reduced slightly */
     }
 
     .match-slot {
@@ -174,9 +174,9 @@
     }
 
     .match-list .match-card {
-      width: 94% !important;
+      width: 96% !important;
       margin: 0 auto !important;
-      padding: 7px 10px !important;
+      padding: 8px 8px !important;
 
       height: 75%;
       display: flex;
@@ -186,12 +186,12 @@
 
     .match-list .match-card.status-completed {
       background: #f1f1f1 !important;
-      border: 2px solid #9d9d9d !important;
+      border: 1px solid #9d9d9d !important;
     }
 
     .match-list .match-card.status-live {
       background: #e3f2fd !important;
-      border: 2px solid #2196f3 !important;
+      border: 1px solid #2196f3 !important;
     }
 
     .match-list .match-card.status-upcoming {
@@ -201,7 +201,7 @@
 
     .match-list .match-top {
       margin-bottom: 5px !important;
-      font-size: 14px !important;
+      font-size: 12px !important;
       font-weight: 700 !important;
     }
 
@@ -212,7 +212,7 @@
     .match-list .team,
     .match-list .score,
     .match-list .vs {
-      font-size: 14px !important;
+      font-size: 10px !important;
       font-weight: 700 !important;
     }
 
@@ -220,7 +220,7 @@
 
     .match-list .status-line {
       margin-top: 4px !important;
-      font-size: 12px !important;
+      font-size: 10px !important;
       text-align: center !important;
     }
 
