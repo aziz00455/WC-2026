@@ -46,7 +46,7 @@ async function saveAndGoToLanding() {
 }
 
 renderTopbar(
-  "My Picks",
+  "My Picks **Test",
   `
     <button onclick="saveAndGoToLanding()">Save Picks</button>
     <button onclick="logout()">Logout</button>
@@ -57,6 +57,11 @@ renderTopbar(
    PICK HANDLER
 ========================= */
 async function handlePick({ matchId, choice }) {
+  // keep in-memory state in sync for future renders
+  if (context && context.saved) {
+    context.saved[matchId] = choice;
+  }
+
   pendingPickSave = saveUserPick(db, userId, matchId, choice)
     .catch(err => {
       console.error("pick save error:", err);
@@ -136,7 +141,7 @@ async function renderMatches(context) {
 let context = null;
 
 async function loadInitial() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
 
   const usersSnap = await db.collection("users").get();
   const saved = await loadUserPredictions(db, userId);
@@ -152,7 +157,7 @@ async function loadInitial() {
 }
 
 async function refreshScores() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
 
   context.results = results;
   context.serverNow = serverNow;

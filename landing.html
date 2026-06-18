@@ -67,7 +67,7 @@ function logout() {
 }
 
 renderTopbar(
-  "Leaderboard",
+  "Leaderboard **Test",
   `
     <button onclick="goToStats()">Stats</button>
     <button id="chatBtn" onclick="goToChat()">Chat</button>
@@ -260,7 +260,7 @@ async function loadInitial() {
     if (chatBtn) chatBtn.classList.add("blink");
   }
 
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
 
   usersSnap = await db.collection("users").get();
   saved = await loadUserPredictions(db, userId);
@@ -269,7 +269,7 @@ async function loadInitial() {
 }
 
 async function refreshScores() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
   renderPage(results, serverNow);
 }
 

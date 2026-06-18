@@ -114,7 +114,7 @@ let selectedUserId = null;
    INIT
 ========================= */
 async function init() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
 
   const [usersSnap, saved] = await Promise.all([
     db.collection("users").get(),
@@ -224,6 +224,7 @@ async function render() {
 
 	  let compareBottom = "";
 
+
   	  if (!oc) {
 	    compareBottom =
 		  `<b>${playerName}:</b> ${shortName(match, pickB)}` +
@@ -269,7 +270,7 @@ async function render() {
    REFRESH
 ========================= */
 async function refresh() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = awaitgetResultsWithServerTime();
   context.results = results;
   context.serverNow = serverNow;
   render();
