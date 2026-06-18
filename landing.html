@@ -99,16 +99,25 @@ async function checkNewChat(userId) {
 /* =========================
    FEATURED MATCH
 ========================= */
+let featuredInterval = null;
+
 function renderFeaturedMatch(context) {
   const container = document.getElementById("featuredMatch");
+
+  // ✅ clear previous interval
+  if (featuredInterval) {
+    clearInterval(featuredInterval);
+    featuredInterval = null;
+  }
+
   const { results, serverNow } = context;
 
-  const sorted = matches.slice().sort((a, b) =>
-    new Date(a.kickoffUtc) - new Date(b.kickoffUtc)
+  const sorted = matches.slice().sort(
+    (a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc)
   );
 
-  let lastMatch = null;
-  let nextMatch = null;
+  const startedPool = []; // completed + in-play
+  const futurePool = [];  // upcoming
 
   for (const match of sorted) {
     const resultDoc = results[match.id];
@@ -117,15 +126,45 @@ function renderFeaturedMatch(context) {
       resultDoc.status === "complete" || resultDoc.status === "completed"
     );
 
-    if (isStarted(match, serverNow) || completed) {
-      lastMatch = match;
-    } else if (!nextMatch) {
-      nextMatch = match;
+    const started = isStarted(match, serverNow);
+
+    if (completed || started) {
+      startedPool.push(match);
+    } else {
+      futurePool.push(match);
     }
   }
 
-  const list = [lastMatch, nextMatch].filter(Boolean);
-  if (!list.length) return;
+  // ✅ get 2 most recent started (completed or in-play)
+  const recent = startedPool.slice(-2);
+
+  // ✅ get next 2 upcoming
+  const upcoming = futurePool.slice(0, 2);
+
+  // ✅ if not enough upcoming, backfill from older started
+  const missing = 2 - upcoming.length;
+  const backfill = missing > 0
+    ? startedPool.slice(Math.max(0, startedPool.length - 2 - missing), Math.max(0, startedPool.length - 2))
+    : [];
+
+  let featuredList = [
+    ...backfill,
+    ...recent,
+    ...upcoming
+  ];
+
+  // ✅ dedupe
+  const seen = new Set();
+  featuredList = featuredList.filter(m => {
+    if (!m || seen.has(m.id)) return false;
+    seen.add(m.id);
+    return true;
+  });
+
+  if (!featuredList.length) {
+    container.innerHTML = "";
+    return;
+  }
 
   let index = 0;
 
@@ -142,14 +181,15 @@ function renderFeaturedMatch(context) {
     container.appendChild(card);
   }
 
-  renderCard(list[index]);
+  // ✅ initial render
+  renderCard(featuredList[index]);
 
-  if (list.length < 2) return;
+  if (featuredList.length < 2) return;
 
-  setInterval(() => {
-    index = (index + 1) % list.length;
-    renderCard(list[index]);
-  }, 4000);
+  featuredInterval = setInterval(() => {
+    index = (index + 1) % featuredList.length;
+    renderCard(featuredList[index]);
+  }, 4000); // ✅ 6 seconds
 }
 
 /* =========================
