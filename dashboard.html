@@ -206,7 +206,7 @@
     }
 
     .match-list .teams-row {
-      margin-bottom: 4px !important;
+      margin-bottom: 6px !important;
     }
 
     .match-list .team,
@@ -317,7 +317,7 @@
 
         const outcome = r.score1 > r.score2 ? 1 : r.score1 < r.score2 ? 2 : 3;
         if (!pick) html += '<span class="n-icon">N</span>';
-        else if (pick === outcome) html += '<span class="last5-mark">✅</span>';
+        else if (pick === outcome) html += '<span class="last5-mark" style="color:#2ecc71;">✅</span>';
         else html += '<span class="last5-mark">❌</span>';
       });
       return html;
