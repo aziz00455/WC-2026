@@ -480,16 +480,21 @@
                 saved: []
               }
             });
-            // ✅ convert team names to short names
-            const teamsRow = card.querySelectorAll('.team');
+            // ✅ convert team names to short names (preserve flags)
+            const teamEls = card.querySelectorAll('.team');
             
-            if (teamsRow.length === 2) {
-              const t1 = getTeam(match.team1)?.short || match.team1;
-              const t2 = getTeam(match.team2)?.short || match.team2;
+            teamEls.forEach((el, i) => {
+              const teamId = i === 0 ? match.team1 : match.team2;
+              const short = getTeam(teamId)?.short || teamId;
             
-              teamsRow[0].textContent = t1;
-              teamsRow[1].textContent = t2;
-            }
+              // ✅ find text node only (keep flag intact)
+              const textNode = Array.from(el.childNodes)
+                .find(n => n.nodeType === Node.TEXT_NODE);
+            
+              if (textNode) {
+                textNode.nodeValue = ' ' + short;
+              }
+            });
 
             // dashboard-specific visual/state behavior
             card.classList.remove('correct', 'incorrect', 'in-play', 'status-completed', 'status-live', 'status-upcoming');
