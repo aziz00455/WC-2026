@@ -487,19 +487,17 @@
               const teamId = i === 0 ? match.team1 : match.team2;
               const short = getTeam(teamId)?.short || teamId;
             
-              // ✅ look for span OR text node
-              const span = el.querySelector('span');
+              // ✅ grab flag (if exists)
+              const flag = el.querySelector('.flag');
             
-              if (span) {
-                span.textContent = short;     // ✅ case: wrapped in span
-              } else {
-                const textNode = Array.from(el.childNodes)
-                  .find(n => n.nodeType === Node.TEXT_NODE);
+              // ✅ clear everything
+              el.innerHTML = '';
             
-                if (textNode) {
-                  textNode.nodeValue = ' ' + short;   // ✅ case: plain text
-                }
-              }
+              // ✅ re-add flag
+              if (flag) el.appendChild(flag);
+            
+              // ✅ add short name
+              el.append(' ' + short);
             });
 
             // dashboard-specific visual/state behavior
