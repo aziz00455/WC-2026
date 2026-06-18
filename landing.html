@@ -16,7 +16,7 @@
   <div id="matchesCompleted" class="matches-completed"></div>
 
   <div class="table-wrap">
-    <table>
+    <table class="landing-table">
       <thead>
         <tr>
           <th>Rank</th>
@@ -26,6 +26,7 @@
           <th>✅<br><span class="subtext">(+1 pt)</span></th>
           <th>❌<br><span class="subtext">(+0 pt)</span></th>
           <th>NP<br><span class="subtext">(-¼ pt)</span></th>
+          <th class="last5-col">Last 5</th>
         </tr>
       </thead>
       <tbody id="leaderboardBody"></tbody>
@@ -38,10 +39,12 @@ window.global = window;
 window.process = window.process || { env: {} };
 </script>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 
+<!-- shared -->
 <script src="../WC_common/utils.js"></script>
 <script src="../WC_common/matches.js"></script>
 <script src="../WC_common/teams.js"></script>
@@ -49,7 +52,6 @@ window.process = window.process || { env: {} };
 <script src="../WC_common/matchCards.js"></script>
 
 <script>
-
 const SESSION_KEY = "session_" + GAME_ID;
 const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
@@ -63,7 +65,7 @@ function logout() {
 }
 
 renderTopbar(
-  "Leaderboard **Test",
+  "Leaderboard",
   `
     <button onclick="goToStats()">Stats</button>
     <button id="chatBtn" onclick="goToChat()">Chat</button>
@@ -132,7 +134,10 @@ function renderFeaturedMatch(context) {
 
   const missing = 2 - upcoming.length;
   const backfill = missing > 0
-    ? activePool.slice(Math.max(0, activePool.length - 2 - missing), Math.max(0, activePool.length - 2))
+    ? activePool.slice(
+        Math.max(0, activePool.length - 2 - missing),
+        Math.max(0, activePool.length - 2)
+      )
     : [];
 
   let featuredList = [...backfill, ...recent, ...upcoming];
@@ -175,10 +180,40 @@ function renderFeaturedMatch(context) {
 }
 
 /* =========================
+   LAST 5 HELPER
+========================= */
+function buildLast5(picksArr, last5Matches, results) {
+  let html = "";
+
+  last5Matches.forEach(match => {
+    const idx = getMatchIndex(matches, match.id);
+    const pick = picksArr[idx];
+    const r = results[match.id];
+
+    if (!r) return;
+
+    const outcome =
+      r.score1 > r.score2 ? 1 :
+      r.score1 < r.score2 ? 2 : 3;
+
+    if (!pick) {
+      html += `<span class="n-icon">N</span>`;
+    } else if (pick === outcome) {
+      html += `<span class="last5-mark">✅</span>`;
+    } else {
+      html += `<span class="last5-mark">❌</span>`;
+    }
+  });
+
+  return html;
+}
+
+/* =========================
    LEADERBOARD
 ========================= */
 function render(rows) {
   const tbody = document.getElementById("leaderboardBody");
+  if (!tbody) return;
   tbody.innerHTML = "";
 
   let rank = 0;
@@ -206,6 +241,7 @@ function render(rows) {
       <td>${r.correct}</td>
       <td>${r.incorrect}</td>
       <td>${r.notPicked}</td>
+      <td class="last5-col">${r.last5 || ""}</td>
     `;
 
     tbody.appendChild(tr);
@@ -256,7 +292,9 @@ function buildStats(usersSnap, resultsMap) {
       if (predicted === outcome) {
         stats[doc.id].correct++;
         stats[doc.id].score++;
-      } else stats[doc.id].incorrect++;
+      } else {
+        stats[doc.id].incorrect++;
+      }
     }
   });
 
@@ -295,6 +333,14 @@ function renderPage(results, serverNow) {
   const { map, completed } = buildResultsMap({ results });
   const stats = buildStats(usersSnap, map);
 
+  const last5Matches = matches
+    .filter(m => {
+      const r = results[m.id];
+      return r && (r.status === "complete" || r.status === "completed");
+    })
+    .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
+    .slice(-5);
+
   document.getElementById("matchesCompleted").textContent =
     `Matches Completed: ${completed} / 72`;
 
@@ -303,6 +349,7 @@ function renderPage(results, serverNow) {
   usersSnap.forEach(doc => {
     const s = stats[doc.id];
     const notPicked = completed - s.completed;
+    const picksArr = doc.data().picks || new Array(73).fill(0);
 
     rows.push({
       uid: doc.id,
@@ -311,7 +358,8 @@ function renderPage(results, serverNow) {
       correct: s.correct,
       incorrect: s.incorrect,
       notPicked,
-      score: Number((s.score + notPicked * -0.25).toFixed(2))
+      score: Number((s.score + notPicked * -0.25).toFixed(2)),
+      last5: buildLast5(picksArr, last5Matches, results)
     });
   });
 
@@ -320,10 +368,7 @@ function renderPage(results, serverNow) {
 }
 
 loadInitial();
-
-/* ✅ 30 SECOND REFRESH */
-setInterval(refreshScores, 300 * 1000);
-
+setInterval(refreshScores, 5 * 60 * 1000);
 </script>
 
 </body>
