@@ -480,19 +480,25 @@
                 saved: []
               }
             });
-            // ✅ convert team names to short names (preserve flags)
+            
             const teamEls = card.querySelectorAll('.team');
             
             teamEls.forEach((el, i) => {
               const teamId = i === 0 ? match.team1 : match.team2;
               const short = getTeam(teamId)?.short || teamId;
             
-              // ✅ find text node only (keep flag intact)
-              const textNode = Array.from(el.childNodes)
-                .find(n => n.nodeType === Node.TEXT_NODE);
+              // ✅ look for span OR text node
+              const span = el.querySelector('span');
             
-              if (textNode) {
-                textNode.nodeValue = ' ' + short;
+              if (span) {
+                span.textContent = short;     // ✅ case: wrapped in span
+              } else {
+                const textNode = Array.from(el.childNodes)
+                  .find(n => n.nodeType === Node.TEXT_NODE);
+            
+                if (textNode) {
+                  textNode.nodeValue = ' ' + short;   // ✅ case: plain text
+                }
               }
             });
 
