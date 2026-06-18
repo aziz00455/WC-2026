@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <title>WC 2026 Dashboard</title>
+
   <style>
     * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -16,40 +18,41 @@
       color: #222;
     }
 
-    body {
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
+    /* ✅ SCALE FIX (MAIN CHANGE) */
+    .scale-wrap {
+      width: 1920px;
+      height: 1080px;
+
+      transform: scale(0.4);   /* ✅ your required 40% */
+      transform-origin: top left;
+
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
     .dashboard {
-      width: 100vw;
-      height: 100vh;
+      width: 1920px;   /* ✅ anchor design size */
+      height: 1080px;  /* ✅ anchor design size */
+
       padding: 10px;
       display: grid;
       grid-template-columns: 60% 40%;
-
-  	  grid-template-rows: 42px 1fr;
-	  grid-template-areas:
-	    "summary summary"
-	    "left right";
-
+      grid-template-rows: 42px 1fr;
+      grid-template-areas:
+        "summary summary"
+        "left right";
       gap: 10px;
-      background: #f4f4f4;
     }
 
     .left-pane {
       grid-area: left;
-      min-width: 0;
-      min-height: 0;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
     .table-card {
-      min-width: 0;
-      min-height: 0;
       background: #fff;
       border: 1px solid #d9d9d9;
       border-radius: 10px;
@@ -61,7 +64,6 @@
       height: 100%;
       table-layout: fixed;
       border-collapse: collapse;
-      background: #fff;
     }
 
     thead th {
@@ -69,191 +71,56 @@
       border-bottom: 1px solid #ddd;
       font-size: 15px;
       font-weight: 700;
-      line-height: 1.1;
       padding: 7px 4px;
       text-align: center;
-      color: #111;
     }
 
     tbody td {
       border-bottom: 1px solid #eee;
       font-size: 15px;
-      line-height: 1.1;
-      padding: 0 4px;
       text-align: center;
-      vertical-align: middle;
-      color: #222;
     }
 
-    tbody tr:last-child td { border-bottom: none; }
-
-    .rank-col { width: 46px; }
-    .name-col {
-      width: 34%;
-      text-align: left;
-      padding-left: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .picks-col { width: 56px; }
     .score-col {
-      width: 68px;
       background: #fff7cc;
       font-weight: 700;
-    }
-    .small-col { width: 52px; }
-    .last5-col {
-      width: 112px;
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .last5-mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 14px;
-      height: 14px;
-      font-size: 11px;
-      line-height: 1;
-      margin: 0 1px;
-      vertical-align: middle;
-    }
-
-    .n-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 14px;
-      height: 14px;
-      font-size: 9px;
-      font-weight: 700;
-      line-height: 1;
-      margin: 0 1px;
-      vertical-align: middle;
-      background: #111;
-      color: #fff;
-      border-radius: 2px;
     }
 
     .right-pane {
       grid-area: right;
-      min-width: 0;
-      min-height: 0;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      overflow: hidden;
     }
 
     .day-column {
-      min-width: 0;
-      min-height: 0;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     .day-title {
-      flex: 0 0 auto;
       text-align: left;
       font-size: 22px;
       font-weight: 700;
-      color: #111;
       margin: 0 0 8px 20px;
       line-height: 4.0;
     }
 
     .match-list {
       flex: 1;
-      min-height: 0;
       display: grid;
       grid-template-rows: repeat(6, minmax(0, 1fr));
       gap: 15px;
-      overflow: hidden;
     }
 
-    .match-slot {
-      min-height: 0;
-    }
-
-    /* Strong dashboard-specific overrides on shared match card output */
-    .match-list .match-card {
+    .match-card {
       width: 94% !important;
-      max-width: none !important;
       margin: 0 auto !important;
       padding: 7px 10px !important;
-      border-radius: 10px !important;
-      box-shadow: none !important;
-      background: #fff !important;
-      border: 1px solid #cfcfcf !important;
-      min-height: 0;
       height: 60%;
       display: flex;
       flex-direction: column;
       justify-content: center;
-    }
-
-    .match-list .match-card.status-completed {
-      background: #f1f1f1 !important;
-      border: 2px solid #9d9d9d !important;
-    }
-
-    .match-list .match-card.status-live {
-      background: #e3f2fd !important;
-      border: 2px solid #2196f3 !important;
-    }
-
-    .match-list .match-card.status-upcoming {
-      background: #ffffff !important;
-      border: 1px solid #cfcfcf !important;
-    }
-
-    /* neutralize result-state styling from shared css */
-    .match-list .match-card.correct,
-    .match-list .match-card.incorrect,
-    .match-list .match-card.in-play {
-      background: inherit !important;
-      border-color: inherit !important;
-    }
-
-    .match-list .match-top {
-      margin-bottom: 5px !important;
-      font-size: 14px !important;
-      font-weight: 700 !important;
-    }
-
-    .match-list .match-top-right {
-      font-size: 13px !important;
-    }
-
-    .match-list .teams-row {
-      margin-bottom: 4px !important;
-      padding: 0 2px !important;
-      column-gap: 3px !important;
-    }
-
-    .match-list .team,
-    .match-list .score,
-    .match-list .vs {
-      font-size: 14px !important;
-      font-weight: 700 !important;
-    }
-
-    .match-list .flag {
-      width: 18px !important;
-      height: 13px !important;
-    }
-
-    .match-list .actions { display: none !important; }
-
-    .match-list .status-line {
-      margin-top: 4px !important;
-      font-size: 12px !important;
-      line-height: 1.2 !important;
-      text-align: center !important;
-      min-height: 14px;
     }
 
     .summary-bar {
@@ -263,68 +130,60 @@
       justify-content: center;
       font-size: 18px;
       font-weight: 700;
-      color: #333;
     }
   </style>
 </head>
-<body>
-  <div class="dashboard">
-    <div class="left-pane">
-      <div class="table-card">
-        <table>
-          <thead>
-            <tr>
-              <th class="rank-col">Rank</th>
-              <th class="name-col">Name</th>
-              <th class="picks-col">Picks</th>
-              <th class="score-col">Score</th>
-              <th class="small-col">✅</th>
-              <th class="small-col">❌</th>
-              <th class="small-col">NP</th>
-              <th class="last5-col">Last 5</th>
-            </tr>
-          </thead>
-          <tbody id="leftTableBody"></tbody>
-        </table>
-      </div>
 
-      <div class="table-card">
-        <table>
-          <thead>
-            <tr>
-              <th class="rank-col">Rank</th>
-              <th class="name-col">Name</th>
-              <th class="picks-col">Picks</th>
-              <th class="score-col">Score</th>
-              <th class="small-col">✅</th>
-              <th class="small-col">❌</th>
-              <th class="small-col">NP</th>
-              <th class="last5-col">Last 5</th>
-            </tr>
-          </thead>
-          <tbody id="rightTableBody"></tbody>
-        </table>
-      </div>
+<body>
+
+<div class="scale-wrap">
+<div class="dashboard">
+
+  <div class="left-pane">
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th><th>Name</th><th>Picks</th><th>Score</th>
+            <th>✅</th><th>❌</th><th>NP</th><th>Last 5</th>
+          </tr>
+        </thead>
+        <tbody id="leftTableBody"></tbody>
+      </table>
     </div>
 
-    <div id="matchesPane" class="right-pane"></div>
-    <div id="summaryBar" class="summary-bar"></div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th><th>Name</th><th>Picks</th><th>Score</th>
+            <th>✅</th><th>❌</th><th>NP</th><th>Last 5</th>
+          </tr>
+        </thead>
+        <tbody id="rightTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <script>
-    window.global = window;
-    window.process = window.process || { env:{} };
-  </script>
+  <div id="matchesPane" class="right-pane"></div>
+  <div id="summaryBar" class="summary-bar"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="firebase.js"></script>
+</div>
+</div>
 
-  <script src="../WC_common/utils.js"></script>
-  <script src="../WC_common/matches.js"></script>
-  <script src="../WC_common/teams.js"></script>
-  <script src="../WC_common/fetchScores.js"></script>
-  <script src="../WC_common/matchCards.js"></script>
+<!-- ✅ CLEAN FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+
+<!-- ✅ SHARED FILES -->
+<script src="../WC_common/utils.js"></script>
+<script src="../WC_common/matches.js"></script>
+<script src="../WC_common/teams.js"></script>
+<script src="../WC_common/fetchScores.js"></script>
+<script src="../WC_common/matchCards.js"></script>
+
+
 
   <script>
     const DASHBOARD_REFRESH_MS = 60 * 1000;
