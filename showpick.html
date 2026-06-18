@@ -49,7 +49,7 @@ const params = new URLSearchParams(window.location.search);
 const initialSelectedUser = params.get("uid");
 
 renderTopbar(
-  "Compare Picks",
+  "Compare Picks **Test",
   `
     <button onclick="goBack()">Return</button>
     <button onclick="logout()">Logout</button>
@@ -83,15 +83,23 @@ function shortName(match, choice) {
 }
 
 function styledPick(match, choice, oc) {
-  let color = "#222";
+  let color = "black";
+  let mark = "";
 
   if (oc) {
-    if (!choice) color = "red";
-    else if (choice === oc) color = "green";
-    else color = "red";
+    if (!choice) {
+      color = "red";
+      mark = " ❌";
+    } else if (choice === oc) {
+      color = "green";
+      mark = " ✅";
+    } else {
+      color = "red";
+      mark = " ❌";
+    }
   }
 
-  return `<span style="font-weight:700;color:${color};">${shortName(match, choice)}</span>`;
+  return `<span style="color:${color};">${shortName(match, choice)}${mark}</span>`;
 }
 
 /* =========================
@@ -214,9 +222,19 @@ async function render() {
       const oc = outcome(context.results[match.id]);
       const playerName = users[selectedUserId];
 
-      const compareBottom =
-        `${playerName}: ${styledPick(match, pickB, oc)} &nbsp; | &nbsp; ` +
-        `You: ${styledPick(match, pickA, oc)}`;
+	  let compareBottom = "";
+
+  	  if (!oc) {
+	    compareBottom =
+		  `<b>${playerName}:</b> ${shortName(match, pickB)}` +
+		  `&nbsp;&nbsp;vs&nbsp;&nbsp;` +
+		  `<b>My Pick:</b> ${shortName(match, pickA)}`;
+	  } else {
+	    compareBottom =
+		  `<b>${playerName}:</b> ${styledPick(match, pickB, oc)}` +
+		  `&nbsp;&nbsp;vs&nbsp;&nbsp;` +
+		  `<b>My Pick:</b> ${styledPick(match, pickA, oc)}`;
+	  }
 
       const statusLine = card.querySelector(".status-line");
       if (statusLine) {
