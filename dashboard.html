@@ -529,7 +529,7 @@
         .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
         .slice(-5);
 
-      document.getElementById('summaryBar').textContent = `Matches Completed: ${completed}/72`;
+      document.getElementById('summaryBar').textContent = `Matches Completed(1): ${completed}/72`;
 
       const rows = [];
       usersSnap.forEach(doc => {
