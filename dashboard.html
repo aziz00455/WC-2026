@@ -11,8 +11,8 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 1920px;
-      height: 1080px;
+      width: 1440px;
+      height: 800px;
 
       overflow: hidden;
       background: #f4f4f4;
@@ -28,8 +28,8 @@
 
     /* ✅ REDUCE ACTIVE AREA PADDING */
     .dashboard {
-      width: 1920px;
-      height: 1080px;
+      width: 1440px;
+      height: 800px;
 
       padding: 6px;            /* ✅ reduced */
       display: grid;
@@ -529,7 +529,7 @@
         .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
         .slice(-5);
 
-      document.getElementById('summaryBar').textContent = `Matches Completed(2): ${completed}/72`;
+      document.getElementById('summaryBar').textContent = `Matches Completed(3): ${completed}/72`;
 
       const rows = [];
       usersSnap.forEach(doc => {
