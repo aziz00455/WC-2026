@@ -487,17 +487,19 @@
               const teamId = i === 0 ? match.team1 : match.team2;
               const short = getTeam(teamId)?.short || teamId;
             
-              // ✅ grab flag (if exists)
               const flag = el.querySelector('.flag');
             
-              // ✅ clear everything
               el.innerHTML = '';
             
-              // ✅ re-add flag
-              if (flag) el.appendChild(flag);
-            
-              // ✅ add short name
-              el.append(' ' + short);
+              if (i === 0) {
+                // ✅ team1 → flag LEFT
+                if (flag) el.appendChild(flag);
+                el.append(' ' + short);
+              } else {
+                // ✅ team2 → flag RIGHT
+                el.append(short + ' ');
+                if (flag) el.appendChild(flag);
+              }
             });
 
             // dashboard-specific visual/state behavior
