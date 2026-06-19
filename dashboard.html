@@ -11,8 +11,8 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 1920px;
-      height: 1080px;
+      width: 1400px;
+      height: 680px;
 
       overflow: hidden;
       background: #f4f4f4;
@@ -28,8 +28,8 @@
 
     /* ✅ REDUCE ACTIVE AREA PADDING */
     .dashboard {
-      width: 1920px;
-      height: 1080px;
+      width: 1400px;
+      height: 680px;
 
       padding: 6px;            /* ✅ reduced */
       display: grid;
@@ -73,19 +73,19 @@
     thead th {
       background: #fafafa;
       border-bottom: 1px solid #ddd;
-      font-size: 15px;
+      font-size: 10px;
       font-weight: 700;
       line-height: 1.1;
-      padding: 6px 3px;   /* ✅ slightly tighter */
+      padding: 3px 2px;   /* ✅ slightly tighter */
       text-align: center;
       color: #111;
     }
 
     tbody td {
       border-bottom: 1px solid #eee;
-      font-size: 15px;
+      font-size: 10px;
       line-height: 1.1;
-      padding: 0 4px;
+      padding: 0 2px;
       text-align: center;
       vertical-align: middle;
       color: #222;
@@ -93,7 +93,7 @@
 
     tbody tr:last-child td { border-bottom: none; }
 
-    .rank-col { width: 46px; }
+    .rank-col { width: 44px; }
     .name-col {
       width: 34%;
       text-align: left;
@@ -102,13 +102,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .picks-col { width: 56px; }
+    .picks-col { width: 44px; }
     .score-col {
-      width: 68px;
+      width: 44px;
       background: #fff7cc;
-      font-weight: 700;
+      font-weight: normal;
     }
-    .small-col { width: 52px; }
+    .small-col { width: 24px; }
     .last5-col {
       width: 112px;
       white-space: nowrap;
@@ -129,13 +129,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 14px;
-      height: 14px;
-      font-size: 9px;
+      width: 13px;
+      height: 13px;
+      font-size: 11px;
       font-weight: 700;
       background: #111;
       color: #fff;
-      border-radius: 2px;
+      border-radius: 2px solid #ffffff;
+      margin: 0 1px;
     }
 
     .right-pane {
@@ -156,7 +157,7 @@
     /* ✅ MAJOR FIX: RETURN HEIGHT BACK */
     .day-title {
       text-align: left;
-      font-size: 22px;
+      font-size: 16px;
       font-weight: 700;
       margin: 0 0 6px 20px;
       line-height: 1.6;       /* ✅ was 4.0 — fixed */
@@ -166,7 +167,7 @@
       flex: 1;
       display: grid;
       grid-template-rows: repeat(6, minmax(0, 1fr));
-      gap: 12px;              /* ✅ reduced slightly */
+      gap: 8px;              /* ✅ reduced slightly */
     }
 
     .match-slot {
@@ -174,19 +175,19 @@
     }
 
     .match-list .match-card {
-      width: 94% !important;
+      width: 96% !important;
       margin: 0 auto !important;
-      padding: 7px 10px !important;
+      padding: 8px 8px !important;
 
-      height: 60%;
+      height: 75%;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
 
     .match-list .match-card.status-completed {
-      background: #f1f1f1 !important;
-      border: 2px solid #9d9d9d !important;
+      background: #fff59d !important;
+      border: 1px solid #f9a825 !important;
     }
 
     .match-list .match-card.status-live {
@@ -201,18 +202,18 @@
 
     .match-list .match-top {
       margin-bottom: 5px !important;
-      font-size: 14px !important;
+      font-size: 12px !important;
       font-weight: 700 !important;
     }
 
     .match-list .teams-row {
-      margin-bottom: 4px !important;
+      margin-bottom: 6px !important;
     }
 
     .match-list .team,
     .match-list .score,
     .match-list .vs {
-      font-size: 14px !important;
+      font-size: 10px !important;
       font-weight: 700 !important;
     }
 
@@ -220,7 +221,7 @@
 
     .match-list .status-line {
       margin-top: 4px !important;
-      font-size: 12px !important;
+      font-size: 10px !important;
       text-align: center !important;
     }
 
@@ -250,7 +251,7 @@
               <th class="name-col">Name</th>
               <th class="picks-col">Picks</th>
               <th class="score-col">Score</th>
-              <th class="small-col">✅</th>
+              <th class="small-col" style="color:#2ecc71;">✅</th>
               <th class="small-col">❌</th>
               <th class="small-col">NP</th>
               <th class="last5-col">Last 5</th>
@@ -268,7 +269,7 @@
               <th class="name-col">Name</th>
               <th class="picks-col">Picks</th>
               <th class="score-col">Score</th>
-              <th class="small-col">✅</th>
+              <th class="small-col" style="color:#2ecc71;">✅</th>
               <th class="small-col">❌</th>
               <th class="small-col">NP</th>
               <th class="last5-col">Last 5</th>
@@ -317,7 +318,7 @@
 
         const outcome = r.score1 > r.score2 ? 1 : r.score1 < r.score2 ? 2 : 3;
         if (!pick) html += '<span class="n-icon">N</span>';
-        else if (pick === outcome) html += '<span class="last5-mark">✅</span>';
+        else if (pick === outcome) html += '<span class="last5-mark" style="color:#2ecc71;">✅</span>';
         else html += '<span class="last5-mark">❌</span>';
       });
       return html;
@@ -479,6 +480,27 @@
                 saved: []
               }
             });
+            
+            const teamEls = card.querySelectorAll('.team');
+            
+            teamEls.forEach((el, i) => {
+              const teamId = i === 0 ? match.team1 : match.team2;
+              const short = getTeam(teamId)?.short || teamId;
+            
+              const flag = el.querySelector('.flag');
+            
+              el.innerHTML = '';
+            
+              if (i === 0) {
+                // ✅ team1 → flag LEFT
+                if (flag) el.appendChild(flag);
+                el.append(' ' + short);
+              } else {
+                // ✅ team2 → flag RIGHT
+                el.append(short + ' ');
+                if (flag) el.appendChild(flag);
+              }
+            });
 
             // dashboard-specific visual/state behavior
             card.classList.remove('correct', 'incorrect', 'in-play', 'status-completed', 'status-live', 'status-upcoming');
@@ -529,7 +551,7 @@
         .sort((a, b) => new Date(a.kickoffUtc) - new Date(b.kickoffUtc))
         .slice(-5);
 
-      document.getElementById('summaryBar').textContent = `Matches Completed: ${completed}/72`;
+      document.getElementById('summaryBar').textContent = `Matches Completed: ${completed} of 72`;
 
       const rows = [];
       usersSnap.forEach(doc => {
