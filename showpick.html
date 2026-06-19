@@ -44,6 +44,9 @@ const SESSION_KEY = "session_" + GAME_ID;
 const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
 
+let lastActivityTime = Date.now();
+const IDLE_LIMIT_MS = 20 * 60 * 1000;
+
 /* ✅ URL PARAM (default player) */
 const params = new URLSearchParams(window.location.search);
 const initialSelectedUser = params.get("uid");
@@ -55,6 +58,22 @@ renderTopbar(
     <button onclick="logout()">Logout</button>
   `
 );
+
+function updateActivity() {
+  lastActivityTime = Date.now();
+}
+
+// ✅ activity tracking
+["click","mousemove","keydown","scroll"].forEach(evt => {
+  document.addEventListener(evt, updateActivity);
+});
+
+// ✅ tab visibility (add separately)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    lastActivityTime = Date.now();
+  }
+});
 
 function goBack() { window.location.href = "landing.html"; }
 function logout() {
@@ -114,7 +133,7 @@ let selectedUserId = null;
    INIT
 ========================= */
 async function init() {
-  const { results, serverNow } = await getResultsWithServerTime();
+  const { results, serverNow } = await ensureScoresUpToDate();
 
   const [usersSnap, saved] = await Promise.all([
     db.collection("users").get(),
@@ -270,14 +289,27 @@ async function render() {
    REFRESH
 ========================= */
 async function refresh() {
-  const { results, serverNow } = awaitgetResultsWithServerTime();
+  const { results, serverNow } = await getResultsWithServerTime();
   context.results = results;
   context.serverNow = serverNow;
   render();
 }
 
 init();
-setInterval(refresh, 5 * 60 * 1000);
+
+setInterval(refresh, 10 * 60 * 1000);
+
+// ✅ idle timeout
+setInterval(() => {
+  const now = Date.now();
+
+  if (now - lastActivityTime > IDLE_LIMIT_MS) {
+    console.log("Idle timeout → logout");
+
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = "index.html";
+  }
+}, 60 * 1000);
 
 </script>
 

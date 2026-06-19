@@ -74,12 +74,32 @@ window.process = window.process || { env: {} };
 <script src="firebase.js"></script>
 
 <script>
+let lastActivityTime = Date.now();
+const IDLE_LIMIT_MS = 20 * 60 * 1000;
+
+
 renderTopbar(
   "Quick Stats",
   `<button onclick="goBack()">Return</button>`
 );
 
 function goBack(){ window.location.href="landing.html"; }
+
+function updateActivity() {
+  lastActivityTime = Date.now();
+}
+
+// ✅ activity tracking
+["click","mousemove","keydown","scroll"].forEach(evt => {
+  document.addEventListener(evt, updateActivity);
+});
+
+// ✅ tab visibility (add separately)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    lastActivityTime = Date.now();
+  }
+});
 
 /* ========================= */
 let sortKey="rank";
@@ -125,7 +145,7 @@ async function load(){
     });
   });
 
-  const { results } = await ensureScoresUpToDate();
+  const { results } = await getResultsWithServerTime();
 
   matches.forEach(m=>{
     const r = results[m.id];
@@ -207,6 +227,17 @@ document.querySelectorAll(".sortable").forEach(th=>{
 });
 
 load();
+
+setInterval(() => {
+  const now = Date.now();
+
+  if (now - lastActivityTime > IDLE_LIMIT_MS) {
+    console.log("Idle timeout → logout");
+
+    localStorage.removeItem("session_" + GAME_ID);
+    window.location.href = "index.html";
+  }
+}, 60 * 1000);
 </script>
 
 </body>

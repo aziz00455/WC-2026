@@ -111,6 +111,9 @@ const SESSION_KEY = "session_" + GAME_ID;
 const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
 
+let lastActivityTime = Date.now();
+const IDLE_LIMIT_MS = 20 * 60 * 1000;
+
 renderTopbar(
   "Chat",
   `
@@ -118,6 +121,16 @@ renderTopbar(
     <button onclick="logoutUser()">Logout</button>
   `
 );
+
+function updateActivity() {
+  lastActivityTime = Date.now();
+}
+
+// ✅ activity tracking
+["click","mousemove","keydown","scroll"].forEach(evt => {
+  document.addEventListener(evt, updateActivity);
+});
+
 
 const box = document.getElementById("chatBox");
 const newMsgBar = document.getElementById("newMsgBar");
@@ -484,10 +497,27 @@ document.addEventListener("visibilitychange", async () => {
 });
 
 window.addEventListener("beforeunload", () => {
-  db.collection("users").doc(userId).set({
-    lastChatTime: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  if (latestMessages.length) {
+    const latestTs = latestMessages[latestMessages.length - 1]?.data?.timestamp;
+
+    if (latestTs) {
+      db.collection("users").doc(userId).set({
+        lastChatTime: latestTs
+      }, { merge: true });
+    }
+  }
 });
+
+setInterval(() => {
+  const now = Date.now();
+
+  if (now - lastActivityTime > IDLE_LIMIT_MS) {
+    console.log("Idle timeout → logout");
+
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = "index.html";
+  }
+}, 60 * 1000);
 
 init();
 </script>

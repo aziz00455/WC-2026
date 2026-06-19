@@ -81,10 +81,17 @@ function updateActivity() {
   lastActivityTime = Date.now();
 }
 
-["click", "mousemove", "keydown", "scroll"].forEach(evt => {
+// ✅ activity tracking
+["click","mousemove","keydown","scroll"].forEach(evt => {
   document.addEventListener(evt, updateActivity);
 });
 
+// ✅ tab visibility (add separately)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    lastActivityTime = Date.now();
+  }
+});
 /* =========================
    CHAT CHECK
 ========================= */

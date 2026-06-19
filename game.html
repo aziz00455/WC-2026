@@ -33,6 +33,11 @@ const SESSION_KEY = "session_" + GAME_ID;
 const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
 
+
+let lastActivityTime = Date.now();
+const IDLE_LIMIT_MS = 20 * 60 * 1000;
+
+
 let pendingPickSave = Promise.resolve();
 
 async function saveAndGoToLanding() {
@@ -52,6 +57,29 @@ renderTopbar(
     <button onclick="logout()">Logout</button>
   `
 );
+
+function updateActivity() {
+  lastActivityTime = Date.now();
+}
+
+// ✅ activity tracking
+["click","mousemove","keydown","scroll"].forEach(evt => {
+  document.addEventListener(evt, updateActivity);
+});
+
+// ✅ tab visibility (add separately)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    lastActivityTime = Date.now();
+  }
+});
+
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  window.location.href = "index.html";
+}
+
+
 
 /* =========================
    PICK HANDLER
@@ -141,7 +169,7 @@ async function renderMatches(context) {
 let context = null;
 
 async function loadInitial() {
-  const { results, serverNow } = await getResultsWithServerTime();
+  const { results, serverNow } = await ensureScoresUpToDate()
 
   const usersSnap = await db.collection("users").get();
   const saved = await loadUserPredictions(db, userId);
@@ -167,9 +195,19 @@ async function refreshScores() {
 
 loadInitial();
 
-// ✅ same behavior as landing
-setInterval(refreshScores, 5 * 60 * 1000);
+setInterval(refreshScores, 10 * 60 * 1000);
 
+// ✅ idle timeout
+setInterval(() => {
+  const now = Date.now();
+
+  if (now - lastActivityTime > IDLE_LIMIT_MS) {
+    console.log("Idle timeout → logout");
+
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = "index.html";
+  }
+}, 60 * 1000);
 </script>
 
 </body>
