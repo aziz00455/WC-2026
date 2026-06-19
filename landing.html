@@ -23,9 +23,9 @@
           <th>Name</th>
           <th>Picks</th>
           <th class="score-col">Score</th>
-          <th>✅<br><span class="subtext">(+1 pt)</span></th>
-          <th>❌<br><span class="subtext">(+0 pt)</span></th>
-          <th>NP<br><span class="subtext">(-¼ pt)</span></th>
+          <th>✅<br><span class="subtext">+1 pt</span></th>
+          <th>❌<br><span class="subtext">0 pt</span></th>
+          <th>NP<br><span class="subtext">-¼ pt</span></th>
           <th class="last5-col">Last 5</th>
         </tr>
       </thead>
@@ -64,8 +64,11 @@ function logout() {
   window.location.href = "index.html";
 }
 
+let lastActivityTime = Date.now();
+const IDLE_LIMIT_MS = 20 * 60 * 1000; // 20 min
+
 renderTopbar(
-  "Leaderboard",
+  "Leaderboard **Test",
   `
     <button onclick="goToStats()">Stats</button>
     <button id="chatBtn" onclick="goToChat()">Chat</button>
@@ -73,6 +76,14 @@ renderTopbar(
     <button onclick="logout()">Logout</button>
   `
 );
+
+function updateActivity() {
+  lastActivityTime = Date.now();
+}
+
+["click", "mousemove", "keydown", "scroll"].forEach(evt => {
+  document.addEventListener(evt, updateActivity);
+});
 
 /* =========================
    CHAT CHECK
@@ -89,6 +100,23 @@ async function checkNewChat(userId) {
   if (!lastChatTime || !lastMessageTime) return false;
 
   return lastMessageTime.toDate() > lastChatTime.toDate();
+}
+
+async function updateChatIndicator() {
+  try {
+    const hasUnread = await checkNewChat(userId);
+    const chatBtn = document.getElementById("chatBtn");
+
+    if (!chatBtn) return;
+
+    if (hasUnread) {
+      chatBtn.classList.add("blink");
+    } else {
+      chatBtn.classList.remove("blink");
+    }
+  } catch (err) {
+    console.error("updateChatIndicator error:", err);
+  }
 }
 
 /* =========================
@@ -308,9 +336,7 @@ let usersSnap = null;
 let saved = null;
 
 async function loadInitial() {
-  if (await checkNewChat(userId)) {
-    document.getElementById("chatBtn")?.classList.add("blink");
-  }
+  await updateChatIndicator();
 
   const { results, serverNow } = await ensureScoresUpToDate();
 
@@ -321,7 +347,7 @@ async function loadInitial() {
 }
 
 async function refreshScores() {
-  const { results, serverNow } = await ensureScoresUpToDate();
+  const { results, serverNow } = await getResultsWithServerTime();
   renderPage(results, serverNow);
 }
 
@@ -368,7 +394,19 @@ function renderPage(results, serverNow) {
 }
 
 loadInitial();
-setInterval(refreshScores, 5 * 60 * 1000);
+setInterval(refreshScores, 10 * 60 * 1000);
+
+// ✅ IDLE TIMEOUT CHECK (ADD THIS HERE)
+setInterval(() => {
+  const now = Date.now();
+
+  if (now - lastActivityTime > IDLE_LIMIT_MS) {
+    console.log("Idle timeout → logout");
+
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = "index.html";
+  }
+}, 60 * 1000); // check every 1 minute
 </script>
 
 </body>

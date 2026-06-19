@@ -112,7 +112,7 @@ const userId = localStorage.getItem(SESSION_KEY);
 if (!userId) window.location.href = "index.html";
 
 renderTopbar(
-  "Chat",
+  "Chat **Test",
   `
     <button onclick="goBack()">Return</button>
     <button onclick="logoutUser()">Logout</button>
@@ -137,14 +137,36 @@ let oldestLoadedDoc = null;
 let loadingOlder = false;
 let noMoreMessages = false;
 
+let lastMarkedAt = 0;
+const MARK_READ_DEBOUNCE_MS = 5000;
+
 /* =========================
    MARK CHAT READ
 ========================= */
 async function markChatRead() {
   try {
+    // Prefer already-loaded latest messages to avoid an extra read
+    let latestTs = null;
+
+    if (latestMessages.length) {
+      latestTs = latestMessages[latestMessages.length - 1]?.data?.timestamp || null;
+    }
+
+    // Fallback: if listener has not populated yet, query the latest message once
+    if (!latestTs) {
+      const snap = await db.collection("chatMessages")
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .get();
+
+      if (!snap.empty) {
+        latestTs = snap.docs[0].data().timestamp || null;
+      }
+    }
+
     await db.collection("users").doc(userId).set(
       {
-        lastChatTime: firebase.firestore.FieldValue.serverTimestamp()
+        lastChatTime: latestTs || firebase.firestore.FieldValue.serverTimestamp()
       },
       { merge: true }
     );
@@ -152,6 +174,14 @@ async function markChatRead() {
     console.error("markChatRead error:", err);
   }
 }
+
+async function markChatReadDebounced() {
+  const now = Date.now();
+  if (now - lastMarkedAt < MARK_READ_DEBOUNCE_MS) return;
+  lastMarkedAt = now;
+  await markChatRead();
+}
+
 
 /* =========================
    NAVIGATION
@@ -426,7 +456,7 @@ box.addEventListener("scroll", async () => {
 
   if (nearBottom) {
     newMsgBar.style.display = "none";
-    await markChatRead();
+    await markChatReadDebounced();
   }
 
   if (box.scrollTop <= 2) {
