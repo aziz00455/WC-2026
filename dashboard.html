@@ -537,14 +537,46 @@
       ];
     }
 
-    function buildPicksText(matchId) {
-      const p = getPickPercentages(matchId, matches, usersSnap);
-      const match = matches.find(m => m.id === matchId);
-      const t1 = getTeam(match.team1)?.short || match.team1;
-      const t2 = getTeam(match.team2)?.short || match.team2;
-      return `<b>Picks:</b> ${t1} ${p.t1}, Tie ${p.tie}, ${t2} ${p.t2}, NP ${p.np}`;
-    }
+	function buildPicksText(matchId, results) {
+	  const p = getPickPercentages(matchId, matches, usersSnap);
+	  const match = matches.find(m => m.id === matchId);
+	  const r = results[matchId];
 
+	  const t1 = getTeam(match.team1)?.short || match.team1;
+	  const t2 = getTeam(match.team2)?.short || match.team2;
+
+	  // default styles
+	  let t1Text = `${t1} ${p.t1}`;
+	  let tieText = `Tie ${p.tie}`;
+	  let t2Text = `${t2} ${p.t2}`;
+	  let npText = `NP ${p.np}`;
+
+	  // ✅ only apply highlight if completed
+	  if (r && (r.status === "complete" || r.status === "completed")) {
+		let winner = "";
+
+		if (r.score1 > r.score2) winner = "t1";
+		else if (r.score1 < r.score2) winner = "t2";
+		else winner = "tie";
+
+		if (winner === "t1") {
+		  t1Text = `<b style="color:#2ecc71;">${t1} ${p.t1} ✅</b>`;
+		} else {
+		  t1Text = `${t1} ${p.t1}`;
+		}
+
+		if (winner === "tie") {
+		  tieText = `<b style="color:#2ecc71;">Tie ${p.tie} ✅</b>`;
+		}
+
+		if (winner === "t2") {
+		  t2Text = `<b style="color:#2ecc71;">${t2} ${p.t2} ✅</b>`;
+		}
+	  }
+
+	  return `<b>Picks:</b> ${t1Text}, ${tieText}, ${t2Text}, ${npText}`;
+	}
+	
     async function renderMatches(results, serverNow) {
       const pane = document.getElementById('matchesPane');
       pane.innerHTML = '';
@@ -619,7 +651,7 @@
 
             const statusLine = card.querySelector('.status-line');
             if (statusLine) {
-              statusLine.innerHTML = buildPicksText(match.id);
+              statusLine.innerHTML = buildPicksText(match.id, results);
             }
 
             slot.appendChild(card);
