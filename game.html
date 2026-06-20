@@ -79,22 +79,59 @@ function logout() {
   window.location.href = "index.html";
 }
 
+async function reconcileMyPickCount(userId) {
+  const userRef = db.collection("users").doc(userId);
 
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(userRef);
+    if (!snap.exists) throw new Error("User document not found");
+
+    const data = snap.data() || {};
+    const picks = Array.isArray(data.picks) ? data.picks.slice(0, 73) : [];
+
+    while (picks.length < 73) picks.push(0);
+
+    for (let i = 0; i < 73; i++) {
+      picks[i] = Number(picks[i]) || 0;
+    }
+
+    const realPickCount = picks.slice(0, 72).reduce((sum, val) => {
+      return sum + (val ? 1 : 0);
+    }, 0);
+
+    if (picks[72] !== realPickCount) {
+      picks[72] = realPickCount;
+      tx.update(userRef, { picks });
+    }
+  });
+}
 
 /* =========================
    PICK HANDLER
 ========================= */
 async function handlePick({ matchId, choice }) {
+  const prev = context?.saved ? context.saved[matchId] : 0;
+
   // keep in-memory state in sync for future renders
   if (context && context.saved) {
     context.saved[matchId] = choice;
   }
 
-  pendingPickSave = saveUserPick(db, userId, matchId, choice)
-    .catch(err => {
-      console.error("pick save error:", err);
-      throw err;
-    });
+  pendingPickSave = pendingPickSave.then(async () => {
+    // 1) keep your original working save path
+    await saveUserPick(db, userId, matchId, choice);
+
+    // 2) then repair picks[72] from actual picks[0..71]
+    await reconcileMyPickCount(userId);
+  }).catch(err => {
+    // rollback local state if save failed
+    if (context && context.saved) {
+      context.saved[matchId] = prev;
+    }
+
+    console.error("pick save error:", err);
+    throw err;
+  });
 
   await pendingPickSave;
 }

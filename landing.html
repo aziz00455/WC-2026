@@ -294,13 +294,64 @@ function buildResultsMap(summary) {
   return { map, completed };
 }
 
-function buildStats(usersSnap, resultsMap) {
-  const stats = {};
+function normalizePicksArray(raw) {
+  const picks = Array.isArray(raw) ? raw.slice(0, 73) : [];
+
+  while (picks.length < 73) picks.push(0);
+
+  for (let i = 0; i < 73; i++) {
+    picks[i] = Number(picks[i]) || 0;
+  }
+
+  return picks;
+}
+
+async function reconcileUserPickCounts(usersSnap) {
+  const users = [];
+  const updates = [];
 
   usersSnap.forEach(doc => {
-    const picks = doc.data().picks || new Array(73).fill(0);
+    const data = doc.data() || {};
+    const picks = normalizePicksArray(data.picks);
 
-    stats[doc.id] = {
+    const realPickCount = picks.slice(0, 72).reduce((sum, val) => {
+      return sum + (val ? 1 : 0);
+    }, 0);
+
+    if (picks[72] !== realPickCount) {
+      picks[72] = realPickCount;
+
+      updates.push(
+        db.collection("users").doc(doc.id).update({ picks }).catch(err => {
+          console.error(`Failed to reconcile picks[72] for user ${doc.id}:`, err);
+        })
+      );
+    }
+
+    users.push({
+      id: doc.id,
+      data: {
+        ...data,
+        picks
+      }
+    });
+  });
+
+  if (updates.length) {
+    await Promise.all(updates);
+  }
+
+  return users;
+}
+
+
+function buildStats(users, resultsMap) {
+  const stats = {};
+
+  users.forEach(user => {
+    const picks = user.data.picks || new Array(73).fill(0);
+
+    stats[user.id] = {
       picks: picks[72] || 0,
       correct: 0,
       incorrect: 0,
@@ -312,29 +363,30 @@ function buildStats(usersSnap, resultsMap) {
       if (!picks[i]) continue;
 
       const result = resultsMap[matches[i].id];
-      if (!result || result.status !== "complete") continue;
+      if (!result || (result.status !== "complete" && result.status !== "completed")) continue;
 
-      stats[doc.id].completed++;
+      stats[user.id].completed++;
 
       const predicted = picks[i] === 1 ? "team1"
-                        : picks[i] === 2 ? "team2"
-                        : "tie";
+                      : picks[i] === 2 ? "team2"
+                      : "tie";
 
       const outcome = result.score1 > result.score2 ? "team1"
-                     : result.score1 < result.score2 ? "team2"
-                     : "tie";
+                    : result.score1 < result.score2 ? "team2"
+                    : "tie";
 
       if (predicted === outcome) {
-        stats[doc.id].correct++;
-        stats[doc.id].score++;
+        stats[user.id].correct++;
+        stats[user.id].score++;
       } else {
-        stats[doc.id].incorrect++;
+        stats[user.id].incorrect++;
       }
     }
   });
 
   return stats;
 }
+
 
 /* =========================
    LOAD
@@ -350,21 +402,28 @@ async function loadInitial() {
   usersSnap = await db.collection("users").get();
   saved = await loadUserPredictions(db, userId);
 
-  renderPage(results, serverNow);
+  await renderPage(results, serverNow);
 }
 
 async function refreshScores() {
-  const { results, serverNow } = await getResultsWithServerTime();
-  renderPage(results, serverNow);
+  const [{ results, serverNow }, freshUsersSnap] = await Promise.all([
+    getResultsWithServerTime(),
+    db.collection("users").get()
+  ]);
+
+  usersSnap = freshUsersSnap;
+  await renderPage(results, serverNow);
 }
 
-function renderPage(results, serverNow) {
+async function renderPage(results, serverNow) {
   const context = { results, serverNow, usersSnap, saved };
 
   renderFeaturedMatch(context);
 
+  const users = await reconcileUserPickCounts(usersSnap);
+
   const { map, completed } = buildResultsMap({ results });
-  const stats = buildStats(usersSnap, map);
+  const stats = buildStats(users, map);
 
   const last5Matches = matches
     .filter(m => {
@@ -379,14 +438,14 @@ function renderPage(results, serverNow) {
 
   const rows = [];
 
-  usersSnap.forEach(doc => {
-    const s = stats[doc.id];
+  users.forEach(user => {
+    const s = stats[user.id];
     const notPicked = completed - s.completed;
-    const picksArr = doc.data().picks || new Array(73).fill(0);
+    const picksArr = user.data.picks || new Array(73).fill(0);
 
     rows.push({
-      uid: doc.id,
-      name: doc.data().username,
+      uid: user.id,
+      name: user.data.username,
       picks: s.picks,
       correct: s.correct,
       incorrect: s.incorrect,
