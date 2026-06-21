@@ -680,11 +680,13 @@
 
 
     async function load() {	
-      const [{ results, serverNow }, snap] = await Promise.all([
-        getResultsWithServerTime(),
-        db.collection('users').get()
-      ]);
-	  
+	  const [scorePayload, snap] = await Promise.all([
+	    ensureScoresUpToDate(matches),   // ✅ trigger ESPN fetch via DB logic
+	    db.collection('users').get()
+	  ]);
+
+	const { results, serverNow } = scorePayload;
+
 	  document.getElementById('lastUpdate').textContent = formatLastUpdate(serverNow);
 
       usersSnap = snap;
