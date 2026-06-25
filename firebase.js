@@ -14,3 +14,5 @@ const db = firebase.firestore();
 
 // **** Instance Identifyer ****
 const GAME_ID = "WC2026_PRD";
+
+const R32_SELECTION = "Auto"; // allowed: "Auto" or "User"
