@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WC 2026 - Knockout Bracket</title>
 
-  <!-- R32 only -->
   <link rel="stylesheet" href="../WC_common/R32_styles.css">
 </head>
 
@@ -41,17 +40,29 @@
   <script src="../WC_common/R32_matchCards.js"></script>
 
   <script>
-    const SESSION_KEY = "session_" + GAME_ID;
+    const BRACKET_GAME_ID =
+      typeof GAME_ID !== "undefined"
+        ? GAME_ID
+        : (window.GAME_ID || "WC2026_DEV");
+
+    const SESSION_KEY = "session_" + BRACKET_GAME_ID;
     const userId = localStorage.getItem(SESSION_KEY);
-    if (!userId) window.location.href = "index.html";
+
+    if (!userId) {
+      console.warn("[R32 Bracket Auth] Missing session", {
+        BRACKET_GAME_ID,
+        SESSION_KEY,
+        localStorageKeys: Object.keys(localStorage)
+      });
+      window.location.href = "index.html";
+    }
 
     const R32_REFRESH_MS = 10 * 60 * 1000;
     const R32_IDLE_MS = 20 * 60 * 1000;
-    const KNOCKOUT_SYNC_URL = "";
+
     const DESKTOP_STEP_PX = 310;
     const MOBILE_STEP_PX = 176;
 
-    // New schema refs
     const R32_MAPPING_COLLECTION = "R32mapping";
     const R32_MAPPING_DOC_ID = "main";
     const LIVE_COLLECTION = "__live";
@@ -63,34 +74,67 @@
     let scrollSyncTimer = null;
     let boundScrollEl = null;
 
-    function isMobileBracketView() { return window.matchMedia("(max-width: 640px)").matches; }
-    function getBracketStepPx() { return isMobileBracketView() ? MOBILE_STEP_PX : DESKTOP_STEP_PX; }
-    function getMaxBracketWindow() { return isMobileBracketView() ? 3 : 2; }
+    let cachedR32MappingData = null;
+    let cachedR32MappingLoaded = false;
+
+    function isMobileBracketView() {
+      return window.matchMedia("(max-width: 640px)").matches;
+    }
+
+    function getBracketStepPx() {
+      return isMobileBracketView() ? MOBILE_STEP_PX : DESKTOP_STEP_PX;
+    }
+
+    function getMaxBracketWindow() {
+      return isMobileBracketView() ? 3 : 2;
+    }
 
     function getDbInstance() {
       try {
-        if (window.firebase && firebase.apps && firebase.apps.length) return firebase.firestore();
+        if (window.firebase && firebase.apps && firebase.apps.length) {
+          return firebase.firestore();
+        }
       } catch (err) {
         console.error("Failed to create Firestore instance:", err);
       }
       return null;
     }
 
-    function getBracketScrollEl() { return document.querySelector("#bracketApp .bracket-scroll"); }
+    function getBracketScrollEl() {
+      return document.querySelector("#bracketApp .bracket-scroll");
+    }
 
     function getActiveLaneClasses() {
       if (isMobileBracketView()) {
-        const mobileMap = [["lane-r32","lane-r16"],["lane-r16","lane-qf"],["lane-qf","lane-sf"],["lane-sf","lane-final"]];
+        const mobileMap = [
+          ["lane-r32", "lane-r16"],
+          ["lane-r16", "lane-qf"],
+          ["lane-qf", "lane-sf"],
+          ["lane-sf", "lane-final"]
+        ];
         return mobileMap[currentBracketWindow] || mobileMap[0];
       }
-      const desktopMap = [["lane-r32","lane-r16","lane-qf"],["lane-r16","lane-qf","lane-sf"],["lane-qf","lane-sf","lane-final"]];
+
+      const desktopMap = [
+        ["lane-r32", "lane-r16", "lane-qf"],
+        ["lane-r16", "lane-qf", "lane-sf"],
+        ["lane-qf", "lane-sf", "lane-final"]
+      ];
       return desktopMap[currentBracketWindow] || desktopMap[0];
     }
 
-    function clampBracketWindow(value) { return Math.max(0, Math.min(getMaxBracketWindow(), value)); }
+    function clampBracketWindow(value) {
+      return Math.max(0, Math.min(getMaxBracketWindow(), value));
+    }
 
     function applyBracketWindowClass() {
-      document.body.classList.remove("bracket-window-0","bracket-window-1","bracket-window-2","bracket-window-3");
+      document.body.classList.remove(
+        "bracket-window-0",
+        "bracket-window-1",
+        "bracket-window-2",
+        "bracket-window-3"
+      );
+
       document.body.classList.add("bracket-window-" + currentBracketWindow);
       document.body.classList.toggle("bracket-mobile-view", isMobileBracketView());
     }
@@ -98,14 +142,16 @@
     function updateBracketPaneHeight() {
       const scrollEl = getBracketScrollEl();
       if (!scrollEl) return;
-      const activeLaneClasses = getActiveLaneClasses();
+
       let maxHeight = 0;
-      activeLaneClasses.forEach(function (cls) {
-        const laneEl = scrollEl.querySelector('.' + cls);
+
+      getActiveLaneClasses().forEach(function (cls) {
+        const laneEl = scrollEl.querySelector("." + cls);
         if (!laneEl) return;
         maxHeight = Math.max(maxHeight, laneEl.scrollHeight);
       });
-      scrollEl.style.height = maxHeight > 0 ? (maxHeight + 'px') : '';
+
+      scrollEl.style.height = maxHeight > 0 ? maxHeight + "px" : "";
     }
 
     function setBracketWindow(index) {
@@ -114,40 +160,62 @@
       requestAnimationFrame(updateBracketPaneHeight);
     }
 
-    function syncBracketWindowFromScroll() {
-      const scrollEl = getBracketScrollEl();
-      if (!scrollEl) return;
-      const step = getBracketStepPx();
-      const computedIndex = Math.round(scrollEl.scrollLeft / step);
-      if (computedIndex !== currentBracketWindow) {
-        setBracketWindow(computedIndex);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-
     function updateBracketNavButtons() {
       const scrollEl = getBracketScrollEl();
       const leftBtn = document.getElementById("bracketLeftBtn");
       const rightBtn = document.getElementById("bracketRightBtn");
+
       if (!leftBtn || !rightBtn) return;
-      if (!scrollEl) { leftBtn.classList.add("is-hidden"); rightBtn.classList.add("is-hidden"); return; }
+
+      if (!scrollEl) {
+        leftBtn.classList.add("is-hidden");
+        rightBtn.classList.add("is-hidden");
+        return;
+      }
+
       const maxScroll = scrollEl.scrollWidth - scrollEl.clientWidth;
       const scrollLeft = scrollEl.scrollLeft;
-      if (maxScroll <= 2) { leftBtn.classList.add("is-hidden"); rightBtn.classList.add("is-hidden"); return; }
-      if (scrollLeft <= 2) leftBtn.classList.add("is-hidden"); else leftBtn.classList.remove("is-hidden");
-      if (scrollLeft >= maxScroll - 2) rightBtn.classList.add("is-hidden"); else rightBtn.classList.remove("is-hidden");
+
+      if (maxScroll <= 2) {
+        leftBtn.classList.add("is-hidden");
+        rightBtn.classList.add("is-hidden");
+        return;
+      }
+
+      leftBtn.classList.toggle("is-hidden", scrollLeft <= 2);
+      rightBtn.classList.toggle("is-hidden", scrollLeft >= maxScroll - 2);
+    }
+
+    function syncBracketWindowFromScroll() {
+      const scrollEl = getBracketScrollEl();
+      if (!scrollEl) return;
+
+      const nextWindow = clampBracketWindow(Math.round(scrollEl.scrollLeft / getBracketStepPx()));
+
+      if (nextWindow !== currentBracketWindow) {
+        setBracketWindow(nextWindow);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
 
     function handleBracketScroll() {
       updateBracketNavButtons();
+
       if (scrollSyncTimer) clearTimeout(scrollSyncTimer);
-      scrollSyncTimer = setTimeout(function () { syncBracketWindowFromScroll(); }, 120);
+
+      scrollSyncTimer = setTimeout(function () {
+        syncBracketWindowFromScroll();
+      }, 120);
     }
 
     function attachBracketScrollListener() {
       const scrollEl = getBracketScrollEl();
       if (!scrollEl) return;
-      if (boundScrollEl && boundScrollEl !== scrollEl) boundScrollEl.removeEventListener("scroll", handleBracketScroll);
+
+      if (boundScrollEl && boundScrollEl !== scrollEl) {
+        boundScrollEl.removeEventListener("scroll", handleBracketScroll);
+      }
+
       if (boundScrollEl !== scrollEl) {
         scrollEl.addEventListener("scroll", handleBracketScroll, { passive: true });
         boundScrollEl = scrollEl;
@@ -157,45 +225,80 @@
     function scrollBracket(direction) {
       const scrollEl = getBracketScrollEl();
       if (!scrollEl) return;
+
       const nextWindow = clampBracketWindow(currentBracketWindow + direction);
-      const step = getBracketStepPx();
+
       setBracketWindow(nextWindow);
-      scrollEl.scrollTo({ left: nextWindow * step, behavior: "smooth" });
+
+      scrollEl.scrollTo({
+        left: nextWindow * getBracketStepPx(),
+        behavior: "smooth"
+      });
+
       window.scrollTo({ top: 0, behavior: "smooth" });
-      setTimeout(function () { updateBracketNavButtons(); updateBracketPaneHeight(); }, 350);
+
+      setTimeout(function () {
+        updateBracketNavButtons();
+        updateBracketPaneHeight();
+      }, 350);
     }
 
     function syncBracketToViewport() {
       const scrollEl = getBracketScrollEl();
+
       currentBracketWindow = clampBracketWindow(currentBracketWindow);
       applyBracketWindowClass();
-      if (scrollEl) scrollEl.scrollLeft = currentBracketWindow * getBracketStepPx();
+
+      if (scrollEl) {
+        scrollEl.scrollLeft = currentBracketWindow * getBracketStepPx();
+      }
+
       updateBracketNavButtons();
       requestAnimationFrame(updateBracketPaneHeight);
     }
 
-    function goToGroupStage() { window.location.href = "landing.html"; }
-	function goToR32Mapping () { window.location.href = "R32_mapping.html"; }
-    function logout() { localStorage.removeItem(SESSION_KEY); window.location.href = "index.html"; }
+    function goToGroupStage() {
+      window.location.href = "landing.html";
+    }
+
+    function goToR32Mapping() {
+      window.location.href = "R32_mapping.html";
+    }
+
+    function logout() {
+      localStorage.removeItem(SESSION_KEY);
+      window.location.href = "index.html";
+    }
 
     function buildTopbar() {
-      if (window.R32Utils && typeof R32Utils.renderTopbar === "function" && typeof R32Utils.makeButtonHtml === "function") {
+      if (
+        window.R32Utils &&
+        typeof R32Utils.renderTopbar === "function" &&
+        typeof R32Utils.makeButtonHtml === "function"
+      ) {
         const actionsHtml = [
           R32Utils.makeButtonHtml({ label: "Group Stage", onClick: "goToGroupStage()" }),
-		  R32Utils.makeButtonHtml({ label: "Team Mapping", onClick: "goToR32Mapping()" }),
+          R32Utils.makeButtonHtml({ label: "Team Mapping", onClick: "goToR32Mapping()" }),
           R32Utils.makeButtonHtml({ label: "Logout", onClick: "logout()" })
         ].join("");
-        R32Utils.renderTopbar({ title: "Knockout Stage Bracket", actionsHtml });
+
+        R32Utils.renderTopbar({
+          title: "Knockout Stage Bracket",
+          actionsHtml
+        });
+
         return;
       }
+
       const topbar = document.getElementById("topbar");
       if (!topbar) return;
+
       topbar.innerHTML = `
         <div class="r32-topbar-inner">
           <div class="r32-topbar-title">Knockout Stage Bracket</div>
           <div class="r32-topbar-actions">
             <button class="r32-btn" onclick="goToGroupStage()">Group Stage</button>
-			<button class="r32-btn" onclick="goToR32Mapping()">Team Mapping</button>
+            <button class="r32-btn" onclick="goToR32Mapping()">Team Mapping</button>
             <button class="r32-btn" onclick="logout()">Logout</button>
           </div>
         </div>`;
@@ -204,6 +307,7 @@
     function renderEmptyState(message) {
       const app = document.getElementById("bracketApp");
       if (!app) return;
+
       app.innerHTML = `<div class="empty-state">${message}</div>`;
       updateBracketNavButtons();
     }
@@ -212,224 +316,463 @@
       return JSON.parse(JSON.stringify(value || null));
     }
 
+    function firstNonEmpty() {
+      for (let i = 0; i < arguments.length; i++) {
+        const value = arguments[i];
+        if (value == null) continue;
+        if (String(value).trim() !== "") return value;
+      }
+      return null;
+    }
+
+    function normalizePlacementKey(value) {
+      return String(value || "")
+        .trim()
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/\s*\/\s*/g, "/")
+        .toUpperCase();
+    }
+
+    function getMatchNumberFromAny(match) {
+      const raw =
+        match && (
+          match.matchNumber != null ? match.matchNumber :
+          match.matchNo != null ? match.matchNo :
+          match.number != null ? match.number :
+          match.id != null ? match.id :
+          null
+        );
+
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function isWinnerSlot(value) {
+      return /^W\d+$/i.test(String(value || "").trim());
+    }
+
+    function isPlacementPlaceholder(value) {
+      const text = normalizePlacementKey(value);
+
+      return (
+        /^[123][A-Z]$/.test(text) ||
+        /^(1ST|2ND|3RD|4TH)\s+[A-Z](\/[A-Z])*$/.test(text)
+      );
+    }
+
     function buildPlacementToTeamLookup(mappingData) {
       const lookup = {};
+
       Object.entries(mappingData || {}).forEach(function ([teamName, data]) {
-        const placement = String(data && data.placement ? data.placement : "").trim();
+        if (!data || typeof data !== "object") return;
+
+        const placement = normalizePlacementKey(data.placement);
         if (!placement) return;
+
         lookup[placement] = teamName;
       });
+
       return lookup;
     }
 
-    function fillLiveBracketTeamsFromMapping(liveDocData, mappingData) {
+    function seedLocalLiveFromMergedMatches(liveDocData, mergedMatches) {
       const safeLive = cloneJson(liveDocData) || {};
-      safeLive.matches = safeLive.matches && typeof safeLive.matches === 'object' ? safeLive.matches : {};
+      safeLive.matches =
+        safeLive.matches && typeof safeLive.matches === "object"
+          ? safeLive.matches
+          : {};
+
+      (Array.isArray(mergedMatches) ? mergedMatches : []).forEach(function (match) {
+        const matchNumber = getMatchNumberFromAny(match);
+        if (!matchNumber) return;
+
+        const key = String(matchNumber);
+        const liveMatch = safeLive.matches[key] || {};
+
+        liveMatch.matchNumber = liveMatch.matchNumber || matchNumber;
+
+        liveMatch.slot1 = firstNonEmpty(
+          liveMatch.slot1,
+          match.slot1,
+          match.slot1Label,
+          match.homeSlot,
+          match.homeSeed,
+          match.team1Slot
+        );
+
+        liveMatch.slot2 = firstNonEmpty(
+          liveMatch.slot2,
+          match.slot2,
+          match.slot2Label,
+          match.awaySlot,
+          match.awaySeed,
+          match.team2Slot
+        );
+
+        liveMatch.team1 = firstNonEmpty(
+          liveMatch.team1,
+          match.team1,
+          match.slot1Team,
+          match.homeTeam,
+          match.homeName
+        );
+
+        liveMatch.team2 = firstNonEmpty(
+          liveMatch.team2,
+          match.team2,
+          match.slot2Team,
+          match.awayTeam,
+          match.awayName
+        );
+
+        liveMatch.score1 = firstNonEmpty(
+          match.score1,
+          match.homeScore,
+          match.scoreHome,
+          liveMatch.score1
+        );
+
+        liveMatch.score2 = firstNonEmpty(
+          match.score2,
+          match.awayScore,
+          match.scoreAway,
+          liveMatch.score2
+        );
+
+        liveMatch.status = firstNonEmpty(
+          match.status,
+          match.matchStatus,
+          match.state,
+          liveMatch.status
+        );
+
+        liveMatch.gameTime = firstNonEmpty(
+          match.gameTime,
+          match.time,
+          match.startTime,
+          match.dateTime,
+          liveMatch.gameTime
+        );
+
+        liveMatch.winner = firstNonEmpty(
+          match.winner,
+          match.winnerTeam,
+          match.winningTeam,
+          liveMatch.winner
+        );
+
+        safeLive.matches[key] = liveMatch;
+      });
+
+      return safeLive;
+    }
+
+    function fillLocalTeamsFromMapping(localLiveData, mappingData) {
+      const safeLive = cloneJson(localLiveData) || {};
+      safeLive.matches =
+        safeLive.matches && typeof safeLive.matches === "object"
+          ? safeLive.matches
+          : {};
 
       const lookup = buildPlacementToTeamLookup(mappingData);
-      let didChange = false;
 
       Object.keys(safeLive.matches).forEach(function (matchKey) {
         const match = safeLive.matches[matchKey] || {};
-        const slot1 = String(match.slot1 || "").trim();
-        const slot2 = String(match.slot2 || "").trim();
 
-        if ((match.team1 == null || match.team1 === "") && slot1 && lookup[slot1]) {
-          match.team1 = lookup[slot1];
-          didChange = true;
+        const slot1Key = normalizePlacementKey(match.slot1);
+        const slot2Key = normalizePlacementKey(match.slot2);
+
+        const mappedTeam1 = lookup[slot1Key];
+        const mappedTeam2 = lookup[slot2Key];
+
+        if (
+          mappedTeam1 &&
+          (
+            match.team1 == null ||
+            String(match.team1).trim() === "" ||
+            normalizePlacementKey(match.team1) === slot1Key ||
+            isPlacementPlaceholder(match.team1)
+          )
+        ) {
+          match.team1 = mappedTeam1;
         }
-        if ((match.team2 == null || match.team2 === "") && slot2 && lookup[slot2]) {
-          match.team2 = lookup[slot2];
-          didChange = true;
+
+        if (
+          mappedTeam2 &&
+          (
+            match.team2 == null ||
+            String(match.team2).trim() === "" ||
+            normalizePlacementKey(match.team2) === slot2Key ||
+            isPlacementPlaceholder(match.team2)
+          )
+        ) {
+          match.team2 = mappedTeam2;
         }
 
         safeLive.matches[matchKey] = match;
       });
 
-      return { liveDocData: safeLive, didChange: didChange };
+      return safeLive;
     }
-	
 
-	function propagateWinners(matches) {
+    function propagateLocalWinnersUntilStable(localLiveData) {
+      const matches =
+        localLiveData &&
+        localLiveData.matches &&
+        typeof localLiveData.matches === "object"
+          ? localLiveData.matches
+          : {};
 
-	  let didChange = false;
+      for (let pass = 0; pass < 8; pass++) {
+        let changed = false;
 
-	  Object.keys(matches).forEach(function (matchKey) {
+        Object.keys(matches).forEach(function (matchKey) {
+          const match = matches[matchKey] || {};
 
-		const match = matches[matchKey] || {};
+          if (isWinnerSlot(match.slot1)) {
+            const prevMatchNum = String(match.slot1).trim().replace(/^W/i, "");
+            const prevMatch = matches[prevMatchNum];
 
-		// ---- team1 from Wxx ----
-		if ((match.team1 == null || match.team1 === "") &&
-			match.slot1 && match.slot1.startsWith("W")) {
+            if (prevMatch && prevMatch.winner && match.team1 !== prevMatch.winner) {
+              match.team1 = prevMatch.winner;
+              changed = true;
+            }
+          }
 
-		  const prevMatchNum = match.slot1.replace("W", "");
-		  const prevMatch = matches[prevMatchNum] || matches[String(prevMatchNum)];
+          if (isWinnerSlot(match.slot2)) {
+            const prevMatchNum = String(match.slot2).trim().replace(/^W/i, "");
+            const prevMatch = matches[prevMatchNum];
 
-		  if (prevMatch && prevMatch.winner) {
-			match.team1 = prevMatch.winner;
-			didChange = true;
-		  }
-		}
+            if (prevMatch && prevMatch.winner && match.team2 !== prevMatch.winner) {
+              match.team2 = prevMatch.winner;
+              changed = true;
+            }
+          }
 
-		// ---- team2 from Wxx ----
-		if ((match.team2 == null || match.team2 === "") &&
-			match.slot2 && match.slot2.startsWith("W")) {
+          matches[matchKey] = match;
+        });
 
-		  const prevMatchNum = match.slot2.replace("W", "");
-		  const prevMatch = matches[prevMatchNum] || matches[String(prevMatchNum)];
+        if (!changed) break;
+      }
 
-		  if (prevMatch && prevMatch.winner) {
-			match.team2 = prevMatch.winner;
-			didChange = true;
-		  }
-		}
+      localLiveData.matches = matches;
+      return localLiveData;
+    }
 
-		matches[matchKey] = match;
-	  });
-
-	  return didChange;
-	}
-
-    function applyLiveBracketTeamsToMergedMatches(mergedMatches, liveDocData) {
+    function applyLocalLiveToMergedMatches(mergedMatches, localLiveData) {
       const list = Array.isArray(mergedMatches) ? cloneJson(mergedMatches) : [];
-      const liveMatches = liveDocData && liveDocData.matches && typeof liveDocData.matches === 'object' ? liveDocData.matches : {};
+
+      const liveMatches =
+        localLiveData &&
+        localLiveData.matches &&
+        typeof localLiveData.matches === "object"
+          ? localLiveData.matches
+          : {};
 
       list.forEach(function (match) {
-        const matchNumber = Number(match && (match.matchNumber != null ? match.matchNumber : match.matchNo != null ? match.matchNo : match.number != null ? match.number : match.id != null ? match.id : null));
-        if (!Number.isFinite(matchNumber)) return;
+        const matchNumber = getMatchNumberFromAny(match);
+        if (!matchNumber) return;
 
-        const liveMatch = liveMatches[String(matchNumber)] || liveMatches[matchNumber];
+        const liveMatch = liveMatches[String(matchNumber)];
         if (!liveMatch) return;
 
-        const team1 = liveMatch.team1 || null;
-        const team2 = liveMatch.team2 || null;
-        const slot1 = liveMatch.slot1 || match.slot1Label || null;
-        const slot2 = liveMatch.slot2 || match.slot2Label || null;
+        if (liveMatch.slot1 && !match.slot1Label) match.slot1Label = liveMatch.slot1;
+        if (liveMatch.slot2 && !match.slot2Label) match.slot2Label = liveMatch.slot2;
 
-        if (slot1 && !match.slot1Label) match.slot1Label = slot1;
-        if (slot2 && !match.slot2Label) match.slot2Label = slot2;
-
-        if (team1) {
-          match.team1 = team1;
-          match.slot1Team = team1;
-          match.homeTeam = team1;
-          match.homeName = team1;
+        if (liveMatch.team1) {
+          match.team1 = liveMatch.team1;
+          match.slot1Team = liveMatch.team1;
+          match.homeTeam = liveMatch.team1;
+          match.homeName = liveMatch.team1;
         }
-        if (team2) {
-          match.team2 = team2;
-          match.slot2Team = team2;
-          match.awayTeam = team2;
-          match.awayName = team2;
+
+        if (liveMatch.team2) {
+          match.team2 = liveMatch.team2;
+          match.slot2Team = liveMatch.team2;
+          match.awayTeam = liveMatch.team2;
+          match.awayName = liveMatch.team2;
+        }
+
+        if (liveMatch.winner) {
+          match.winner = liveMatch.winner;
+          match.winnerTeam = liveMatch.winner;
+          match.winningTeam = liveMatch.winner;
         }
       });
 
       return list;
     }
 
-	async function synchronizeBracketFromNewSchema(db, context) {
-	  const mappingRef = db.collection(R32_MAPPING_COLLECTION).doc(R32_MAPPING_DOC_ID);
-	  const liveRef = db.collection(LIVE_COLLECTION).doc(LIVE_BRACKET_DOC_ID);
+    async function getCachedR32MappingData(db) {
+      if (cachedR32MappingLoaded) return cachedR32MappingData || {};
 
-	  const [mappingSnap, liveSnap] = await Promise.all([
-		mappingRef.get(),
-		liveRef.get()
-	  ]);
+      const snap = await db
+        .collection(R32_MAPPING_COLLECTION)
+        .doc(R32_MAPPING_DOC_ID)
+        .get();
 
-	  const mappingData = mappingSnap.exists ? (mappingSnap.data() || {}) : {};
-	  const liveDocData = liveSnap.exists ? (liveSnap.data() || {}) : {};
-	  const mergedMatches = context && Array.isArray(context.mergedMatches) ? context.mergedMatches : [];
+      cachedR32MappingData = snap.exists ? (snap.data() || {}) : {};
+      cachedR32MappingLoaded = true;
 
-	  // 1. Start from live doc, but seed any missing match shells from mergedMatches.
-	  const seedResult = seedLiveMatchesFromMergedMatches(liveDocData, mergedMatches);
+      console.log("[R32 Bracket] Loaded R32mapping once", buildPlacementToTeamLookup(cachedR32MappingData));
 
-	  // 2. Fill R32 teams from R32mapping placement -> team.
-	  const fillResult = fillLiveBracketTeamsFromMapping(seedResult.liveDocData, mappingData);
+      return cachedR32MappingData;
+    }
 
-	  // 3. Propagate winners repeatedly so later rounds update in the same load.
-	  const winnerChanged = propagateWinnersUntilStable(fillResult.liveDocData.matches);
+    async function synchronizeBracketForDisplay(db, context) {
+      const mergedMatches =
+        context && Array.isArray(context.mergedMatches)
+          ? context.mergedMatches
+          : [];
 
-	  const didChange =
-		seedResult.didChange ||
-		fillResult.didChange ||
-		winnerChanged;
+      const mappingData = await getCachedR32MappingData(db);
 
-	  if (didChange) {
-		await liveRef.set({
-		  matches: fillResult.liveDocData.matches,
-		  updatedAtUtc: firebase.firestore.FieldValue.serverTimestamp()
-		}, { merge: true });
-	  }
+      const liveSnap = await db
+        .collection(LIVE_COLLECTION)
+        .doc(LIVE_BRACKET_DOC_ID)
+        .get();
 
-	  // 4. IMPORTANT:
-	  // Render from context.mergedMatches, not window.R32matches.
-	  // context.mergedMatches contains score/status/winner data from R32_fetchScores.
-	  const nextContext = Object.assign({}, context || {});
-	  nextContext.mergedMatches = applyLiveBracketTeamsToMergedMatches(
-		mergedMatches,
-		fillResult.liveDocData
-	  );
+      const liveDocData = liveSnap.exists ? (liveSnap.data() || {}) : {};
 
-	  return nextContext;
-	}
+      let localLiveData = seedLocalLiveFromMergedMatches(liveDocData, mergedMatches);
+      localLiveData = fillLocalTeamsFromMapping(localLiveData, mappingData);
+      localLiveData = propagateLocalWinnersUntilStable(localLiveData);
+
+      const nextContext = Object.assign({}, context || {});
+
+      nextContext.mergedMatches = applyLocalLiveToMergedMatches(
+        mergedMatches,
+        localLiveData
+      );
+
+      return nextContext;
+    }
 
     function renderBracket(context) {
       const app = document.getElementById("bracketApp");
       const lastUpdatedText = document.getElementById("lastUpdatedText");
+
       if (!app) return;
+
       const mergedMatches = context && context.mergedMatches ? context.mergedMatches : [];
+
       if (!mergedMatches.length) {
         renderEmptyState("No knockout schedule found.");
         if (lastUpdatedText) lastUpdatedText.textContent = "Last Updated: —";
         return;
       }
+
       const boardSpec = [
-        { title: "Round of 32", laneClass: "lane-r32", matchNumbers: [74,77,73,75,83,84,81,82,76,78,79,80,86,88,85,87] },
-        { title: "Round of 16", laneClass: "lane-r16", matchNumbers: [89,90,93,94,91,92,95,96] },
-        { title: "Quarter-finals", laneClass: "lane-qf", matchNumbers: [97,98,99,100] },
-        { title: "Semi-finals", laneClass: "lane-sf", matchNumbers: [101,102] },
-        { title: "Final", laneClass: "lane-final", matchNumbers: [104,103] }
+        {
+          title: "Round of 32",
+          laneClass: "lane-r32",
+          matchNumbers: [74, 77, 73, 75, 83, 84, 81, 82, 76, 78, 79, 80, 86, 88, 85, 87]
+        },
+        {
+          title: "Round of 16",
+          laneClass: "lane-r16",
+          matchNumbers: [89, 90, 93, 94, 91, 92, 95, 96]
+        },
+        {
+          title: "Quarter-finals",
+          laneClass: "lane-qf",
+          matchNumbers: [97, 98, 99, 100]
+        },
+        {
+          title: "Semi-finals",
+          laneClass: "lane-sf",
+          matchNumbers: [101, 102]
+        },
+        {
+          title: "Final",
+          laneClass: "lane-final",
+          matchNumbers: [104, 103]
+        }
       ];
+
       app.innerHTML = R32MatchCards.buildBracketBoardHtml(boardSpec, mergedMatches);
+
       applyBracketWindowClass();
       attachBracketScrollListener();
-      requestAnimationFrame(function () { syncBracketToViewport(); });
+
+      requestAnimationFrame(function () {
+        syncBracketToViewport();
+      });
+
       if (lastUpdatedText) {
-        lastUpdatedText.textContent = `Last Updated: ${R32Utils.formatUpdatedAtEdt(context && context.fetchedAtClientUtc)}`;
+        lastUpdatedText.textContent =
+          `Last Updated: ${R32Utils.formatUpdatedAtEdt(context && context.fetchedAtClientUtc)}`;
       }
     }
 
     function startPage() {
       buildTopbar();
       setBracketWindow(0);
+
       if (!window.R32matches || !Array.isArray(window.R32matches) || !window.R32matches.length) {
-        renderEmptyState("matches.js loaded, but window.R32matches is missing or empty."); return;
+        renderEmptyState("matches.js loaded, but window.R32matches is missing or empty.");
+        return;
       }
-      if (!window.R32FetchScores) { renderEmptyState("R32_fetchScores.js failed to load."); return; }
-      if (!window.R32Utils) { renderEmptyState("R32_utils.js failed to load."); return; }
-      if (!window.R32MatchCards) { renderEmptyState("R32_matchCards.js failed to load."); return; }
+
+      if (!window.R32FetchScores) {
+        renderEmptyState("R32_fetchScores.js failed to load.");
+        return;
+      }
+
+      if (!window.R32Utils) {
+        renderEmptyState("R32_utils.js failed to load.");
+        return;
+      }
+
+      if (!window.R32MatchCards) {
+        renderEmptyState("R32_matchCards.js failed to load.");
+        return;
+      }
 
       const dbInstance = getDbInstance();
-      if (!dbInstance) { renderEmptyState("firebase.js loaded, but Firestore db is not available."); return; }
 
-      idleRuntime = R32Utils.installIdleTimeout({ sessionKey: SESSION_KEY, redirectUrl: "index.html", idleMs: R32_IDLE_MS, checkMs: 60 * 1000 });
-      window.addEventListener("resize", function () { syncBracketToViewport(); });
+      if (!dbInstance) {
+        renderEmptyState("firebase.js loaded, but Firestore db is not available.");
+        return;
+      }
+
+      idleRuntime = R32Utils.installIdleTimeout({
+        sessionKey: SESSION_KEY,
+        redirectUrl: "index.html",
+        idleMs: R32_IDLE_MS,
+        checkMs: 60 * 1000
+      });
+
+      window.addEventListener("resize", function () {
+        syncBracketToViewport();
+      });
 
       refreshRuntime = R32Utils.startR32PageRefresh({
         db: dbInstance,
-        syncUrl: KNOCKOUT_SYNC_URL,
+        syncUrl: "",
         refreshMs: R32_REFRESH_MS,
-        triggerSyncOnStart: true,
-        triggerSyncOnRefresh: true,
+
+        // Important:
+        // R32_bracket.html is now display-only.
+        // Do not trigger external sync from this page.
+        triggerSyncOnStart: false,
+        triggerSyncOnRefresh: false,
+
         onUpdate: async function (context) {
           try {
-            const nextContext = await synchronizeBracketFromNewSchema(dbInstance, context || {});
+            const nextContext = await synchronizeBracketForDisplay(dbInstance, context || {});
             renderBracket(nextContext);
           } catch (err) {
-            console.error("R32 bracket schema sync error:", err);
+            console.error("R32 bracket display sync error:", err);
             renderBracket(context || {});
           }
         },
-        onError: function (err) { console.error("R32 bracket refresh error:", err); renderEmptyState("Failed to load knockout bracket."); }
+
+        onError: function (err) {
+          console.error("R32 bracket refresh error:", err);
+          renderEmptyState("Failed to load knockout bracket.");
+        }
       });
     }
 
