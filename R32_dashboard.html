@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>WC 2026 - Knockout Dashboard</title>
+
+  <link rel="stylesheet" href="../WC_common/R32_styles.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1400px;
+      height: 680px;
+      overflow: hidden;
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      color: #222;
+    }
+
+    body {
+      min-height: 0;
+      line-height: 1.4;
+      padding-top: 0 !important;
+    }
+
+    .dashboard {
+      position: relative;
+      width: 1400px;
+      height: 680px;
+      padding: 18px 6px 6px 6px;
+      background: #f4f4f4;
+      overflow: hidden;
+    }
+
+    .last-update {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-size: 10px;
+      color: #666;
+      font-weight: 500;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    #bracketApp {
+      position: relative !important;
+      width: 1388px;
+      height: 656px;
+      overflow: visible;
+    }
+
+    .bracket-scroll {
+      position: relative !important;
+      z-index: 2;
+      width: 1388px !important;
+      max-width: none !important;
+      height: 656px !important;
+      min-height: 656px !important;
+      max-height: 656px !important;
+      overflow: hidden !important;
+      padding-bottom: 0 !important;
+      scrollbar-width: none;
+    }
+
+    .bracket-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .bracket-board {
+      display: grid !important;
+      grid-template-columns: repeat(9, 148px) !important;
+      column-gap: 7px !important;
+      row-gap: 0 !important;
+      width: 1388px !important;
+      min-width: 1388px !important;
+      height: 656px !important;
+      min-height: 656px !important;
+      align-items: stretch !important;
+      overflow: visible !important;
+    }
+
+    .bracket-lane {
+      width: 148px !important;
+      flex: none !important;
+      min-width: 0 !important;
+      height: 656px !important;
+      min-height: 656px !important;
+      overflow: visible !important;
+    }
+
+    .bracket-lane-title,
+    .bracket-last-updated,
+    .bracket-nav-btn {
+      display: none !important;
+    }
+
+    .bracket-lane-cards {
+      position: relative !important;
+      display: block !important;
+      width: 148px !important;
+      height: 656px !important;
+      min-height: 656px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      gap: 0 !important;
+      transition: none !important;
+      overflow: visible !important;
+    }
+
+    .bracket-lane-cards > .match-card {
+      position: absolute !important;
+      left: 0 !important;
+      width: 148px !important;
+      height: 76px !important;
+      min-height: 76px !important;
+      max-height: 76px !important;
+      margin: 0 !important;
+      z-index: 5;
+    }
+
+    /* Round of 32 */
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(1),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(1) {
+      top: 10px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(2),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(2) {
+      top: 90px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(3),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(3) {
+      top: 170px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(4),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(4) {
+      top: 250px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(5),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(5) {
+      top: 330px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(6),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(6) {
+      top: 410px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(7),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(7) {
+      top: 490px;
+    }
+
+    .tv-left-r32 .bracket-lane-cards > .match-card:nth-child(8),
+    .tv-right-r32 .bracket-lane-cards > .match-card:nth-child(8) {
+      top: 570px;
+    }
+
+    /* Round of 16 */
+    .tv-left-r16 .bracket-lane-cards > .match-card:nth-child(1),
+    .tv-right-r16 .bracket-lane-cards > .match-card:nth-child(1) {
+      top: 50px;
+    }
+
+    .tv-left-r16 .bracket-lane-cards > .match-card:nth-child(2),
+    .tv-right-r16 .bracket-lane-cards > .match-card:nth-child(2) {
+      top: 210px;
+    }
+
+    .tv-left-r16 .bracket-lane-cards > .match-card:nth-child(3),
+    .tv-right-r16 .bracket-lane-cards > .match-card:nth-child(3) {
+      top: 370px;
+    }
+
+    .tv-left-r16 .bracket-lane-cards > .match-card:nth-child(4),
+    .tv-right-r16 .bracket-lane-cards > .match-card:nth-child(4) {
+      top: 530px;
+    }
+
+    /* Quarter-finals */
+    .tv-left-qf .bracket-lane-cards > .match-card:nth-child(1),
+    .tv-right-qf .bracket-lane-cards > .match-card:nth-child(1) {
+      top: 130px;
+    }
+
+    .tv-left-qf .bracket-lane-cards > .match-card:nth-child(2),
+    .tv-right-qf .bracket-lane-cards > .match-card:nth-child(2) {
+      top: 450px;
+    }
+
+    /* Semi-finals */
+    .tv-left-sf .bracket-lane-cards > .match-card:nth-child(1),
+    .tv-right-sf .bracket-lane-cards > .match-card:nth-child(1) {
+      top: 290px;
+    }
+
+    /* Final */
+    .tv-final .bracket-lane-cards > .match-card:nth-child(1) {
+      top: 290px;
+    }
+
+    /* 3rd place */
+    .tv-final .bracket-lane-cards > .match-card:nth-child(2) {
+      top: 396px;
+    }
+
+    .match-card {
+      width: 148px !important;
+      height: 76px !important;
+      min-height: 76px !important;
+      max-height: 76px !important;
+      padding: 4px 5px !important;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .match-card.live-match {
+      border: 2px solid #1a73e8;
+      background: #eef6ff;
+    }
+
+    .match-card.complete-match {
+      border: 1px solid #e0c24d;
+      background: #fff9d9;
+    }
+
+    .match-head {
+      height: 16px !important;
+      margin-bottom: 2px !important;
+      gap: 4px !important;
+      align-items: center !important;
+    }
+
+    .match-head-left {
+      min-width: 0;
+    }
+
+    .match-head-right {
+      max-width: 62% !important;
+      min-width: 0;
+    }
+
+    .match-num {
+      font-size: 8px !important;
+      line-height: 1 !important;
+      white-space: nowrap;
+    }
+
+    .match-status-wrap {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .match-status {
+      min-height: 13px !important;
+      padding: 0 4px !important;
+      font-size: 7px !important;
+      line-height: 1 !important;
+    }
+
+    .match-live-time {
+      font-size: 7px !important;
+      margin-left: 3px !important;
+      line-height: 1 !important;
+    }
+
+    .match-scheduled-time {
+      margin-top: 1px !important;
+      font-size: 7px !important;
+      line-height: 1 !important;
+    }
+
+    .team-row {
+      gap: 4px !important;
+      padding: 2px 0 !important;
+      min-height: 0 !important;
+      border-top: 1px solid #eee;
+    }
+
+    .team-row:first-of-type {
+      border-top: none;
+    }
+
+    .team-main {
+      gap: 4px !important;
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    .team-flag,
+    .team-flag-text,
+    .team-flag-placeholder {
+      width: 15px !important;
+      height: 11px !important;
+      border-radius: 2px;
+      flex: 0 0 auto;
+    }
+
+    .team-flag-text {
+      font-size: 10px !important;
+    }
+
+    .team-text {
+      gap: 0 !important;
+      min-width: 0;
+    }
+
+    .team-name {
+      font-size: 8px !important;
+      line-height: 1.05 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-line {
+      font-size: 7px !important;
+      line-height: 1.05 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score-box {
+      min-width: 11px !important;
+      font-size: 10px !important;
+      line-height: 1 !important;
+      font-weight: bold;
+    }
+
+    .r32-tv-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1388px;
+      height: 656px;
+      z-index: 1;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .r32-tv-line {
+      fill: none;
+      stroke: #bdbdbd;
+      stroke-width: 1.5;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    .empty-state {
+      width: 100%;
+      height: 656px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      background: #fafafa;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .is-hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard">
+    <div id="lastUpdatedText" class="last-update">Last Updated: —</div>
+    <div id="bracketApp"></div>
+  </div>
+
+  <script>
+    window.global = window;
+    window.process = window.process || { env: {} };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+
+  <script src="../WC_common/matches.js"></script>
+  <script src="../WC_common/teams.js"></script>
+  <script src="../WC_common/R32_fetchScores.js"></script>
+  <script src="../WC_common/R32_utils.js"></script>
+  <script src="../WC_common/R32_matchCards.js"></script>
+
+  <script>
+    const R32_REFRESH_MS = 10 * 60 * 1000;
+
+    const R32_MAPPING_COLLECTION = "R32mapping";
+    const R32_MAPPING_DOC_ID = "main";
+    const LIVE_COLLECTION = "__live";
+    const LIVE_BRACKET_DOC_ID = "knockoutBracket";
+
+    let refreshRuntime = null;
+
+    let cachedR32MappingData = null;
+    let cachedR32MappingLoaded = false;
+
+    function getDbInstance() {
+      try {
+        if (window.firebase && firebase.apps && firebase.apps.length) {
+          return firebase.firestore();
+        }
+      } catch (err) {
+        console.error("Failed to create Firestore instance:", err);
+      }
+
+      return null;
+    }
+
+    function renderEmptyState(message) {
+      const app = document.getElementById("bracketApp");
+      if (!app) return;
+
+      app.innerHTML = `<div class="empty-state">${message}</div>`;
+    }
+
+    function cloneJson(value) {
+      return JSON.parse(JSON.stringify(value || null));
+    }
+
+    function firstNonEmpty() {
+      for (let i = 0; i < arguments.length; i++) {
+        const value = arguments[i];
+        if (value == null) continue;
+        if (String(value).trim() !== "") return value;
+      }
+
+      return null;
+    }
+
+    function normalizePlacementKey(value) {
+      return String(value || "")
+        .trim()
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, " ")
+        .replace(/\s*\/\s*/g, "/")
+        .toUpperCase();
+    }
+
+    function getMatchNumberFromAny(match) {
+      const raw =
+        match && (
+          match.matchNumber != null ? match.matchNumber :
+          match.matchNo != null ? match.matchNo :
+          match.number != null ? match.number :
+          match.id != null ? match.id :
+          null
+        );
+
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function isWinnerSlot(value) {
+      return /^W\d+$/i.test(String(value || "").trim());
+    }
+
+    function isPlacementPlaceholder(value) {
+      const text = normalizePlacementKey(value);
+
+      return (
+        /^[123][A-Z]$/.test(text) ||
+        /^(1ST|2ND|3RD|4TH)\s+[A-Z](\/[A-Z])*$/.test(text)
+      );
+    }
+
+    function buildPlacementToTeamLookup(mappingData) {
+      const lookup = {};
+
+      Object.entries(mappingData || {}).forEach(function ([teamName, data]) {
+        if (!data || typeof data !== "object") return;
+
+        const placement = normalizePlacementKey(data.placement);
+        if (!placement) return;
+
+        lookup[placement] = teamName;
+      });
+
+      return lookup;
+    }
+
+    function seedLocalLiveFromMergedMatches(liveDocData, mergedMatches) {
+      const safeLive = cloneJson(liveDocData) || {};
+
+      safeLive.matches =
+        safeLive.matches && typeof safeLive.matches === "object"
+          ? safeLive.matches
+          : {};
+
+      (Array.isArray(mergedMatches) ? mergedMatches : []).forEach(function (match) {
+        const matchNumber = getMatchNumberFromAny(match);
+        if (!matchNumber) return;
+
+        const key = String(matchNumber);
+        const liveMatch = safeLive.matches[key] || {};
+
+        liveMatch.matchNumber = liveMatch.matchNumber || matchNumber;
+
+        liveMatch.slot1 = firstNonEmpty(
+          liveMatch.slot1,
+          match.slot1,
+          match.slot1Label,
+          match.homeSlot,
+          match.homeSeed,
+          match.team1Slot
+        );
+
+        liveMatch.slot2 = firstNonEmpty(
+          liveMatch.slot2,
+          match.slot2,
+          match.slot2Label,
+          match.awaySlot,
+          match.awaySeed,
+          match.team2Slot
+        );
+
+        liveMatch.team1 = firstNonEmpty(
+          liveMatch.team1,
+          match.team1,
+          match.slot1Team,
+          match.homeTeam,
+          match.homeName
+        );
+
+        liveMatch.team2 = firstNonEmpty(
+          liveMatch.team2,
+          match.team2,
+          match.slot2Team,
+          match.awayTeam,
+          match.awayName
+        );
+
+        liveMatch.score1 = firstNonEmpty(
+          match.score1,
+          match.homeScore,
+          match.scoreHome,
+          liveMatch.score1
+        );
+
+        liveMatch.score2 = firstNonEmpty(
+          match.score2,
+          match.awayScore,
+          match.scoreAway,
+          liveMatch.score2
+        );
+
+        liveMatch.status = firstNonEmpty(
+          match.status,
+          match.matchStatus,
+          match.state,
+          liveMatch.status
+        );
+
+        liveMatch.gameTime = firstNonEmpty(
+          match.gameTime,
+          match.time,
+          match.startTime,
+          match.dateTime,
+          liveMatch.gameTime
+        );
+
+        liveMatch.winner = firstNonEmpty(
+          match.winner,
+          match.winnerTeam,
+          match.winningTeam,
+          liveMatch.winner
+        );
+
+        safeLive.matches[key] = liveMatch;
+      });
+
+      return safeLive;
+    }
+
+    function fillLocalTeamsFromMapping(localLiveData, mappingData) {
+      const safeLive = cloneJson(localLiveData) || {};
+
+      safeLive.matches =
+        safeLive.matches && typeof safeLive.matches === "object"
+          ? safeLive.matches
+          : {};
+
+      const lookup = buildPlacementToTeamLookup(mappingData);
+
+      Object.keys(safeLive.matches).forEach(function (matchKey) {
+        const match = safeLive.matches[matchKey] || {};
+
+        const slot1Key = normalizePlacementKey(match.slot1);
+        const slot2Key = normalizePlacementKey(match.slot2);
+
+        const mappedTeam1 = lookup[slot1Key];
+        const mappedTeam2 = lookup[slot2Key];
+
+        if (
+          mappedTeam1 &&
+          (
+            match.team1 == null ||
+            String(match.team1).trim() === "" ||
+            normalizePlacementKey(match.team1) === slot1Key ||
+            isPlacementPlaceholder(match.team1)
+          )
+        ) {
+          match.team1 = mappedTeam1;
+        }
+
+        if (
+          mappedTeam2 &&
+          (
+            match.team2 == null ||
+            String(match.team2).trim() === "" ||
+            normalizePlacementKey(match.team2) === slot2Key ||
+            isPlacementPlaceholder(match.team2)
+          )
+        ) {
+          match.team2 = mappedTeam2;
+        }
+
+        safeLive.matches[matchKey] = match;
+      });
+
+      return safeLive;
+    }
+
+    function propagateLocalWinnersUntilStable(localLiveData) {
+      const matches =
+        localLiveData &&
+        localLiveData.matches &&
+        typeof localLiveData.matches === "object"
+          ? localLiveData.matches
+          : {};
+
+      for (let pass = 0; pass < 8; pass++) {
+        let changed = false;
+
+        Object.keys(matches).forEach(function (matchKey) {
+          const match = matches[matchKey] || {};
+
+          if (isWinnerSlot(match.slot1)) {
+            const prevMatchNum = String(match.slot1).trim().replace(/^W/i, "");
+            const prevMatch = matches[prevMatchNum];
+
+            if (prevMatch && prevMatch.winner && match.team1 !== prevMatch.winner) {
+              match.team1 = prevMatch.winner;
+              changed = true;
+            }
+          }
+
+          if (isWinnerSlot(match.slot2)) {
+            const prevMatchNum = String(match.slot2).trim().replace(/^W/i, "");
+            const prevMatch = matches[prevMatchNum];
+
+            if (prevMatch && prevMatch.winner && match.team2 !== prevMatch.winner) {
+              match.team2 = prevMatch.winner;
+              changed = true;
+            }
+          }
+
+          matches[matchKey] = match;
+        });
+
+        if (!changed) break;
+      }
+
+      localLiveData.matches = matches;
+      return localLiveData;
+    }
+
+    function applyLocalLiveToMergedMatches(mergedMatches, localLiveData) {
+      const list = Array.isArray(mergedMatches) ? cloneJson(mergedMatches) : [];
+
+      const liveMatches =
+        localLiveData &&
+        localLiveData.matches &&
+        typeof localLiveData.matches === "object"
+          ? localLiveData.matches
+          : {};
+
+      list.forEach(function (match) {
+        const matchNumber = getMatchNumberFromAny(match);
+        if (!matchNumber) return;
+
+        const liveMatch = liveMatches[String(matchNumber)];
+        if (!liveMatch) return;
+
+        if (liveMatch.slot1 && !match.slot1Label) match.slot1Label = liveMatch.slot1;
+        if (liveMatch.slot2 && !match.slot2Label) match.slot2Label = liveMatch.slot2;
+
+        if (liveMatch.team1) {
+          match.team1 = liveMatch.team1;
+          match.slot1Team = liveMatch.team1;
+          match.homeTeam = liveMatch.team1;
+          match.homeName = liveMatch.team1;
+        }
+
+        if (liveMatch.team2) {
+          match.team2 = liveMatch.team2;
+          match.slot2Team = liveMatch.team2;
+          match.awayTeam = liveMatch.team2;
+          match.awayName = liveMatch.team2;
+        }
+
+        if (liveMatch.winner) {
+          match.winner = liveMatch.winner;
+          match.winnerTeam = liveMatch.winner;
+          match.winningTeam = liveMatch.winner;
+        }
+      });
+
+      return list;
+    }
+
+    async function getCachedR32MappingData(db) {
+      if (cachedR32MappingLoaded) return cachedR32MappingData || {};
+
+      const snap = await db
+        .collection(R32_MAPPING_COLLECTION)
+        .doc(R32_MAPPING_DOC_ID)
+        .get();
+
+      cachedR32MappingData = snap.exists ? (snap.data() || {}) : {};
+      cachedR32MappingLoaded = true;
+
+      console.log("[R32 Dashboard] Loaded R32mapping once", buildPlacementToTeamLookup(cachedR32MappingData));
+
+      return cachedR32MappingData;
+    }
+
+    async function synchronizeBracketForDisplay(db, context) {
+      const mergedMatches =
+        context && Array.isArray(context.mergedMatches)
+          ? context.mergedMatches
+          : [];
+
+      const mappingData = await getCachedR32MappingData(db);
+
+      const liveSnap = await db
+        .collection(LIVE_COLLECTION)
+        .doc(LIVE_BRACKET_DOC_ID)
+        .get();
+
+      const liveDocData = liveSnap.exists ? (liveSnap.data() || {}) : {};
+
+      let localLiveData = seedLocalLiveFromMergedMatches(liveDocData, mergedMatches);
+      localLiveData = fillLocalTeamsFromMapping(localLiveData, mappingData);
+      localLiveData = propagateLocalWinnersUntilStable(localLiveData);
+
+      const nextContext = Object.assign({}, context || {});
+
+      nextContext.mergedMatches = applyLocalLiveToMergedMatches(
+        mergedMatches,
+        localLiveData
+      );
+
+      return nextContext;
+    }
+
+    function buildConnectorPathLeft(fromCol, fromY1, fromY2, toCol, toY) {
+      const colW = 148;
+      const gap = 7;
+      const pitch = colW + gap;
+
+      const xFrom = fromCol * pitch + colW;
+      const xTo = toCol * pitch;
+      const xMid = (xFrom + xTo) / 2;
+
+      return `
+        M ${xFrom} ${fromY1}
+        H ${xMid}
+        M ${xFrom} ${fromY2}
+        H ${xMid}
+        M ${xMid} ${fromY1}
+        V ${fromY2}
+        M ${xMid} ${toY}
+        H ${xTo}
+      `;
+    }
+
+    function buildConnectorPathRight(fromCol, fromY1, fromY2, toCol, toY) {
+      const colW = 148;
+      const gap = 7;
+      const pitch = colW + gap;
+
+      const xFrom = fromCol * pitch;
+      const xTo = toCol * pitch + colW;
+      const xMid = (xFrom + xTo) / 2;
+
+      return `
+        M ${xFrom} ${fromY1}
+        H ${xMid}
+        M ${xFrom} ${fromY2}
+        H ${xMid}
+        M ${xMid} ${fromY1}
+        V ${fromY2}
+        M ${xMid} ${toY}
+        H ${xTo}
+      `;
+    }
+
+    function buildStraightConnectorLeft(fromCol, fromY, toCol) {
+      const colW = 148;
+      const gap = 7;
+      const pitch = colW + gap;
+
+      const xFrom = fromCol * pitch + colW;
+      const xTo = toCol * pitch;
+
+      return `M ${xFrom} ${fromY} H ${xTo}`;
+    }
+
+    function buildStraightConnectorRight(fromCol, fromY, toCol) {
+      const colW = 148;
+      const gap = 7;
+      const pitch = colW + gap;
+
+      const xFrom = fromCol * pitch;
+      const xTo = toCol * pitch + colW;
+
+      return `M ${xFrom} ${fromY} H ${xTo}`;
+    }
+
+    function drawTvBracketLines() {
+      const app = document.getElementById("bracketApp");
+      if (!app) return;
+
+      app.querySelector(".r32-tv-lines")?.remove();
+
+      const paths = [];
+
+      /* Left side */
+      paths.push(buildConnectorPathLeft(0, 48, 128, 1, 88));
+      paths.push(buildConnectorPathLeft(0, 208, 288, 1, 248));
+      paths.push(buildConnectorPathLeft(0, 368, 448, 1, 408));
+      paths.push(buildConnectorPathLeft(0, 528, 608, 1, 568));
+
+      paths.push(buildConnectorPathLeft(1, 88, 248, 2, 168));
+      paths.push(buildConnectorPathLeft(1, 408, 568, 2, 488));
+
+      paths.push(buildConnectorPathLeft(2, 168, 488, 3, 328));
+      paths.push(buildStraightConnectorLeft(3, 328, 4));
+
+      /* Right side */
+      paths.push(buildConnectorPathRight(8, 48, 128, 7, 88));
+      paths.push(buildConnectorPathRight(8, 208, 288, 7, 248));
+      paths.push(buildConnectorPathRight(8, 368, 448, 7, 408));
+      paths.push(buildConnectorPathRight(8, 528, 608, 7, 568));
+
+      paths.push(buildConnectorPathRight(7, 88, 248, 6, 168));
+      paths.push(buildConnectorPathRight(7, 408, 568, 6, 488));
+
+      paths.push(buildConnectorPathRight(6, 168, 488, 5, 328));
+      paths.push(buildStraightConnectorRight(5, 328, 4));
+
+      const svgHtml = `
+        <svg class="r32-tv-lines" viewBox="0 0 1388 656" preserveAspectRatio="none" aria-hidden="true">
+          ${paths.map(function (d) {
+            return `<path class="r32-tv-line" d="${d}"></path>`;
+          }).join("")}
+        </svg>
+      `;
+
+      app.insertAdjacentHTML("beforeend", svgHtml);
+    }
+
+    function renderBracket(context) {
+      const app = document.getElementById("bracketApp");
+      const lastUpdatedText = document.getElementById("lastUpdatedText");
+
+      if (!app) return;
+
+      const mergedMatches = context && context.mergedMatches ? context.mergedMatches : [];
+
+      if (!mergedMatches.length) {
+        renderEmptyState("No knockout schedule found.");
+        if (lastUpdatedText) lastUpdatedText.textContent = "Last Updated: —";
+        return;
+      }
+
+      const boardSpec = [
+        {
+          title: "",
+          laneClass: "tv-left-r32",
+          matchNumbers: [74, 77, 73, 75, 83, 84, 81, 82]
+        },
+        {
+          title: "",
+          laneClass: "tv-left-r16",
+          matchNumbers: [89, 90, 93, 94]
+        },
+        {
+          title: "",
+          laneClass: "tv-left-qf",
+          matchNumbers: [97, 98]
+        },
+        {
+          title: "",
+          laneClass: "tv-left-sf",
+          matchNumbers: [101]
+        },
+        {
+          title: "",
+          laneClass: "tv-final",
+          matchNumbers: [104, 103]
+        },
+        {
+          title: "",
+          laneClass: "tv-right-sf",
+          matchNumbers: [102]
+        },
+        {
+          title: "",
+          laneClass: "tv-right-qf",
+          matchNumbers: [99, 100]
+        },
+        {
+          title: "",
+          laneClass: "tv-right-r16",
+          matchNumbers: [91, 92, 95, 96]
+        },
+        {
+          title: "",
+          laneClass: "tv-right-r32",
+          matchNumbers: [76, 78, 79, 80, 86, 88, 85, 87]
+        }
+      ];
+
+      app.innerHTML = R32MatchCards.buildBracketBoardHtml(boardSpec, mergedMatches);
+      drawTvBracketLines();
+
+      if (lastUpdatedText) {
+        lastUpdatedText.textContent =
+          `Last Updated: ${R32Utils.formatUpdatedAtEdt(context && context.fetchedAtClientUtc)}`;
+      }
+    }
+
+    function startPage() {
+      if (!window.R32matches || !Array.isArray(window.R32matches) || !window.R32matches.length) {
+        renderEmptyState("matches.js loaded, but window.R32matches is missing or empty.");
+        return;
+      }
+
+      if (!window.R32FetchScores) {
+        renderEmptyState("R32_fetchScores.js failed to load.");
+        return;
+      }
+
+      if (!window.R32Utils) {
+        renderEmptyState("R32_utils.js failed to load.");
+        return;
+      }
+
+      if (!window.R32MatchCards) {
+        renderEmptyState("R32_matchCards.js failed to load.");
+        return;
+      }
+
+      const dbInstance = getDbInstance();
+
+      if (!dbInstance) {
+        renderEmptyState("firebase.js loaded, but Firestore db is not available.");
+        return;
+      }
+
+      refreshRuntime = R32Utils.startR32PageRefresh({
+        db: dbInstance,
+        syncUrl: "",
+        refreshMs: R32_REFRESH_MS,
+
+        triggerSyncOnStart: false,
+        triggerSyncOnRefresh: false,
+
+        onUpdate: async function (context) {
+          try {
+            const nextContext = await synchronizeBracketForDisplay(dbInstance, context || {});
+            renderBracket(nextContext);
+          } catch (err) {
+            console.error("R32 dashboard display sync error:", err);
+            renderBracket(context || {});
+          }
+        },
+
+        onError: function (err) {
+          console.error("R32 dashboard refresh error:", err);
+          renderEmptyState("Failed to load knockout dashboard.");
+        }
+      });
+    }
+
+    startPage();
+  </script>
+</body>
+</html>
