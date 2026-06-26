@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WC 2026 - R32 Mapping</title>
+    <link rel="stylesheet" href="../WC_common/styles.css">
+    <style>
+      .r32-error {
+        display: none;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        border: 1px solid #e5bcbc;
+        background: #fff4f4;
+        color: #b42318;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.4
+      }
+
+      .r32-info-box {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        line-height: 1.5
+      }
+
+      .r32-info-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 80px;
+        gap: 12px;
+        align-items: start
+      }
+
+      .r32-info-left {
+        min-width: 0
+      }
+
+      .r32-info-right {
+        width: 80px;
+        text-align: right;
+        justify-self: end
+      }
+
+      .r32-info-right .btn {
+        width: 80px;
+        padding: 8px 8px;
+        font-size: 12px;
+        line-height: 1.2;
+        margin-top: 6px
+      }
+
+      .r32-status-pill {
+        display: inline-block;
+        min-width: 54px;
+        text-align: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 700;
+        border: 1px solid #bbb;
+        background: #f7f7f7;
+        color: #444;
+        box-sizing: border-box;
+        vertical-align: middle
+      }
+
+      .r32-status-prelim {
+        border-color: #9dbcf3;
+        background: #eaf2ff;
+        color: #185abc
+      }
+
+      .r32-status-pick {
+        border-color: #9dbcf3;
+        background: #eaf2ff;
+        color: #185abc
+      }
+
+      .r32-status-final {
+        border-color: #cfcfcf;
+        background: #f1f1f1;
+        color: #444
+      }
+
+      .r32-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        overflow: hidden
+      }
+
+      .r32-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        background: #fff;
+        border: none
+      }
+
+      .r32-table th,
+      .r32-table td {
+        padding: 8px 8px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 14px;
+        background: #fff
+      }
+
+      .r32-table th {
+        background: #fafafa;
+        font-weight: 700
+      }
+
+      .r32-table tr:last-child td {
+        border-bottom: none
+      }
+
+      .r32-table th.r32-rank-col,
+      .r32-table td.r32-rank-col,
+      .r32-table th.r32-seed-col,
+      .r32-table td.r32-seed-col,
+      .r32-table th.r32-score-col,
+      .r32-table td.r32-score-col,
+      .r32-table th.r32-assign-col,
+      .r32-table td.r32-assign-col {
+        width: 10%;
+        white-space: nowrap
+      }
+
+      .r32-table th.r32-player-col,
+      .r32-table td.r32-player-col,
+      .r32-table th.r32-team-col,
+      .r32-table td.r32-team-col {
+        width: 30%
+      }
+
+      .r32-dnq-row td {
+        background: #fff0f0
+      }
+
+      .r32-cutoff-row td {
+        background: #fff8cc !important
+      }
+
+      .r32-pending {
+        font-weight: normal;
+		color: #c62828;
+		font-style: italic;
+      }
+
+      .r32-seed-tie {
+        color: #185abc;
+        font-weight: 700
+      }
+
+      .r32-prelim-merged {
+        color: #185abc;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.45
+      }
+
+      /* same visual line style as rest of table, but forced visible on merged cells */
+      .r32-merged-cell,
+      .r32-cutoff-merged {
+        position: relative
+      }
+
+      .r32-merged-cell {
+        background: #eaf2ff !important
+      }
+
+      .r32-cutoff-merged {
+        background: #fff8cc !important
+      }
+
+      .r32-merged-cell::before,
+      .r32-merged-cell::after,
+      .r32-cutoff-merged::before,
+      .r32-cutoff-merged::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #eee;
+        pointer-events: none
+      }
+
+      .r32-merged-cell::before,
+      .r32-cutoff-merged::before {
+        top: 0
+      }
+
+      .r32-merged-cell::after,
+      .r32-cutoff-merged::after {
+        bottom: 0
+      }
+
+      .r32-assign-badge {
+        display: inline-block;
+        min-width: 52px;
+        text-align: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        line-height: 1.4;
+        font-weight: 700;
+        user-select: none;
+        white-space: nowrap;
+        box-sizing: border-box
+      }
+
+      .r32-assign-manual {
+        border: 1px solid #d8d8d8;
+        background: #f4f4f4;
+        color: #666
+      }
+
+      .r32-assign-auto {
+        border: 1px solid #9dbcf3;
+        background: #eaf2ff;
+        color: #185abc
+      }
+
+      .r32-assign-toggle {
+        cursor: pointer
+      }
+
+      .r32-assign-dnq {
+        border: 1px solid #d8d8d8;
+        background: #f4f4f4;
+        color: #666
+      }
+
+      .r32-team-select {
+        width: calc(100% - 84px);
+        max-width: calc(100% - 84px);
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background: #fff;
+        font-size: 14px;
+        line-height: 1.2;
+        height: 34px;
+        box-sizing: border-box;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px
+      }
+
+      .r32-next-btn {
+        min-width: 68px;
+        height: 34px;
+        vertical-align: middle
+      }
+
+      @media (max-width:900px) {
+
+        .r32-table th,
+        .r32-table td {
+          padding: 7px 6px;
+          font-size: 13px
+        }
+
+        .r32-table th.r32-rank-col,
+        .r32-table td.r32-rank-col,
+        .r32-table th.r32-seed-col,
+        .r32-table td.r32-seed-col,
+        .r32-table th.r32-score-col,
+        .r32-table td.r32-score-col,
+        .r32-table th.r32-assign-col,
+        .r32-table td.r32-assign-col {
+          width: 12%
+        }
+
+        .r32-table th.r32-player-col,
+        .r32-table td.r32-player-col,
+        .r32-table th.r32-team-col,
+        .r32-table td.r32-team-col {
+          width: 26%
+        }
+
+        .r32-team-select {
+          width: 100%;
+          max-width: 100%;
+          display: block;
+          margin-right: 0;
+          margin-bottom: 6px;
+          font-size: 13px
+        }
+
+        .r32-next-btn {
+          min-width: 100%
+        }
+
+        .r32-info-layout {
+          grid-template-columns: minmax(0, 1fr) 80px
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="topbar"></div>
+    <div class="page-wrap">
+      <div id="r32Error" class="r32-error"></div>
+      <div id="r32Info" class="r32-info-box"></div>
+      <div class="r32-card">
+        <table class="r32-table">
+          <thead>
+            <tr>
+              <th class="r32-rank-col">Rank</th>
+              <th class="r32-seed-col">Seed</th>
+              <th class="r32-player-col">Player</th>
+              <th class="r32-score-col">Score</th>
+              <th class="r32-assign-col">Assign</th>
+              <th class="r32-team-col">Team (FIFA Rank)</th>
+            </tr>
+          </thead>
+          <tbody id="mappingBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <script>
+      window.global = window;
+      window.process = window.process || {
+        env: {}
+      };
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="firebase.js"></script>
+    <script src="../WC_common/utils.js"></script>
+    <script src="../WC_common/matches.js"></script>
+    <script src="../WC_common/teams.js"></script>
+    <script src="../WC_common/fetchScores.js"></script>
+    <script>
+      const SESSION_KEY = 'session_' + GAME_ID;
+      const sessionUserId = localStorage.getItem(SESSION_KEY);
+      if (!sessionUserId) window.location.href = 'index.html';
+	  
+	  function goToBracket() { window.location.href = "R32_bracket.html"; }
+	  function goToGroupStage() { window.location.href = "landing.html"; }
+	  
+	  renderTopbar(
+        "Knockout Stage Team Mapping",
+        `
+          <button onclick="goToGroupStage()">Group Stage</button>
+          <button onclick="goToBracket()">Bracket</button>
+          <button onclick="logout()">Logout</button>
+        `
+      );
+
+      const MAPPING_DOC = db.collection('R32mapping').doc('main');
+      const IDLE_LIMIT_MS = 20 * 60 * 1000;
+      const USER_FINAL_CUTOFF_UTC = '2026-06-28T18:00:00Z';
+      const RESET_SEED = new URLSearchParams(window.location.search).get('resetSeed') === '1';
+      const RESET_MAP = new URLSearchParams(window.location.search).get('resetMap') === '1';
+
+      let lastActivityServerMs = null;
+      let markBusy = false;
+      let lastMarkFetchAt = 0;
+      let pageState = null;
+
+      function showError(msg) {
+        const el = document.getElementById('r32Error');
+        el.style.display = 'block';
+        el.textContent = msg;
+      }
+
+      function hideError() {
+        const el = document.getElementById('r32Error');
+        el.style.display = 'none';
+        el.textContent = '';
+      }
+
+      async function markActivity(force) {
+        const now = Date.now();
+        if (!force && (markBusy || now - lastMarkFetchAt < 30000)) return;
+        markBusy = true;
+        try {
+          lastActivityServerMs = await fetchServerTime(db);
+          lastMarkFetchAt = Date.now();
+        } catch (err) {
+          console.error('markActivity error:', err);
+        } finally {
+          markBusy = false;
+        }
+      }
+
+      ['click', 'keydown', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, () => { markActivity(false); }, { passive: true });
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) markActivity(true);
+      });
+
+      function escapeHtml(v) {
+        return String(v == null ? '' : v)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function buildTeamMaster() {
+        return Object.entries(window.teams || {})
+          .map(([teamName, info]) => ({
+            teamName,
+            rank: Number(info && info.rank != null ? info.rank : 999999)
+          }))
+          .sort((a, b) => a.rank - b.rank || a.teamName.localeCompare(b.teamName))
+          .map((item, idx) => ({ idx, teamName: item.teamName, rank: item.rank }));
+      }
+
+      function defaultR32Order(teamMaster) {
+        return teamMaster.map(t => t.idx);
+      }
+
+      function isValidR32Order(arr, teamCount) {
+        if (!Array.isArray(arr) || arr.length !== teamCount) return false;
+        const seen = new Set(arr);
+        if (seen.size !== teamCount) return false;
+        for (let i = 0; i < teamCount; i++) if (!seen.has(i)) return false;
+        return true;
+      }
+
+      function normalizeModeArray(raw, len) {
+        const arr = Array.isArray(raw) ? raw.slice(0, len) : [];
+        while (arr.length < len) arr.push('MANUAL');
+        return arr.map(v => String(v || 'MANUAL').toUpperCase() === 'AUTO' ? 'AUTO' : 'MANUAL');
+      }
+
+      function normalizeSeedArray(raw, len) {
+        const arr = Array.isArray(raw) ? raw.slice(0, len) : [];
+        while (arr.length < len) arr.push(0);
+        return arr.map(v => Number.isInteger(Number(v)) ? Number(v) : 0);
+      }
+
+      function normalizePicksArray(raw) {
+        const picks = Array.isArray(raw) ? raw.slice(0, 73) : [];
+        while (picks.length < 73) picks.push(0);
+        for (let i = 0; i < 73; i++) picks[i] = Number(picks[i]) || 0;
+        return picks;
+      }
+
+      function buildResultsMap(results) {
+        const map = results || {};
+        let completed = 0;
+        for (let i = 0; i < 72; i++) {
+          const r = map[matches[i].id];
+          if (r && (r.status === 'complete' || r.status === 'completed')) completed++;
+        }
+        return { map, completed };
+      }
+
+      function buildStats(users, resultsMap) {
+        const stats = {};
+        users.forEach(user => {
+          const picks = user.data.picks || new Array(73).fill(0);
+          stats[user.id] = { completed: 0, score: 0 };
+          for (let i = 0; i < 72; i++) {
+            if (!picks[i]) continue;
+            const result = resultsMap[matches[i].id];
+            if (!result || (result.status !== 'complete' && result.status !== 'completed')) continue;
+            stats[user.id].completed++;
+            const predicted = picks[i] === 1 ? 'team1' : picks[i] === 2 ? 'team2' : 'tie';
+            const outcome = result.score1 > result.score2 ? 'team1' : result.score1 < result.score2 ? 'team2' : 'tie';
+            if (predicted === outcome) stats[user.id].score++;
+          }
+        });
+        return stats;
+      }
+
+      function shuffleInPlace(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function applyDisplayRanks(rows) {
+        let displayRank = 0;
+        let lastScore = null;
+        return rows.map((row, idx) => {
+          if (lastScore === null || row.score !== lastScore) {
+            displayRank = idx + 1;
+            lastScore = row.score;
+          }
+          return { ...row, displayRank };
+        });
+      }
+
+	async function ensureUsers(teamMaster) {
+	  const usersSnap = await db.collection('users').get();
+	  const users = [];
+	  const updates = [];
+	  const defaultOrder = defaultR32Order(teamMaster);
+
+	  usersSnap.forEach(doc => {
+		const data = doc.data() || {};
+
+		const hasValidR32 =
+		  Array.isArray(data.R32_teams) &&
+		  isValidR32Order(data.R32_teams, teamMaster.length);
+
+		const normalized = {
+		  ...data,
+		  picks: normalizePicksArray(data.picks),
+		  R32_teams: hasValidR32 ? data.R32_teams.slice() : defaultOrder.slice(),
+		  seed: normalizeSeedArray(data.seed, 6),
+		  assignMode: normalizeModeArray(data.assignMode, 6),
+		  tieSeed: Number.isInteger(data.tieSeed) ? data.tieSeed : null
+		};
+
+		users.push({ id: doc.id, data: normalized });
+
+		const patch = {};
+		if (!Array.isArray(data.seed) || data.seed.length !== 6) {
+		  patch.seed = normalized.seed;
+		}
+		if (!Array.isArray(data.assignMode) || data.assignMode.length !== 6) {
+		  patch.assignMode = normalized.assignMode;
+		}
+
+		// IMPORTANT:
+		// Do NOT auto-write fallback R32_teams from this page.
+		// If a user's saved preselection is partial / older schema / temporarily invalid,
+		// we still allow local fallback for rendering, but we do not overwrite Firestore here.
+
+		if (Object.keys(patch).length) {
+		  updates.push(
+			db.collection('users').doc(doc.id).set(patch, { merge: true })
+		  );
+		}
+	  });
+
+	  if (updates.length) await Promise.all(updates);
+	  return users;
+	}
+
+      async function buildRankedPlayers(teamMaster, finalizeRankSeed) {
+        const users = await ensureUsers(teamMaster);
+        const resultsPayload = (typeof ensureScoresUpToDate === 'function') ? await ensureScoresUpToDate() : await getResultsWithServerTime();
+        const { map, completed } = buildResultsMap(resultsPayload.results || {});
+        const stats = buildStats(users, map);
+
+        let leaderboard = users.map(user => {
+          const s = stats[user.id] || { completed: 0, score: 0 };
+          const notPicked = completed - s.completed;
+          return {
+            uid: user.id,
+            username: user.data.username || user.data.displayName || user.data.name || user.id,
+            score: Number((s.score + notPicked * -0.25).toFixed(2)),
+            savedTieSeed: Number.isInteger(user.data.tieSeed) ? user.data.tieSeed : null,
+            R32_teams: user.data.R32_teams,
+            assignMode: user.data.assignMode,
+            seed: user.data.seed
+          };
+        });
+
+        leaderboard.sort((a, b) => b.score - a.score || a.username.localeCompare(b.username));
+
+        let nextTieSeed = 1;
+        const tieWrites = [];
+        let i = 0;
+        const ordered = [];
+
+        while (i < leaderboard.length) {
+          let j = i + 1;
+          while (j < leaderboard.length && leaderboard[j].score === leaderboard[i].score) j++;
+
+          let block = leaderboard.slice(i, j);
+          const allExisting = !RESET_SEED && block.every(item => Number.isInteger(item.savedTieSeed));
+          if (allExisting) block.sort((a, b) => a.savedTieSeed - b.savedTieSeed);
+          else shuffleInPlace(block);
+
+          block = block.map((item, k) => {
+            const tieSeed = allExisting ? item.savedTieSeed : (nextTieSeed + k);
+            if (finalizeRankSeed && (!allExisting || item.savedTieSeed !== tieSeed)) {
+              tieWrites.push(db.collection('users').doc(item.uid).set({ tieSeed }, { merge: true }));
+            }
+            return { ...item, tieSeed };
+          });
+
+          ordered.push(...block);
+          nextTieSeed += block.length;
+          i = j;
+        }
+
+        if (tieWrites.length) await Promise.all(tieWrites);
+        const ranked = applyDisplayRanks(ordered);
+        return {
+          rankedPlayers: ranked.map(r => ({
+            uid: r.uid,
+            username: r.username,
+            score: r.score,
+            rank: r.displayRank,
+            tieSeed: r.tieSeed,
+            R32_teams: r.R32_teams,
+            assignMode: r.assignMode,
+            seed: r.seed
+          }))
+        };
+      }
+
+      async function getMappingState(teamMaster) {
+        const snap = await MAPPING_DOC.get();
+        if (!snap.exists) throw new Error('R32mapping/main not found');
+
+        const data = snap.data() || {};
+        const rankMap = new Map(teamMaster.map(t => [t.teamName, t.rank]));
+        const allTeams = Object.entries(data)
+          .filter(([k, row]) => row && typeof row === 'object')
+          .map(([teamName, row]) => ({
+            teamName,
+            teamRank: rankMap.has(teamName) ? rankMap.get(teamName) : 999999,
+            placement: row.placement,
+            player: row.player || null
+          }));
+
+        const candidateTeams = allTeams
+          .filter(t => t.placement !== 'ELIMINATED')
+          .sort((a, b) => a.teamRank - b.teamRank || a.teamName.localeCompare(b.teamName))
+          .slice(0, 32);
+
+        const active = allTeams.filter(t => t.placement !== 'ELIMINATED').length;
+        return { candidateTeams, teamsFixed: active === 32 };
+      }
+
+      function buildDraftRows(rankedPlayers) {
+        if (!rankedPlayers.length) return [];
+        const rows = [];
+        const topPool = rankedPlayers.slice(0, Math.min(32, rankedPlayers.length));
+
+        if (rankedPlayers.length <= 32) {
+          for (let i = 0; i < 32; i++) {
+            const p = topPool[i % topPool.length];
+            rows.push({
+              rank: p.rank,
+              seedNo: i + 1,
+              uid: p.uid,
+              username: p.username,
+              score: p.score,
+              dnq: false,
+              R32_teams: p.R32_teams
+            });
+          }
+        } else {
+          for (let i = 0; i < rankedPlayers.length; i++) {
+            const p = rankedPlayers[i];
+            rows.push({
+              rank: p.rank,
+              seedNo: i < 32 ? i + 1 : 0,
+              uid: p.uid,
+              username: p.username,
+              score: p.score,
+              dnq: i >= 32,
+              R32_teams: p.R32_teams
+            });
+          }
+        }
+
+        return rows;
+      }
+
+      function arrayEquals(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+        return true;
+      }
+
+      async function syncUserSlotSchema(rows, rankedPlayers, mode) {
+        const byUser = new Map();
+        rankedPlayers.forEach(p => byUser.set(p.uid, { ranked: p, activeSeeds: [] }));
+
+        rows.forEach(row => {
+          const rec = byUser.get(row.uid);
+          if (rec && !row.dnq && row.seedNo > 0 && rec.activeSeeds.length < 6) {
+            rec.activeSeeds.push(row.seedNo);
+          }
+        });
+
+        const writes = [];
+
+        for (const [uid, rec] of byUser.entries()) {
+          const oldSeed = normalizeSeedArray(rec.ranked.seed || [], 6);
+          const oldMode = normalizeModeArray(rec.ranked.assignMode || [], 6);
+          const nextSeed = rec.activeSeeds.slice(0, 6);
+          while (nextSeed.length < 6) nextSeed.push(0);
+
+          const nextMode = [];
+          for (let i = 0; i < 6; i++) {
+            const seedNo = nextSeed[i];
+            if (!seedNo) {
+              nextMode.push('MANUAL');
+            } else {
+              const oldIdx = oldSeed.indexOf(seedNo);
+              if (oldIdx >= 0) nextMode.push(mode === 'Auto' ? 'MANUAL' : oldMode[oldIdx]);
+              else nextMode.push('MANUAL');
+            }
+          }
+
+          if (!arrayEquals(oldSeed, nextSeed) || !arrayEquals(oldMode, nextMode)) {
+            writes.push(db.collection('users').doc(uid).set({ seed: nextSeed, assignMode: nextMode }, { merge: true }));
+          }
+
+          rec.ranked.seed = nextSeed;
+          rec.ranked.assignMode = nextMode;
+        }
+
+        if (writes.length) await Promise.all(writes);
+
+        const stateByUid = new Map();
+        for (const [uid, rec] of byUser.entries()) {
+          stateByUid.set(uid, {
+            seed: rec.ranked.seed,
+            assignMode: rec.ranked.assignMode,
+            R32_teams: rec.ranked.R32_teams,
+            username: rec.ranked.username
+          });
+        }
+        return stateByUid;
+      }
+
+      function rowsFromState(draftRows, candidateTeams, userStateByUid) {
+        const candidateMap = new Map(candidateTeams.map(t => [t.teamName, t.teamRank]));
+        const teamsByPlayer = new Map();
+
+        candidateTeams.forEach(team => {
+          if (!team.player) return;
+          if (!teamsByPlayer.has(team.player)) teamsByPlayer.set(team.player, []);
+          teamsByPlayer.get(team.player).push(team.teamName);
+        });
+
+        const rows = [];
+        draftRows.forEach(row => {
+          if (row.dnq) {
+            rows.push({ ...row, assignMode: 'DNQ', team: '-', teamRank: null });
+            return;
+          }
+
+          const userState = userStateByUid.get(row.uid);
+          const idx = userState ? userState.seed.indexOf(row.seedNo) : -1;
+          const mode = idx >= 0 ? userState.assignMode[idx] : 'MANUAL';
+          const assigned = (teamsByPlayer.get(row.username) || []).slice();
+
+          let chosen = null;
+          if (assigned.length) {
+            for (const prefIdx of row.R32_teams || []) {
+              const prefTeam = (window.__teamMaster__ || [])[prefIdx]?.teamName;
+              if (prefTeam && assigned.includes(prefTeam)) {
+                chosen = prefTeam;
+                break;
+              }
+            }
+            if (!chosen) chosen = assigned[0];
+            const arr = teamsByPlayer.get(row.username) || [];
+            const removeIdx = arr.indexOf(chosen);
+            if (removeIdx >= 0) arr.splice(removeIdx, 1);
+            teamsByPlayer.set(row.username, arr);
+          }
+
+          rows.push({
+            ...row,
+            assignMode: mode,
+            team: chosen,
+            teamRank: chosen ? (candidateMap.get(chosen) || null) : null
+          });
+        });
+
+        return rows;
+      }
+
+      async function writeMappingFromRows(rows, candidateTeams) {
+        const ownerByTeam = {};
+        rows.forEach(row => {
+          if (row.team && row.team !== '-') ownerByTeam[row.team] = row.username;
+        });
+        const patch = {};
+        candidateTeams.forEach(team => {
+          patch[team.teamName] = { player: ownerByTeam[team.teamName] || null };
+        });
+        await MAPPING_DOC.set(patch, { merge: true });
+      }
+
+      function availableOptionsForSeed(row, rows, candidateTeams, teamMaster) {
+        const selected = new Set(rows.filter(r => r.team && r.team !== '-').map(r => r.team));
+        const candidateMap = new Map(candidateTeams.map(t => [t.teamName, t.teamRank]));
+        const opts = [];
+        (row.R32_teams || []).forEach(idx => {
+          const team = teamMaster[idx];
+          if (!team) return;
+          if (!candidateMap.has(team.teamName)) return;
+          if (selected.has(team.teamName)) return;
+          opts.push({ teamName: team.teamName, teamRank: candidateMap.get(team.teamName) });
+        });
+        return opts;
+      }
+
+      async function persistUserModes(uid, state) {
+        await db.collection('users').doc(uid).set({ seed: state.seed, assignMode: state.assignMode }, { merge: true });
+      }
+
+  	  function buildInfoTexts(mode) {
+	    if (mode === 'Auto') {
+		return `
+	      The top 32 players advance to the knockout stage. Each player is assigned a Round of 32 team based on their group stage seeding and the official FIFA rankings of the qualified teams.
+	      Teams are assigned automatically in seed order, with each player receiving the highest FIFA ranked team available. Assignments become final once all Round of 32 fixtures are confirmed.
+  	      <br><br>
+	      *Tiebreak: Players with identical scores are seeded in a randomized order.*
+	      `;
+	    }
+
+	  return `
+	    The top 32 players advance to the knockout stage. Players take turns selecting a Round of 32 team in seed order once all teams are confirmed.
+	    Before their turn, players may choose how their pick is handled:
+	    <br>- <b>Assign = Auto:</b> Automatically assigns the best available team from the player’s preselection list when their turn arrives  
+	    <br>- <b>Assign = Manual:</b> Allows the player to manually select a team from the remaining pool during their turn  
+	    The selection phase continues until all 32 teams are assigned. One hour before the first Round of 32 Game, any remaining selections are then automatically assigned.
+	    <br><br>
+	    *Tiebreak: Players with identical scores are seeded in a randomized order.*
+	    `;
+	  }
+
+      function buildPrelimGroups(state) {
+        const groups = new Map();
+        const userPrelim = (state.mode === 'User' && state.userStage === 'PRELIM');
+        const autoPrelim = (state.mode === 'Auto' && !state.teamsFixed);
+        if (!autoPrelim && !userPrelim) return groups;
+
+        let i = 0;
+        while (i < state.rows.length) {
+          const row = state.rows[i];
+          if (row.rank == null) {
+            i++;
+            continue;
+          }
+
+          let j = i + 1;
+          while (j < state.rows.length && state.rows[j].rank === row.rank) j++;
+
+          const groupRows = state.rows.slice(i, j);
+          const size = j - i;
+          const seededRows = groupRows.filter(r => !r.dnq && r.seedNo > 0 && r.seedNo <= 32);
+          const eliminatedRows = groupRows.filter(r => r.dnq || !r.seedNo || r.seedNo > 32);
+
+          if (size > 1) {
+            const crossesCutoff = seededRows.length > 0 && eliminatedRows.length > 0;
+            if (crossesCutoff) {
+              const seedStart = seededRows[0].seedNo;
+              const seedEnd = seededRows[seededRows.length - 1].seedNo;
+              const eliminatedCount = eliminatedRows.length;
+              const teamTextList = seededRows
+                .filter(r => r.team && r.team !== '-')
+                .map(r => `${r.team} (${r.teamRank == null ? '' : r.teamRank})`);
+
+              const cutoffAssignMode = autoPrelim ? 'AUTO' : (seededRows[0]?.assignMode === 'AUTO' ? 'AUTO' : 'MANUAL');
+
+			  groups.set(i, {
+			    type: 'cutoff',
+			    size,
+			    seedText: `*TBD: ${seedStart}~${seedEnd} (+${eliminatedCount} ${eliminatedCount === 1 ? '' : 's'} DNQ)`,
+			    teamText: `*TBD: ${teamTextList.join(', ')} (+${eliminatedCount} ${eliminatedCount === 1 ? '' : 's'} DNQ)`,
+			    mergeSeed: true,
+			    mergeTeam: autoPrelim,
+			    assignMode: cutoffAssignMode
+			  });
+
+              for (let k = i + 1; k < j; k++) {
+                groups.set(k, {
+                  hiddenSeed: true,
+                  hiddenTeam: autoPrelim,
+                  type: 'cutoff',
+                  assignMode: cutoffAssignMode
+                });
+              }
+            } else {
+              const seedStart = groupRows.find(r => r.seedNo > 0)?.seedNo || groupRows[0].seedNo || '-';
+              const seedEnd = [...groupRows].reverse().find(r => r.seedNo > 0)?.seedNo || groupRows[groupRows.length - 1].seedNo || '-';
+              const teams = groupRows
+                .map(r => r.team && r.team !== '-' ? `${r.team} (${r.teamRank == null ? '' : r.teamRank})` : null)
+                .filter(Boolean);
+
+              groups.set(i, {
+                type: 'regular',
+                size,
+                seedText: `*TBD: ${seedStart}~${seedEnd}`,
+                teamText: teams.length ? `*TBD: ${teams.join(', ')}` : '*TBD',
+                mergeSeed: true,
+                mergeTeam: autoPrelim
+              });
+
+              for (let k = i + 1; k < j; k++) {
+                groups.set(k, {
+                  hiddenSeed: true,
+                  hiddenTeam: autoPrelim,
+                  type: 'regular'
+                });
+              }
+            }
+          }
+          i = j;
+        }
+
+        return groups;
+      }
+
+      async function buildPageState() {
+        const mode = (typeof R32_SELECTION === 'string' ? R32_SELECTION : 'Auto');
+        const teamMaster = buildTeamMaster();
+        window.__teamMaster__ = teamMaster;
+
+        const serverNowMs = await fetchServerTime(db);
+        const mappingState = await getMappingState(teamMaster);
+        const teamsFixed = mappingState.teamsFixed;
+
+        const ranked = await buildRankedPlayers(teamMaster, teamsFixed);
+        const draftRows = buildDraftRows(ranked.rankedPlayers);
+        const userStateByUid = await syncUserSlotSchema(draftRows, ranked.rankedPlayers, mode);
+        let rows = rowsFromState(draftRows, mappingState.candidateTeams, userStateByUid);
+
+        if (RESET_MAP) {
+          rows = rows.map(r => r.dnq ? r : ({ ...r, team: null, teamRank: null }));
+          if (mode === 'User') {
+            for (const [uid, state] of userStateByUid.entries()) {
+              state.assignMode = state.assignMode.map(() => 'MANUAL');
+              await persistUserModes(uid, state);
+            }
+            rows = rows.map(r => r.dnq ? r : ({ ...r, assignMode: 'MANUAL', team: null, teamRank: null }));
+          }
+          await writeMappingFromRows(rows, mappingState.candidateTeams);
+        }
+
+        let userStage = 'PRELIM';
+        if (teamsFixed && serverNowMs < new Date(USER_FINAL_CUTOFF_UTC).getTime()) userStage = 'PICK';
+        else if (teamsFixed && serverNowMs >= new Date(USER_FINAL_CUTOFF_UTC).getTime()) userStage = 'FINAL';
+
+        if (mode === 'Auto') {
+          const autoRows = rows.map(r => ({ ...r }));
+          const taken = new Set();
+          const candidateSet = new Set(mappingState.candidateTeams.map(t => t.teamName));
+          autoRows.forEach(row => {
+            if (row.dnq) {
+              row.team = '-';
+              row.assignMode = 'DNQ';
+              return;
+            }
+            for (const idx of row.R32_teams || []) {
+              const team = teamMaster[idx];
+              if (!team || !candidateSet.has(team.teamName) || taken.has(team.teamName)) continue;
+              row.team = team.teamName;
+              row.teamRank = mappingState.candidateTeams.find(t => t.teamName === team.teamName)?.teamRank || null;
+              row.assignMode = 'AUTO';
+              taken.add(team.teamName);
+              break;
+            }
+          });
+          rows = autoRows;
+          if (teamsFixed) await writeMappingFromRows(rows, mappingState.candidateTeams);
+        } else if (userStage === 'FINAL') {
+          let working = rows.map(r => ({ ...r }));
+          while (true) {
+            let currentSeed = 33;
+            for (let i = 1; i <= 32; i++) {
+              const filled = working.find(r => !r.dnq && r.seedNo === i && r.team);
+              if (!filled) {
+                currentSeed = i;
+                break;
+              }
+            }
+            if (currentSeed > 32) break;
+            const row = working.find(r => r.seedNo === currentSeed);
+            if (!row || row.dnq || row.team) break;
+            const opts = availableOptionsForSeed(row, working, mappingState.candidateTeams, teamMaster);
+            if (!opts.length) break;
+            row.team = opts[0].teamName;
+            row.teamRank = opts[0].teamRank;
+            row.assignMode = 'AUTO';
+            const us = userStateByUid.get(row.uid);
+            if (us) {
+              const idx = us.seed.indexOf(row.seedNo);
+              if (idx >= 0) us.assignMode[idx] = 'AUTO';
+            }
+          }
+          rows = working;
+          for (const [uid, state] of userStateByUid.entries()) await persistUserModes(uid, state);
+          await writeMappingFromRows(rows, mappingState.candidateTeams);
+        }
+
+        let currentSeed = 33;
+        if (mode === 'User') {
+          for (let i = 1; i <= 32; i++) {
+            const filled = rows.find(r => !r.dnq && r.seedNo === i && r.team);
+            if (!filled) {
+              currentSeed = i;
+              break;
+            }
+          }
+        }
+
+        return {
+          mode,
+          teamMaster,
+          candidateTeams: mappingState.candidateTeams,
+          userStateByUid,
+          rows,
+          currentSeed,
+          completed: currentSeed > 32,
+          teamsFixed,
+          userStage,
+          infoText: buildInfoTexts(mode)
+        };
+      }
+
+      function renderInfoBox(state) {
+        let badgeLabel = 'Prelim';
+        let badgeClass = 'r32-status-prelim';
+        if (state.mode === 'User' && state.userStage === 'PICK') {
+          badgeLabel = 'Pick';
+          badgeClass = 'r32-status-pick';
+        } else if ((state.mode === 'User' && state.userStage === 'FINAL') || (state.mode === 'Auto' && state.teamsFixed)) {
+          badgeLabel = 'Final';
+          badgeClass = 'r32-status-final';
+        }
+
+        document.getElementById('r32Info').innerHTML = `
+          <div class="r32-info-layout">
+            <div class="r32-info-left">${state.infoText}</div>
+            <div class="r32-info-right">
+              <span class="r32-status-pill ${badgeClass}">${badgeLabel}</span>
+              ${state.mode === 'User' ? '<br><button class="btn" onclick="window.location.href=\'R32_autolist.html\'">Preselect</button>' : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAssignBadge(state, row, groupMeta) {
+        if (groupMeta && groupMeta.type === 'cutoff') {
+          if (state.mode === 'Auto' || groupMeta.assignMode === 'AUTO') {
+            return '<span class="r32-assign-badge r32-assign-auto">Auto</span>';
+          }
+          return '<span class="r32-assign-badge r32-assign-manual">Manual</span>';
+        }
+
+        if (row.dnq) return '<span class="r32-assign-badge r32-assign-dnq">DNQ</span>';
+        if (state.mode === 'Auto') return '<span class="r32-assign-badge r32-assign-auto">Auto</span>';
+
+        const label = row.assignMode === 'AUTO' ? 'Auto' : 'Manual';
+        const cls = row.assignMode === 'AUTO' ? 'r32-assign-auto' : 'r32-assign-manual';
+        const canToggle = (state.userStage !== 'FINAL') && !row.team && !row.dnq && row.uid === sessionUserId && row.seedNo >= state.currentSeed && row.seedNo > 0;
+        if (!canToggle) return `<span class="r32-assign-badge ${cls}">${label}</span>`;
+        return `<span class="r32-assign-badge ${cls} r32-assign-toggle" onclick="toggleAssign(${row.seedNo})">${label}</span>`;
+      }
+
+      function formatTeamDisplay(teamName, teamRank) {
+        if (!teamName) return '';
+        if (teamName === '-') return '-';
+        if (teamName === '-') return '-';
+        return `${escapeHtml(teamName)} (${teamRank == null ? '' : teamRank})`;
+      }
+
+      function renderManualControls(options) {
+        if (!options.length) return '<span class="r32-pending">No teams available</span>';
+        let html = '<select id="currentTeamSelect" class="r32-team-select">';
+        options.forEach(opt => {
+          html += `<option value="${escapeHtml(opt.teamName)}">${escapeHtml(opt.teamName)} (${opt.teamRank})</option>`;
+        });
+        html += '</select><button class="r32-next-btn" onclick="commitManualPick()">Next</button>';
+        return html;
+      }
+
+      function renderTable(state) {
+        const tbody = document.getElementById('mappingBody');
+        tbody.innerHTML = '';
+
+        const currentRow = state.rows.find(r => r.seedNo === state.currentSeed && !r.dnq);
+        const options = currentRow && currentRow.uid === sessionUserId && state.mode === 'User' && state.userStage === 'PICK' && !state.completed && currentRow.assignMode === 'MANUAL'
+          ? availableOptionsForSeed(currentRow, state.rows, state.candidateTeams, state.teamMaster)
+          : [];
+
+        const prelimGroups = buildPrelimGroups(state);
+
+        state.rows.forEach((row, idx) => {
+          const meta = prelimGroups.get(idx) || {};
+          const tr = document.createElement('tr');
+          if (row.dnq) tr.className = 'r32-dnq-row';
+          if (meta.type === 'cutoff') tr.classList.add('r32-cutoff-row');
+
+          const prevRank = idx > 0 ? state.rows[idx - 1].rank : null;
+          const nextRank = idx < state.rows.length - 1 ? state.rows[idx + 1].rank : null;
+          const tied = !row.dnq && (row.rank === prevRank || row.rank === nextRank);
+
+          let teamHtml = row.team ? formatTeamDisplay(row.team, row.teamRank) : '';
+          if (state.mode === 'User' && !state.completed && !row.dnq && row.seedNo === state.currentSeed && !row.team) {
+            if (state.userStage === 'PRELIM') {
+              teamHtml = '<span class="r32-pending">Waiting for group matches to complete</span>';
+            } else if (state.userStage === 'PICK' && row.assignMode === 'MANUAL') {
+              teamHtml = row.uid === sessionUserId ? renderManualControls(options) : '<span class="r32-pending">Pending Selection</span>';
+            }
+          }
+
+          let cells = `<td class="r32-rank-col">${row.rank}</td>`;
+
+          if (!meta.hiddenSeed) {
+            if (meta.mergeSeed) {
+              const cls = meta.type === 'cutoff' ? 'r32-cutoff-merged' : 'r32-merged-cell';
+              cells += `<td class="r32-seed-col ${cls}" rowspan="${meta.size}"><span class="r32-prelim-merged">${escapeHtml(meta.seedText)}</span></td>`;
+            } else {
+              const seedText = row.seedNo ? (tied ? `<span class="r32-seed-tie">${row.seedNo}*</span>` : String(row.seedNo)) : '-';
+              cells += `<td class="r32-seed-col">${seedText}</td>`;
+            }
+          }
+
+          const assignMeta = (meta && meta.type === 'cutoff') ? meta : (meta.mergeSeed ? meta : null);
+          cells += `<td class="r32-player-col">${escapeHtml(row.username)}</td>`;
+          cells += `<td class="r32-score-col">${Number(row.score).toFixed(2)}</td>`;
+          cells += `<td class="r32-assign-col">${renderAssignBadge(state, row, assignMeta)}</td>`;
+
+          if (!meta.hiddenTeam) {
+            if (meta.mergeTeam) {
+              const cls = meta.type === 'cutoff' ? 'r32-cutoff-merged' : 'r32-merged-cell';
+              cells += `<td class="r32-team-col ${cls}" rowspan="${meta.size}"><div class="r32-prelim-merged">${escapeHtml(meta.teamText)}</div></td>`;
+            } else {
+              cells += `<td class="r32-team-col">${row.dnq ? '-' : teamHtml}</td>`;
+            }
+          }
+
+          tr.innerHTML = cells;
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function toggleAssign(seedNo) {
+        try {
+          hideError();
+          const state = pageState;
+          if (!state || state.mode !== 'User' || state.userStage === 'FINAL') return;
+
+          const row = state.rows.find(r => r.seedNo === seedNo);
+          if (!row || row.uid !== sessionUserId || row.dnq || row.team || seedNo < state.currentSeed) return;
+
+          const us = state.userStateByUid.get(row.uid);
+          const idx = us.seed.indexOf(seedNo);
+          if (idx < 0) return;
+
+          us.assignMode[idx] = us.assignMode[idx] === 'AUTO' ? 'MANUAL' : 'AUTO';
+          row.assignMode = us.assignMode[idx];
+          await persistUserModes(row.uid, us);
+          renderTable(state);
+
+          if (seedNo === state.currentSeed && row.assignMode === 'AUTO' && state.userStage === 'PICK') {
+            pageState = await processAutoChainIfNeeded(state);
+            renderInfoBox(pageState);
+            renderTable(pageState);
+          }
+        } catch (err) {
+          console.error(err);
+          showError('Toggle failed:\n' + (err && err.message ? err.message : String(err)));
+        }
+      }
+      window.toggleAssign = toggleAssign;
+
+      async function commitManualPick() {
+        try {
+          hideError();
+          const state = pageState;
+          if (!state || state.mode !== 'User' || state.userStage !== 'PICK') throw new Error('User selection is not open right now.');
+          if (state.completed) throw new Error('Selection is already complete.');
+
+          const row = state.rows.find(r => r.seedNo === state.currentSeed);
+          if (!row) throw new Error('Current row not found.');
+          if (row.uid !== sessionUserId) throw new Error('It is not your turn.');
+          if (row.dnq) throw new Error('DNQ rows cannot select.');
+          if (row.assignMode !== 'MANUAL') throw new Error('Current row is not manual.');
+
+          const select = document.getElementById('currentTeamSelect');
+          if (!select) throw new Error('Selection control not found.');
+          const teamName = select.value;
+          if (!teamName) throw new Error('Please choose a team.');
+
+          const opts = availableOptionsForSeed(row, state.rows, state.candidateTeams, state.teamMaster).map(x => x.teamName);
+          if (!opts.includes(teamName)) throw new Error('That team is not available in your list.');
+
+          row.team = teamName;
+          row.teamRank = state.candidateTeams.find(t => t.teamName === teamName)?.teamRank || null;
+          await writeMappingFromRows(state.rows, state.candidateTeams);
+          pageState = await processAutoChainIfNeeded(state);
+          renderInfoBox(pageState);
+          renderTable(pageState);
+        } catch (err) {
+          console.error(err);
+          showError('Selection failed:\n' + (err && err.message ? err.message : String(err)));
+        }
+      }
+      window.commitManualPick = commitManualPick;
+
+      async function processAutoChainIfNeeded(state) {
+        if (state.mode !== 'User' || state.userStage !== 'PICK' || state.completed) return state;
+        let working = state;
+
+        while (true) {
+          let currentSeed = 33;
+          for (let i = 1; i <= 32; i++) {
+            const filled = working.rows.find(r => !r.dnq && r.seedNo === i && r.team);
+            if (!filled) {
+              currentSeed = i;
+              break;
+            }
+          }
+
+          working.currentSeed = currentSeed;
+          working.completed = currentSeed > 32;
+          if (working.completed) break;
+
+          const row = working.rows.find(r => r.seedNo === currentSeed);
+          if (!row || row.dnq || row.team || row.assignMode !== 'AUTO') break;
+
+          const opts = availableOptionsForSeed(row, working.rows, working.candidateTeams, working.teamMaster);
+          if (!opts.length) break;
+
+          row.team = opts[0].teamName;
+          row.teamRank = opts[0].teamRank;
+          await writeMappingFromRows(working.rows, working.candidateTeams);
+        }
+
+        return working;
+      }
+
+      async function loadPage() {
+        try {
+          hideError();
+          let state = await buildPageState();
+          state = await processAutoChainIfNeeded(state);
+          pageState = state;
+          renderInfoBox(pageState);
+          renderTable(pageState);
+          await markActivity(true);
+        } catch (err) {
+          console.error(err);
+          showError('Failed to load page:\n' + (err && err.message ? err.message : String(err)));
+        }
+      }
+
+      loadPage();
+      setInterval(async () => {
+        try {
+          if (lastActivityServerMs == null) return;
+          const nowServerMs = await fetchServerTime(db);
+          if (nowServerMs - lastActivityServerMs > IDLE_LIMIT_MS) {
+            localStorage.removeItem(SESSION_KEY);
+            window.location.href = 'index.html';
+          }
+        } catch (err) {
+          console.error('idle timeout error:', err);
+        }
+      }, 60 * 1000);
+    </script>
+  </body>
+</html>
