@@ -2,34 +2,49 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">	
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    
   <title>WC 2026 - Rules</title>
   <link rel="stylesheet" href="../WC_common/styles.css">
 </head>
 
 <body>
   <div id="topbar"></div>
+
   <div class="container">
     <div class="section">
       <div class="section-title">FIFA World Cup 2026: Tournament Format</div>
+
       <div class="subhead">1. Group Stage (June 11 – June 27, 2026)</div>
-      <p> The tournament begins with 48 teams divided into 12 groups of 4 teams. Each team plays 3 matches within its group in a round-robin format (Total 72 Matches). </p>
+      <p>
+        The tournament begins with 48 teams divided into 12 groups of 4 teams.
+        Each team plays 3 matches within its group in a round-robin format (Total 72 Matches).
+      </p>
+
       <div class="subhead">2. Knockout Stage (June 28 – July 19, 2026)</div>
-      <p> After the group stage, 32 teams advance to the knockout round. This includes: The Top 2 teams from each group, plus the best third-place teams. </p>
-      <p> From there, the tournament becomes single elimination — starting with the Round of 32 and continuing through to the final. </p>
+      <p>
+        After the group stage, 32 teams advance to the knockout round. This includes:
+        The Top 2 teams from each group, plus the best third-place teams.
+      </p>
+      <p>
+        From there, the tournament becomes single elimination — starting with the
+        Round of 32 and continuing through to the final.
+      </p>
     </div>
 
     <!-- Game Rules -->
     <div class="section">
       <div class="section-title">How This Game Works</div>
+
       <div class="subhead">Round 1. Group Stage Predictions</div>
-      <p> During the group stage, each player predicts the outcome of every match. </p>
+      <p>During the group stage, each player predicts the outcome of every match.</p>
+
       <ul>
         <li>Pick one outcome: <strong>Team A Win, Tie, or Team B Win</strong></li>
         <li>Total predictions: <strong>72</strong></li>
         <li>You can update your pick anytime until <strong>1 hour before scheduled kickoff</strong></li>
       </ul>
-      <p> Scoring: Players are ranked based on total points scored. </p>
+
+      <p>Scoring: Players are ranked based on total points scored.</p>
       <ul>
         <li>Correct prediction: <strong>1 point</strong></li>
         <li>Incorrect prediction: <strong>0 points</strong></li>
@@ -37,17 +52,25 @@
         <li>Maximum possible score: <strong>72 points</strong></li>
       </ul>
 
-      <p> * Tiebreak: If players finish with the same score, their ranking order will be randomly determined for seeding purposes. </p>
-
+      <p>
+        * Tiebreak: If players finish with the same score, their ranking order
+        will be randomly determined for seeding purposes.
+      </p>
 
       <div class="subhead">Round 2. Knockout Stage</div>
-      <p> Only the top 32 players advance to Round 2. </p>
-      <p> Each player is assigned one of the 32 teams that advance to the World Cup knockout stage. This assignment is based on: </p>
+      <p>Only the top 32 players advance to Round 2.</p>
+
+      <p>
+        Each player is assigned one of the 32 teams that advance to the World Cup
+        knockout stage. This assignment is based on:
+      </p>
+
       <ul>
         <li>Player ranking from Round 1</li>
         <li>Official FIFA ranking of the qualified teams</li>
       </ul>
-      <p> In simple terms: </p>
+
+      <p>In simple terms:</p>
       <ul>
         <li>(Sorry..) You cannot choose your favorite team</li>
         <li>Higher-ranked players are assigned stronger (higher-seeded) teams</li>
@@ -82,13 +105,34 @@
     const SESSION_KEY = "session_" + GAME_ID;
     const userId = localStorage.getItem(SESSION_KEY);
 
-    // ✅ session guard
+    // ✅ Session guard
     if (!userId) {
       window.location.href = "index.html";
     }
 
+    let R32_STAGE = "Group"; // default safe fallback
+
+    async function loadR32Status() {
+      try {
+        const snap = await db.collection("R32mapping").doc("status").get();
+
+        if (snap.exists) {
+          const data = snap.data() || {};
+          if (data.stage === "Knockout") {
+            R32_STAGE = "Knockout";
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load R32 status:", err);
+      }
+    }
+
     function goPlay() {
-      window.location.href = "landing.html";
+      if (R32_STAGE === "Knockout") {
+        window.location.href = "R32_bracket.html";
+      } else {
+        window.location.href = "landing.html";
+      }
     }
 
     function logout() {
@@ -96,14 +140,19 @@
       window.location.href = "index.html";
     }
 
-    // ✅ render shared topbar (same UI, just moved)
-    renderTopbar(
-      "Rules",
-      `
-        <button onclick="goPlay()">Play</button>
-        <button onclick="logout()">Logout</button>
-      `
-    );
+    async function initPage() {
+      await loadR32Status();
+
+      renderTopbar(
+        "Rules",
+        `
+          <button onclick="goPlay()">Play</button>
+          <button onclick="logout()">Logout</button>
+        `
+      );
+    }
+
+    initPage();
   </script>
 
 </body>
