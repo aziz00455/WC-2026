@@ -459,15 +459,19 @@
         throw new Error('Invalid R32mapping/status.stage. Expected Group or Knockout.');
       }
 
+      const previousStatus = String(data.status || '').trim();
       const status = computeStatus(mode, stage, serverNowMs);
+      const statusChanged = previousStatus !== status;
 
-      if (data.status !== status) {
+      if (statusChanged) {
         await STATUS_DOC.set({ stage, status }, { merge: true });
       }
 
       return {
         stage,
         status,
+        previousStatus,
+        statusChanged,
         isGroup: stage === 'Group',
         isKnockout: stage === 'Knockout',
         isPrelim: status === 'Prelim',
@@ -486,10 +490,6 @@
         .map((item, idx) => ({ idx, teamName: item.teamName, rank: item.rank }));
     }
 
-    function defaultR32Order(teamMaster) {
-      return teamMaster.map(t => t.idx);
-    }
-
     function normalizeUserR32Teams(raw, teamMaster) {
       const nameToIdx = new Map();
       const used = new Set();
@@ -504,7 +504,6 @@
         if (!Number.isInteger(n)) return;
         if (n < 0 || n >= teamMaster.length) return;
         if (used.has(n)) return;
-
         used.add(n);
         normalized.push(n);
       };
@@ -512,10 +511,8 @@
       const addTeamName = name => {
         const key = String(name || '').trim().toLowerCase();
         if (!key) return;
-
         const idx = nameToIdx.get(key);
         if (idx == null) return;
-
         addIdx(idx);
       };
 
@@ -525,20 +522,10 @@
             addIdx(item);
           } else if (typeof item === 'string') {
             const trimmed = item.trim();
-
-            if (/^\d+$/.test(trimmed)) {
-              addIdx(Number(trimmed));
-            } else {
-              addTeamName(trimmed);
-            }
+            if (/^\d+$/.test(trimmed)) addIdx(Number(trimmed));
+            else addTeamName(trimmed);
           } else if (item && typeof item === 'object') {
-            addTeamName(
-              item.teamName ||
-              item.team ||
-              item.name ||
-              item.country ||
-              ''
-            );
+            addTeamName(item.teamName || item.team || item.name || item.country || '');
           }
         });
       }
@@ -562,7 +549,6 @@
     function normalizeSeedArray(raw, len) {
       const arr = Array.isArray(raw) ? raw.slice(0, len) : [];
       while (arr.length < len) arr.push(0);
-
       return arr.map(v => {
         const n = Number(v);
         return Number.isInteger(n) ? n : 0;
@@ -735,7 +721,10 @@
 
       leaderboard.sort((a, b) => b.score - a.score || a.username.localeCompare(b.username));
 
-      const seedsFinal = stageState.isKnockout && hasCompleteSavedSeeds(leaderboard);
+      const seedsFinal =
+        stageState.isKnockout &&
+        !stageState.statusChanged &&
+        hasCompleteSavedSeeds(leaderboard);
 
       if (seedsFinal) {
         const qualified = leaderboard
@@ -1095,12 +1084,7 @@
           return;
         }
 
-        const opts = availableOptionsForSeed(
-          row,
-          autoRows,
-          candidateTeams,
-          teamMaster
-        );
+        const opts = availableOptionsForSeed(row, autoRows, candidateTeams, teamMaster);
 
         if (opts.length) {
           row.team = opts[0].teamName;
@@ -1190,10 +1174,7 @@
         }
 
         let j = i + 1;
-
-        while (j < state.rows.length && state.rows[j].rank === row.rank) {
-          j++;
-        }
+        while (j < state.rows.length && state.rows[j].rank === row.rank) j++;
 
         const groupRows = state.rows.slice(i, j);
         const size = j - i;
@@ -1288,7 +1269,9 @@
       const ranked = await buildRankedPlayers(teamMaster, stageState);
       const draftRows = buildDraftRows(ranked.rankedPlayers);
 
-      const allowUserSlotWrites = stageState.isKnockout && !ranked.seedsFinal;
+      const allowUserSlotWrites =
+        (mode === 'User' && (stageState.status === 'Prelim' || stageState.status === 'Pick')) ||
+        (stageState.isKnockout && !ranked.seedsFinal);
 
       const userStateByUid = await syncUserSlotSchema(
         draftRows,
@@ -1411,13 +1394,15 @@
       const cls = row.assignMode === 'AUTO' ? 'r32-assign-auto' : 'r32-assign-manual';
 
       const canToggle =
-        state.userStage === 'PICK' &&
-        !row.team &&
+        state.mode === 'User' &&
+        (state.userStage === 'PRELIM' || state.userStage === 'PICK') &&
         !row.dnq &&
         row.uid === sessionUserId &&
-        row.seedNo >= state.currentSeed &&
         row.seedNo > 0 &&
-        state.isKnockout;
+        (
+          state.userStage === 'PRELIM' ||
+          !row.team
+        );
 
       if (!canToggle) {
         return `<span class="r32-assign-badge ${cls}">${label}</span>`;
@@ -1555,17 +1540,26 @@
 
         const state = pageState;
 
-        if (!state || state.mode !== 'User' || state.userStage !== 'PICK' || !state.isKnockout) return;
+        if (
+          !state ||
+          state.mode !== 'User' ||
+          (state.userStage !== 'PRELIM' && state.userStage !== 'PICK')
+        ) {
+          return;
+        }
 
         refreshTurnState(state);
 
         const row = state.rows.find(r => r.seedNo === seedNo);
 
-        if (!row || row.uid !== sessionUserId || row.dnq || row.team || seedNo < state.currentSeed) return;
+        if (!row || row.uid !== sessionUserId || row.dnq || row.seedNo <= 0) return;
+
+        if (state.userStage === 'PICK' && row.team) return;
 
         const us = state.userStateByUid.get(row.uid);
-        const idx = us.seed.indexOf(seedNo);
+        if (!us) return;
 
+        const idx = us.seed.indexOf(seedNo);
         if (idx < 0) return;
 
         us.assignMode[idx] = us.assignMode[idx] === 'AUTO' ? 'MANUAL' : 'AUTO';
@@ -1575,7 +1569,11 @@
 
         renderTable(state);
 
-        if (seedNo === state.currentSeed && row.assignMode === 'AUTO') {
+        if (
+          state.userStage === 'PICK' &&
+          seedNo === state.currentSeed &&
+          row.assignMode === 'AUTO'
+        ) {
           pageState = await processAutoChainIfNeeded(state);
           renderInfoBox(pageState);
           renderTable(pageState);
