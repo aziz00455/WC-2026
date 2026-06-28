@@ -74,9 +74,6 @@
     let scrollSyncTimer = null;
     let boundScrollEl = null;
 
-    let cachedR32MappingData = null;
-    let cachedR32MappingLoaded = false;
-
     function isMobileBracketView() {
       return window.matchMedia("(max-width: 640px)").matches;
     }
@@ -376,6 +373,156 @@
       return lookup;
     }
 
+    function buildTeamToPlayerLookup(mappingData) {
+      const lookup = {};
+
+      Object.entries(mappingData || {}).forEach(function ([teamName, data]) {
+        if (!data || typeof data !== "object") return;
+
+        let player = firstNonEmpty(
+          data.player,
+          data.playerName,
+          data.username,
+          data.userName,
+          data.owner,
+          data.ownerName,
+          data.assignedPlayer,
+          data.assignedPlayerName
+        );
+
+        if (!player && data.player && typeof data.player === "object") {
+          player = firstNonEmpty(
+            data.player.name,
+            data.player.username,
+            data.player.displayName,
+            data.player.playerName
+          );
+        }
+
+        if (!player) return;
+
+        lookup[teamName] = String(player);
+      });
+
+      return lookup;
+    }
+
+    function setSidePlayer(match, side, playerName) {
+      if (!match || !playerName) return;
+
+      const player = String(playerName);
+
+      if (side === 1) {
+        match.player1 = player;
+        match.player1Name = player;
+        match.playerName1 = player;
+
+        match.slot1Player = player;
+        match.slot1PlayerName = player;
+
+        match.team1Player = player;
+        match.team1PlayerName = player;
+
+        match.homePlayer = player;
+        match.homePlayerName = player;
+
+        match.owner1 = player;
+        match.ownerName1 = player;
+
+        match.user1 = player;
+        match.userName1 = player;
+        match.username1 = player;
+
+        match.playerHome = player;
+        match.homeOwner = player;
+        match.team1Owner = player;
+      } else {
+        match.player2 = player;
+        match.player2Name = player;
+        match.playerName2 = player;
+
+        match.slot2Player = player;
+        match.slot2PlayerName = player;
+
+        match.team2Player = player;
+        match.team2PlayerName = player;
+
+        match.awayPlayer = player;
+        match.awayPlayerName = player;
+
+        match.owner2 = player;
+        match.ownerName2 = player;
+
+        match.user2 = player;
+        match.userName2 = player;
+        match.username2 = player;
+
+        match.playerAway = player;
+        match.awayOwner = player;
+        match.team2Owner = player;
+      }
+    }
+
+    function getPlayerForTeamInMatch(match, teamName) {
+      if (!match || !teamName) return null;
+
+      if (
+        match.team1 === teamName ||
+        match.slot1Team === teamName ||
+        match.homeTeam === teamName ||
+        match.homeName === teamName
+      ) {
+        return firstNonEmpty(
+          match.player1Name,
+          match.playerName1,
+          match.player1,
+          match.slot1Player,
+          match.slot1PlayerName,
+          match.team1Player,
+          match.team1PlayerName,
+          match.homePlayer,
+          match.homePlayerName,
+          match.owner1,
+          match.ownerName1,
+          match.user1,
+          match.userName1,
+          match.username1,
+          match.playerHome,
+          match.homeOwner,
+          match.team1Owner
+        );
+      }
+
+      if (
+        match.team2 === teamName ||
+        match.slot2Team === teamName ||
+        match.awayTeam === teamName ||
+        match.awayName === teamName
+      ) {
+        return firstNonEmpty(
+          match.player2Name,
+          match.playerName2,
+          match.player2,
+          match.slot2Player,
+          match.slot2PlayerName,
+          match.team2Player,
+          match.team2PlayerName,
+          match.awayPlayer,
+          match.awayPlayerName,
+          match.owner2,
+          match.ownerName2,
+          match.user2,
+          match.userName2,
+          match.username2,
+          match.playerAway,
+          match.awayOwner,
+          match.team2Owner
+        );
+      }
+
+      return null;
+    }
+
     function seedLocalLiveFromMergedMatches(liveDocData, mergedMatches) {
       const safeLive = cloneJson(liveDocData) || {};
       safeLive.matches =
@@ -424,6 +571,28 @@
           match.slot2Team,
           match.awayTeam,
           match.awayName
+        );
+
+        liveMatch.player1 = firstNonEmpty(
+          liveMatch.player1,
+          liveMatch.player1Name,
+          match.player1,
+          match.player1Name,
+          match.playerName1,
+          match.slot1Player,
+          match.team1Player,
+          match.homePlayer
+        );
+
+        liveMatch.player2 = firstNonEmpty(
+          liveMatch.player2,
+          liveMatch.player2Name,
+          match.player2,
+          match.player2Name,
+          match.playerName2,
+          match.slot2Player,
+          match.team2Player,
+          match.awayPlayer
         );
 
         liveMatch.score1 = firstNonEmpty(
@@ -475,7 +644,8 @@
           ? safeLive.matches
           : {};
 
-      const lookup = buildPlacementToTeamLookup(mappingData);
+      const placementLookup = buildPlacementToTeamLookup(mappingData);
+      const playerLookup = buildTeamToPlayerLookup(mappingData);
 
       Object.keys(safeLive.matches).forEach(function (matchKey) {
         const match = safeLive.matches[matchKey] || {};
@@ -483,8 +653,8 @@
         const slot1Key = normalizePlacementKey(match.slot1);
         const slot2Key = normalizePlacementKey(match.slot2);
 
-        const mappedTeam1 = lookup[slot1Key];
-        const mappedTeam2 = lookup[slot2Key];
+        const mappedTeam1 = placementLookup[slot1Key];
+        const mappedTeam2 = placementLookup[slot2Key];
 
         if (
           mappedTeam1 &&
@@ -509,6 +679,28 @@
         ) {
           match.team2 = mappedTeam2;
         }
+
+        if (match.team1) {
+          match.displayTeam1 = match.team1;
+          match.slot1Team = match.team1;
+          match.homeTeam = match.team1;
+          match.homeName = match.team1;
+          match.hasRealTeam1 = true;
+        }
+
+        if (match.team2) {
+          match.displayTeam2 = match.team2;
+          match.slot2Team = match.team2;
+          match.awayTeam = match.team2;
+          match.awayName = match.team2;
+          match.hasRealTeam2 = true;
+        }
+
+        const player1 = match.team1 ? playerLookup[match.team1] : null;
+        const player2 = match.team2 ? playerLookup[match.team2] : null;
+
+        if (player1) setSidePlayer(match, 1, player1);
+        if (player2) setSidePlayer(match, 2, player2);
 
         safeLive.matches[matchKey] = match;
       });
@@ -536,7 +728,20 @@
 
             if (prevMatch && prevMatch.winner && match.team1 !== prevMatch.winner) {
               match.team1 = prevMatch.winner;
+              match.displayTeam1 = prevMatch.winner;
+              match.slot1Team = prevMatch.winner;
+              match.homeTeam = prevMatch.winner;
+              match.homeName = prevMatch.winner;
+              match.hasRealTeam1 = true;
               changed = true;
+            }
+
+            if (prevMatch && prevMatch.winner) {
+              const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
+              if (winnerPlayer) {
+                setSidePlayer(match, 1, winnerPlayer);
+                changed = true;
+              }
             }
           }
 
@@ -546,7 +751,20 @@
 
             if (prevMatch && prevMatch.winner && match.team2 !== prevMatch.winner) {
               match.team2 = prevMatch.winner;
+              match.displayTeam2 = prevMatch.winner;
+              match.slot2Team = prevMatch.winner;
+              match.awayTeam = prevMatch.winner;
+              match.awayName = prevMatch.winner;
+              match.hasRealTeam2 = true;
               changed = true;
+            }
+
+            if (prevMatch && prevMatch.winner) {
+              const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
+              if (winnerPlayer) {
+                setSidePlayer(match, 2, winnerPlayer);
+                changed = true;
+              }
             }
           }
 
@@ -582,17 +800,43 @@
 
         if (liveMatch.team1) {
           match.team1 = liveMatch.team1;
+          match.displayTeam1 = liveMatch.team1;
           match.slot1Team = liveMatch.team1;
           match.homeTeam = liveMatch.team1;
           match.homeName = liveMatch.team1;
+          match.hasRealTeam1 = true;
         }
 
         if (liveMatch.team2) {
           match.team2 = liveMatch.team2;
+          match.displayTeam2 = liveMatch.team2;
           match.slot2Team = liveMatch.team2;
           match.awayTeam = liveMatch.team2;
           match.awayName = liveMatch.team2;
+          match.hasRealTeam2 = true;
         }
+
+        const player1 = firstNonEmpty(
+          liveMatch.player1Name,
+          liveMatch.playerName1,
+          liveMatch.player1,
+          liveMatch.slot1Player,
+          liveMatch.team1Player,
+          liveMatch.homePlayer
+        );
+
+        if (player1) setSidePlayer(match, 1, player1);
+
+        const player2 = firstNonEmpty(
+          liveMatch.player2Name,
+          liveMatch.playerName2,
+          liveMatch.player2,
+          liveMatch.slot2Player,
+          liveMatch.team2Player,
+          liveMatch.awayPlayer
+        );
+
+        if (player2) setSidePlayer(match, 2, player2);
 
         if (liveMatch.winner) {
           match.winner = liveMatch.winner;
@@ -604,20 +848,20 @@
       return list;
     }
 
-    async function getCachedR32MappingData(db) {
-      if (cachedR32MappingLoaded) return cachedR32MappingData || {};
-
+    async function getR32MappingData(db) {
       const snap = await db
         .collection(R32_MAPPING_COLLECTION)
         .doc(R32_MAPPING_DOC_ID)
         .get();
 
-      cachedR32MappingData = snap.exists ? (snap.data() || {}) : {};
-      cachedR32MappingLoaded = true;
+      const mappingData = snap.exists ? (snap.data() || {}) : {};
 
-      console.log("[R32 Bracket] Loaded R32mapping once", buildPlacementToTeamLookup(cachedR32MappingData));
+      console.log("[R32 Bracket] Loaded R32mapping", {
+        placementLookup: buildPlacementToTeamLookup(mappingData),
+        playerLookup: buildTeamToPlayerLookup(mappingData)
+      });
 
-      return cachedR32MappingData;
+      return mappingData;
     }
 
     async function synchronizeBracketForDisplay(db, context) {
@@ -626,7 +870,7 @@
           ? context.mergedMatches
           : [];
 
-      const mappingData = await getCachedR32MappingData(db);
+      const mappingData = await getR32MappingData(db);
 
       const liveSnap = await db
         .collection(LIVE_COLLECTION)
@@ -691,6 +935,14 @@
         }
       ];
 
+      console.log("[R32 Bracket] mergedMatches with players", mergedMatches.map(m => ({
+        match: getMatchNumberFromAny(m),
+        team1: m.team1 || m.displayTeam1 || m.slot1Team || m.homeTeam,
+        player1: m.player1Name || m.playerName1 || m.player1 || m.team1Player || m.homePlayer,
+        team2: m.team2 || m.displayTeam2 || m.slot2Team || m.awayTeam,
+        player2: m.player2Name || m.playerName2 || m.player2 || m.team2Player || m.awayPlayer
+      })));
+
       app.innerHTML = R32MatchCards.buildBracketBoardHtml(boardSpec, mergedMatches);
 
       applyBracketWindowClass();
@@ -753,9 +1005,6 @@
         syncUrl: "",
         refreshMs: R32_REFRESH_MS,
 
-        // Important:
-        // R32_bracket.html is now display-only.
-        // Do not trigger external sync from this page.
         triggerSyncOnStart: false,
         triggerSyncOnRefresh: false,
 
