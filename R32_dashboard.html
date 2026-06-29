@@ -498,6 +498,84 @@
       return lookup;
     }
 
+    function buildTeamToPlayerLookup(mappingData) {
+      const lookup = {};
+
+      Object.entries(mappingData || {}).forEach(function ([teamName, data]) {
+        if (!data || typeof data !== "object") return;
+
+        let player = firstNonEmpty(
+          data.player,
+          data.playerName,
+          data.username,
+          data.userName,
+          data.owner,
+          data.ownerName,
+          data.assignedPlayer,
+          data.assignedPlayerName
+        );
+
+        if (!player && data.player && typeof data.player === "object") {
+          player = firstNonEmpty(
+            data.player.name,
+            data.player.username,
+            data.player.displayName,
+            data.player.playerName
+          );
+        }
+
+        if (!player) return;
+
+        lookup[teamName] = String(player);
+      });
+
+      return lookup;
+    }
+
+    function setSidePlayer(match, side, playerName) {
+      if (!match || !playerName) return;
+
+      const player = String(playerName);
+
+      if (side === 1) {
+        match.player1 = player;
+        match.player1Name = player;
+        match.playerName1 = player;
+        match.slot1Player = player;
+        match.slot1PlayerName = player;
+        match.team1Player = player;
+        match.team1PlayerName = player;
+        match.homePlayer = player;
+        match.homePlayerName = player;
+        match.owner1 = player;
+        match.ownerName1 = player;
+        match.user1 = player;
+        match.userName1 = player;
+        match.username1 = player;
+        match.playerHome = player;
+        match.homeOwner = player;
+        match.team1Owner = player;
+      } else {
+        match.player2 = player;
+        match.player2Name = player;
+        match.playerName2 = player;
+        match.slot2Player = player;
+        match.slot2PlayerName = player;
+        match.team2Player = player;
+        match.team2PlayerName = player;
+        match.awayPlayer = player;
+        match.awayPlayerName = player;
+        match.owner2 = player;
+        match.ownerName2 = player;
+        match.user2 = player;
+        match.userName2 = player;
+        match.username2 = player;
+        match.playerAway = player;
+        match.awayOwner = player;
+        match.team2Owner = player;
+      }
+    }
+
     function seedLocalLiveFromMergedMatches(liveDocData, mergedMatches) {
       const safeLive = cloneJson(liveDocData) || {};
 
@@ -549,6 +627,37 @@
           match.awayName
         );
 
+        liveMatch.player1 = firstNonEmpty(
+          liveMatch.player1,
+          liveMatch.player1Name,
+          match.player1,
+          match.player1Name,
+          match.playerName1,
+          match.slot1Player,
+          match.slot1PlayerName,
+          match.team1Player,
+          match.team1PlayerName,
+          match.homePlayer,
+          match.homePlayerName
+        );
+
+        liveMatch.player2 = firstNonEmpty(
+          liveMatch.player2,
+          liveMatch.player2Name,
+          match.player2,
+          match.player2Name,
+          match.playerName2,
+          match.slot2Player,
+          match.slot2PlayerName,
+          match.team2Player,
+          match.team2PlayerName,
+          match.awayPlayer,
+          match.awayPlayerName
+        );
+
+        liveMatch.player1Name = firstNonEmpty(liveMatch.player1Name, liveMatch.player1);
+        liveMatch.player2Name = firstNonEmpty(liveMatch.player2Name, liveMatch.player2);
+
         liveMatch.score1 = firstNonEmpty(
           match.score1,
           match.homeScore,
@@ -599,7 +708,8 @@
           ? safeLive.matches
           : {};
 
-      const lookup = buildPlacementToTeamLookup(mappingData);
+      const placementLookup = buildPlacementToTeamLookup(mappingData);
+      const playerLookup = buildTeamToPlayerLookup(mappingData);
 
       Object.keys(safeLive.matches).forEach(function (matchKey) {
         const match = safeLive.matches[matchKey] || {};
@@ -607,8 +717,8 @@
         const slot1Key = normalizePlacementKey(match.slot1);
         const slot2Key = normalizePlacementKey(match.slot2);
 
-        const mappedTeam1 = lookup[slot1Key];
-        const mappedTeam2 = lookup[slot2Key];
+        const mappedTeam1 = placementLookup[slot1Key];
+        const mappedTeam2 = placementLookup[slot2Key];
 
         if (
           mappedTeam1 &&
@@ -633,6 +743,28 @@
         ) {
           match.team2 = mappedTeam2;
         }
+
+        if (match.team1) {
+          match.displayTeam1 = match.team1;
+          match.slot1Team = match.team1;
+          match.homeTeam = match.team1;
+          match.homeName = match.team1;
+          match.hasRealTeam1 = true;
+        }
+
+        if (match.team2) {
+          match.displayTeam2 = match.team2;
+          match.slot2Team = match.team2;
+          match.awayTeam = match.team2;
+          match.awayName = match.team2;
+          match.hasRealTeam2 = true;
+        }
+
+        const player1 = match.team1 ? playerLookup[match.team1] : null;
+        const player2 = match.team2 ? playerLookup[match.team2] : null;
+
+        if (player1) setSidePlayer(match, 1, player1);
+        if (player2) setSidePlayer(match, 2, player2);
 
         safeLive.matches[matchKey] = match;
       });
@@ -706,17 +838,48 @@
 
         if (liveMatch.team1) {
           match.team1 = liveMatch.team1;
+          match.displayTeam1 = liveMatch.team1;
           match.slot1Team = liveMatch.team1;
           match.homeTeam = liveMatch.team1;
           match.homeName = liveMatch.team1;
+          match.hasRealTeam1 = true;
         }
 
         if (liveMatch.team2) {
           match.team2 = liveMatch.team2;
+          match.displayTeam2 = liveMatch.team2;
           match.slot2Team = liveMatch.team2;
           match.awayTeam = liveMatch.team2;
           match.awayName = liveMatch.team2;
+          match.hasRealTeam2 = true;
         }
+
+        const player1 = firstNonEmpty(
+          liveMatch.player1Name,
+          liveMatch.playerName1,
+          liveMatch.player1,
+          liveMatch.slot1Player,
+          liveMatch.slot1PlayerName,
+          liveMatch.team1Player,
+          liveMatch.team1PlayerName,
+          liveMatch.homePlayer,
+          liveMatch.homePlayerName
+        );
+
+        const player2 = firstNonEmpty(
+          liveMatch.player2Name,
+          liveMatch.playerName2,
+          liveMatch.player2,
+          liveMatch.slot2Player,
+          liveMatch.slot2PlayerName,
+          liveMatch.team2Player,
+          liveMatch.team2PlayerName,
+          liveMatch.awayPlayer,
+          liveMatch.awayPlayerName
+        );
+
+        if (player1) setSidePlayer(match, 1, player1);
+        if (player2) setSidePlayer(match, 2, player2);
 
         if (liveMatch.winner) {
           match.winner = liveMatch.winner;
@@ -739,7 +902,10 @@
       cachedR32MappingData = snap.exists ? (snap.data() || {}) : {};
       cachedR32MappingLoaded = true;
 
-      console.log("[R32 Dashboard] Loaded R32mapping once", buildPlacementToTeamLookup(cachedR32MappingData));
+      console.log("[R32 Dashboard] Loaded R32mapping once", {
+        placementLookup: buildPlacementToTeamLookup(cachedR32MappingData),
+        playerLookup: buildTeamToPlayerLookup(cachedR32MappingData)
+      });
 
       return cachedR32MappingData;
     }
