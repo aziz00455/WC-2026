@@ -97,18 +97,17 @@
       line-height: 1;
     }
     .header-team-flag { width: 11px; height: 8px; object-fit: cover; border-radius: 1px; display: block; }
-    .mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .mark-img {
       width: 12px;
       height: 12px;
-      font-size: 10px;
-      line-height: 1;
+      display: inline-block;
       vertical-align: middle;
     }
-    .mark-correct { color: #2ecc71; }
-    .mark-wrong { color: #c62828; }
+    .mark-img svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+    }
     .n-icon {
       display: inline-flex;
       align-items: center;
@@ -426,14 +425,36 @@
       return escapeHtml(winnerTeam || '');
     }
 
+    function getCheckSvg() {
+      return (
+        '<span class="mark-img" aria-label="Correct">' +
+          '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle cx="8" cy="8" r="7" fill="#2ecc71"></circle>' +
+            '<path d="M4.1 8.2L6.7 10.8L12.1 5.2" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '</svg>' +
+        '</span>'
+      );
+    }
+
+    function getWrongSvg() {
+      return (
+        '<span class="mark-img" aria-label="Wrong">' +
+          '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle cx="8" cy="8" r="7" fill="#c62828"></circle>' +
+            '<path d="M5 5L11 11M11 5L5 11" fill="none" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round"></path>' +
+          '</svg>' +
+        '</span>'
+      );
+    }
+
     function buildPickMark(pick, result) {
       const numericPick = Number(pick || 0);
       if (!numericPick) return '<span class="n-icon">N</span>';
       if (!isCompleteResult(result)) return '<span class="n-icon">N</span>';
       const outcome = getOutcome(result);
       if (!outcome) return '<span class="n-icon">N</span>';
-      if (numericPick === outcome) return '<span class="mark mark-correct">✅</span>';
-      return '<span class="mark mark-wrong">❌</span>';
+      if (numericPick === outcome) return getCheckSvg();
+      return getWrongSvg();
     }
 
     function calculateUserStats(user, groupMatches, results) {
