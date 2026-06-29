@@ -474,6 +474,14 @@
       return /^W\d+$/i.test(String(value || "").trim());
     }
 
+    function isCompletedWinnerMatch(match) {
+      return !!(
+        match &&
+        String(match.status || "").toLowerCase() === "complete" &&
+        match.winner
+      );
+    }
+
     function isPlacementPlaceholder(value) {
       const text = normalizePlacementKey(value);
 
@@ -541,17 +549,23 @@
         match.player1 = player;
         match.player1Name = player;
         match.playerName1 = player;
+
         match.slot1Player = player;
         match.slot1PlayerName = player;
+
         match.team1Player = player;
         match.team1PlayerName = player;
+
         match.homePlayer = player;
         match.homePlayerName = player;
+
         match.owner1 = player;
         match.ownerName1 = player;
+
         match.user1 = player;
         match.userName1 = player;
         match.username1 = player;
+
         match.playerHome = player;
         match.homeOwner = player;
         match.team1Owner = player;
@@ -559,21 +573,87 @@
         match.player2 = player;
         match.player2Name = player;
         match.playerName2 = player;
+
         match.slot2Player = player;
         match.slot2PlayerName = player;
+
         match.team2Player = player;
         match.team2PlayerName = player;
+
         match.awayPlayer = player;
         match.awayPlayerName = player;
+
         match.owner2 = player;
         match.ownerName2 = player;
+
         match.user2 = player;
         match.userName2 = player;
         match.username2 = player;
+
         match.playerAway = player;
         match.awayOwner = player;
         match.team2Owner = player;
       }
+    }
+
+    function getPlayerForTeamInMatch(match, teamName) {
+      if (!match || !teamName) return null;
+
+      if (
+        match.team1 === teamName ||
+        match.slot1Team === teamName ||
+        match.homeTeam === teamName ||
+        match.homeName === teamName
+      ) {
+        return firstNonEmpty(
+          match.player1Name,
+          match.playerName1,
+          match.player1,
+          match.slot1Player,
+          match.slot1PlayerName,
+          match.team1Player,
+          match.team1PlayerName,
+          match.homePlayer,
+          match.homePlayerName,
+          match.owner1,
+          match.ownerName1,
+          match.user1,
+          match.userName1,
+          match.username1,
+          match.playerHome,
+          match.homeOwner,
+          match.team1Owner
+        );
+      }
+
+      if (
+        match.team2 === teamName ||
+        match.slot2Team === teamName ||
+        match.awayTeam === teamName ||
+        match.awayName === teamName
+      ) {
+        return firstNonEmpty(
+          match.player2Name,
+          match.playerName2,
+          match.player2,
+          match.slot2Player,
+          match.slot2PlayerName,
+          match.team2Player,
+          match.team2PlayerName,
+          match.awayPlayer,
+          match.awayPlayerName,
+          match.owner2,
+          match.ownerName2,
+          match.user2,
+          match.userName2,
+          match.username2,
+          match.playerAway,
+          match.awayOwner,
+          match.team2Owner
+        );
+      }
+
+      return null;
     }
 
     function seedLocalLiveFromMergedMatches(liveDocData, mergedMatches) {
@@ -790,9 +870,23 @@
             const prevMatchNum = String(match.slot1).trim().replace(/^W/i, "");
             const prevMatch = matches[prevMatchNum];
 
-            if (prevMatch && prevMatch.winner && match.team1 !== prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch) && match.team1 !== prevMatch.winner) {
               match.team1 = prevMatch.winner;
+              match.displayTeam1 = prevMatch.winner;
+              match.slot1Team = prevMatch.winner;
+              match.homeTeam = prevMatch.winner;
+              match.homeName = prevMatch.winner;
+              match.hasRealTeam1 = true;
               changed = true;
+            }
+
+            if (isCompletedWinnerMatch(prevMatch)) {
+              const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
+
+              if (winnerPlayer) {
+                setSidePlayer(match, 1, winnerPlayer);
+                changed = true;
+              }
             }
           }
 
@@ -800,9 +894,23 @@
             const prevMatchNum = String(match.slot2).trim().replace(/^W/i, "");
             const prevMatch = matches[prevMatchNum];
 
-            if (prevMatch && prevMatch.winner && match.team2 !== prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch) && match.team2 !== prevMatch.winner) {
               match.team2 = prevMatch.winner;
+              match.displayTeam2 = prevMatch.winner;
+              match.slot2Team = prevMatch.winner;
+              match.awayTeam = prevMatch.winner;
+              match.awayName = prevMatch.winner;
+              match.hasRealTeam2 = true;
               changed = true;
+            }
+
+            if (isCompletedWinnerMatch(prevMatch)) {
+              const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
+
+              if (winnerPlayer) {
+                setSidePlayer(match, 2, winnerPlayer);
+                changed = true;
+              }
             }
           }
 
@@ -880,6 +988,29 @@
 
         if (player1) setSidePlayer(match, 1, player1);
         if (player2) setSidePlayer(match, 2, player2);
+
+        if (liveMatch.score1 != null) {
+          match.score1 = liveMatch.score1;
+          match.homeScore = liveMatch.score1;
+          match.scoreHome = liveMatch.score1;
+        }
+
+        if (liveMatch.score2 != null) {
+          match.score2 = liveMatch.score2;
+          match.awayScore = liveMatch.score2;
+          match.scoreAway = liveMatch.score2;
+        }
+
+        if (liveMatch.status) {
+          match.status = liveMatch.status;
+          match.matchStatus = liveMatch.status;
+          match.state = liveMatch.status;
+        }
+
+        if (liveMatch.gameTime) {
+          match.gameTime = liveMatch.gameTime;
+          match.time = liveMatch.gameTime;
+        }
 
         if (liveMatch.winner) {
           match.winner = liveMatch.winner;

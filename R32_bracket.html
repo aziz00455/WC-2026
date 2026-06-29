@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
   <meta charset="utf-8" />
@@ -326,7 +325,7 @@
     function normalizePlacementKey(value) {
       return String(value || "")
         .trim()
-        .replace(/\u00A0/g, " ")
+        .replace(/ /g, " ")
         .replace(/\s+/g, " ")
         .replace(/\s*\/\s*/g, "/")
         .toUpperCase();
@@ -348,6 +347,14 @@
 
     function isWinnerSlot(value) {
       return /^W\d+$/i.test(String(value || "").trim());
+    }
+
+    function isCompletedWinnerMatch(match) {
+      return !!(
+        match &&
+        String(match.status || "").toLowerCase() === "complete" &&
+        match.winner
+      );
     }
 
     function isPlacementPlaceholder(value) {
@@ -727,7 +734,7 @@
             const prevMatchNum = String(match.slot1).trim().replace(/^W/i, "");
             const prevMatch = matches[prevMatchNum];
 
-            if (prevMatch && prevMatch.winner && match.team1 !== prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch) && match.team1 !== prevMatch.winner) {
               match.team1 = prevMatch.winner;
               match.displayTeam1 = prevMatch.winner;
               match.slot1Team = prevMatch.winner;
@@ -737,7 +744,7 @@
               changed = true;
             }
 
-            if (prevMatch && prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch)) {
               const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
               if (winnerPlayer) {
                 setSidePlayer(match, 1, winnerPlayer);
@@ -750,7 +757,7 @@
             const prevMatchNum = String(match.slot2).trim().replace(/^W/i, "");
             const prevMatch = matches[prevMatchNum];
 
-            if (prevMatch && prevMatch.winner && match.team2 !== prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch) && match.team2 !== prevMatch.winner) {
               match.team2 = prevMatch.winner;
               match.displayTeam2 = prevMatch.winner;
               match.slot2Team = prevMatch.winner;
@@ -760,7 +767,7 @@
               changed = true;
             }
 
-            if (prevMatch && prevMatch.winner) {
+            if (isCompletedWinnerMatch(prevMatch)) {
               const winnerPlayer = getPlayerForTeamInMatch(prevMatch, prevMatch.winner);
               if (winnerPlayer) {
                 setSidePlayer(match, 2, winnerPlayer);
@@ -838,6 +845,29 @@
         );
 
         if (player2) setSidePlayer(match, 2, player2);
+
+        if (liveMatch.score1 != null) {
+          match.score1 = liveMatch.score1;
+          match.homeScore = liveMatch.score1;
+          match.scoreHome = liveMatch.score1;
+        }
+
+        if (liveMatch.score2 != null) {
+          match.score2 = liveMatch.score2;
+          match.awayScore = liveMatch.score2;
+          match.scoreAway = liveMatch.score2;
+        }
+
+        if (liveMatch.status) {
+          match.status = liveMatch.status;
+          match.matchStatus = liveMatch.status;
+          match.state = liveMatch.status;
+        }
+
+        if (liveMatch.gameTime) {
+          match.gameTime = liveMatch.gameTime;
+          match.time = liveMatch.gameTime;
+        }
 
         if (liveMatch.winner) {
           match.winner = liveMatch.winner;
