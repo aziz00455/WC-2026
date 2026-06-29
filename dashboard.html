@@ -3,12 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <title>WC 2026 Dashboard</title>
-
   <style>
     * { box-sizing: border-box; }
-
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       width: 1400px;
@@ -18,13 +15,7 @@
       font-family: Arial, sans-serif;
       color: #222;
     }
-
-    body {
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-    }
-
+    body { display: flex; align-items: stretch; justify-content: stretch; }
     .dashboard {
       width: 1400px;
       height: 680px;
@@ -32,7 +23,6 @@
       background: #f4f4f4;
       overflow: hidden;
     }
-
     .table-card {
       width: 100%;
       height: 100%;
@@ -43,7 +33,6 @@
       border-radius: 8px;
       overflow: hidden;
     }
-
     table {
       width: 100%;
       height: 100%;
@@ -51,7 +40,6 @@
       border-collapse: collapse;
       background: #fff;
     }
-
     thead th {
       background: #fafafa;
       border-bottom: 1px solid #d9d9d9;
@@ -67,7 +55,6 @@
       text-overflow: clip;
       vertical-align: middle;
     }
-
     tbody td {
       border-bottom: 1px solid #eee;
       border-right: 1px solid #f0f0f0;
@@ -81,44 +68,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     tbody tr:last-child td { border-bottom: none; }
-    thead th:last-child,
-    tbody td:last-child { border-right: none; }
-
-    .name-col {
-      width: 57px;
-      text-align: left;
-      padding-left: 4px;
-    }
-
-    .match-col {
-      width: 15px;
-      min-width: 15px;
-      max-width: 15px;
-      padding: 0;
-    }
-
-    .score-col {
-      width: 34px;
-      font-weight: 700;
-    }
-
-    .rank-col {
-      width: 28px;
-      font-weight: 700;
-    }
-
-    .seed-col {
-      width: 32px;
-      font-weight: 700;
-    }
-
-    .team-col {
-      width: 78px;
-      font-weight: 700;
-    }
-
+    thead th:last-child, tbody td:last-child { border-right: none; }
+    .rank-col { width: 28px; font-weight: 700; }
+    .seed-col { width: 32px; font-weight: 700; }
+    .name-col { width: 57px; text-align: left; padding-left: 4px; }
+    .team-col { width: 78px; font-weight: 700; }
+    .match-col { width: 15px; min-width: 15px; max-width: 15px; padding: 0; }
+    .score-col { width: 34px; font-weight: 700; }
     .header-match-cell {
       display: flex;
       flex-direction: column;
@@ -130,14 +87,7 @@
       height: 100%;
       overflow: hidden;
     }
-
-    .header-match-id {
-      font-size: 7px;
-      font-weight: 700;
-      line-height: 1;
-      height: 7px;
-    }
-
+    .header-match-id { font-size: 7px; font-weight: 700; line-height: 1; height: 7px; }
     .header-match-flags {
       display: flex;
       flex-direction: column;
@@ -146,15 +96,7 @@
       gap: 1px;
       line-height: 1;
     }
-
-    .header-team-flag {
-      width: 11px;
-      height: 8px;
-      object-fit: cover;
-      border-radius: 1px;
-      display: block;
-    }
-
+    .header-team-flag { width: 11px; height: 8px; object-fit: cover; border-radius: 1px; display: block; }
     .mark {
       display: inline-flex;
       align-items: center;
@@ -165,10 +107,8 @@
       line-height: 1;
       vertical-align: middle;
     }
-
     .mark-correct { color: #2ecc71; }
     .mark-wrong { color: #c62828; }
-
     .n-icon {
       display: inline-flex;
       align-items: center;
@@ -183,7 +123,6 @@
       border-radius: 2px;
       vertical-align: middle;
     }
-
     .team-display {
       display: inline-flex;
       align-items: center;
@@ -195,22 +134,12 @@
       line-height: 1;
       vertical-align: middle;
     }
-
-    .team-flag {
-      width: 14px;
-      height: 10px;
-      object-fit: cover;
-      border-radius: 1px;
-      flex: 0 0 auto;
-    }
-
-    .team-short {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    .team-flag { width: 14px; height: 10px; object-fit: cover; border-radius: 1px; flex: 0 0 auto; }
+    .team-short { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-row td { background: #fafafa; font-weight: 700; border-top: 2px solid #d9d9d9; }
+    .result-label { text-align: left; padding-left: 4px; }
+    .result-flag { width: 12px; height: 9px; object-fit: cover; border-radius: 1px; vertical-align: middle; }
+    .result-tie { font-size: 7px; font-weight: 700; line-height: 1; }
     .empty-state {
       width: 100%;
       height: 100%;
@@ -227,7 +156,6 @@
     }
   </style>
 </head>
-
 <body>
   <div class="dashboard">
     <div class="table-card">
@@ -242,11 +170,9 @@
     window.global = window;
     window.process = window.process || { env: {} };
   </script>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="firebase.js"></script>
-
   <script src="../WC_common/utils.js"></script>
   <script src="../WC_common/matches.js"></script>
   <script src="../WC_common/teams.js"></script>
@@ -305,6 +231,10 @@
       return [];
     }
 
+    function getMatchId(match) {
+      return String(match && (match.id != null ? match.id : match.matchNumber != null ? match.matchNumber : match.matchNo != null ? match.matchNo : ""));
+    }
+
     function getGroupMatches() {
       return getAllMatches()
         .slice(0, GROUP_MATCH_COUNT)
@@ -315,10 +245,6 @@
           if (Number.isFinite(at) && Number.isFinite(bt) && at !== bt) return at - bt;
           return String(getMatchId(a)).localeCompare(String(getMatchId(b)), undefined, { numeric: true });
         });
-    }
-
-    function getMatchId(match) {
-      return String(match && (match.id != null ? match.id : match.matchNumber != null ? match.matchNumber : match.matchNo != null ? match.matchNo : ""));
     }
 
     function getMatchPickIndex(match) {
@@ -380,11 +306,7 @@
     }
 
     async function loadResultsReadOnly(dbInstance) {
-      const snap = await dbInstance
-        .collection(MATCH_RESULTS_COLLECTION)
-        .doc(MATCH_RESULTS_DOC_ID)
-        .get();
-
+      const snap = await dbInstance.collection(MATCH_RESULTS_COLLECTION).doc(MATCH_RESULTS_DOC_ID).get();
       if (!snap.exists) return { results: {} };
       return { results: normalizeResultsFromDoc(snap.data() || {}) };
     }
@@ -393,8 +315,7 @@
       const snap = await dbInstance.collection("users").get();
       const users = [];
       snap.forEach(function (doc) {
-        const data = doc.data() || {};
-        users.push({ id: doc.id, data });
+        users.push({ id: doc.id, data: doc.data() || {} });
       });
       return users;
     }
@@ -456,11 +377,9 @@
     function getTeamMeta(teamName) {
       if (!teamName || teamName === "Elim") return null;
       if (window.teams && window.teams[teamName]) return window.teams[teamName];
-
       try {
         if (typeof getTeam === "function") return getTeam(teamName);
       } catch (err) {}
-
       return null;
     }
 
@@ -479,49 +398,38 @@
       const rankText = rank !== "" ? " (" + escapeHtml(rank) + ")" : "";
 
       if (flag) {
-        return (
-          '<span class="team-display">' +
-            '<img class="team-flag" src="' + escapeAttr(flag) + '" alt="">' +
-            '<span class="team-short">' + escapeHtml(shortName) + rankText + '</span>' +
-          '</span>'
-        );
+        return '<span class="team-display"><img class="team-flag" src="' + escapeAttr(flag) + '" alt=""><span class="team-short">' + escapeHtml(shortName) + rankText + '</span></span>';
       }
 
-      return (
-        '<span class="team-display">' +
-          '<span class="team-short">' + escapeHtml(shortName) + rankText + '</span>' +
-        '</span>'
-      );
+      return '<span class="team-display"><span class="team-short">' + escapeHtml(shortName) + rankText + '</span></span>';
     }
 
     function buildMatchHeaderCell(match) {
       const matchId = getMatchId(match);
       const flag1 = getTeamFlagUrl(match.team1);
       const flag2 = getTeamFlagUrl(match.team2);
-
       let flagsHtml = "";
 
-      if (flag1) {
-        flagsHtml += '<img class="header-team-flag" src="' + escapeAttr(flag1) + '" alt="">';
-      }
+      if (flag1) flagsHtml += '<img class="header-team-flag" src="' + escapeAttr(flag1) + '" alt="">';
+      if (flag2) flagsHtml += '<img class="header-team-flag" src="' + escapeAttr(flag2) + '" alt="">';
 
-      if (flag2) {
-        flagsHtml += '<img class="header-team-flag" src="' + escapeAttr(flag2) + '" alt="">';
-      }
+      return '<div class="header-match-cell"><div class="header-match-id">' + escapeHtml(matchId) + '</div><div class="header-match-flags">' + flagsHtml + '</div></div>';
+    }
 
-      return (
-        '<div class="header-match-cell">' +
-          '<div class="header-match-id">' + escapeHtml(matchId) + '</div>' +
-          '<div class="header-match-flags">' + flagsHtml + '</div>' +
-        '</div>'
-      );
+    function buildResultCell(match, result) {
+      if (!isCompleteResult(result)) return '<span class="n-icon">N</span>';
+      const outcome = getOutcome(result);
+      if (outcome === 3) return '<span class="result-tie">TIE</span>';
+      const winnerTeam = outcome === 1 ? match.team1 : outcome === 2 ? match.team2 : null;
+      const flag = getTeamFlagUrl(winnerTeam);
+      if (flag) return '<img class="result-flag" src="' + escapeAttr(flag) + '" alt="">';
+      return escapeHtml(winnerTeam || '');
     }
 
     function buildPickMark(pick, result) {
       const numericPick = Number(pick || 0);
       if (!numericPick) return '<span class="n-icon">N</span>';
       if (!isCompleteResult(result)) return '<span class="n-icon">N</span>';
-
       const outcome = getOutcome(result);
       if (!outcome) return '<span class="n-icon">N</span>';
       if (numericPick === outcome) return '<span class="mark mark-correct">✅</span>';
@@ -537,19 +445,16 @@
       groupMatches.forEach(function (match) {
         const result = results[getMatchId(match)];
         if (!isCompleteResult(result)) return;
-
         completedMatches += 1;
         const pickIndex = getMatchPickIndex(match);
         const pick = pickIndex >= 0 ? Number(picks[pickIndex] || 0) : 0;
         if (!pick) return;
-
         completedPicked += 1;
         if (pick === getOutcome(result)) correct += 1;
       });
 
       const notPicked = completedMatches - completedPicked;
       const score = Number((correct + notPicked * -0.25).toFixed(2));
-
       return { correct, completedPicked, completedMatches, notPicked, score };
     }
 
@@ -558,7 +463,6 @@
         if (b.score !== a.score) return b.score - a.score;
         return String(a.name).localeCompare(String(b.name));
       });
-
       let rank = 0;
       let previousScore = null;
       ranked.forEach(function (row, index) {
@@ -576,7 +480,6 @@
         const bs = Number(b.seed);
         const aHasSeed = Number.isFinite(as) && as > 0;
         const bHasSeed = Number.isFinite(bs) && bs > 0;
-
         if (aHasSeed && bHasSeed && as !== bs) return as - bs;
         if (aHasSeed && !bHasSeed) return -1;
         if (!aHasSeed && bHasSeed) return 1;
@@ -588,22 +491,25 @@
       const thead = document.getElementById("tableHead");
       const tbody = document.getElementById("tableBody");
 
-      const headerCells = ['<th class="name-col">Name</th>'];
+      const headerCells = [
+        '<th class="rank-col">Rank</th>',
+        '<th class="seed-col">Seed</th>',
+        '<th class="name-col">Name</th>',
+        '<th class="team-col">Team</th>'
+      ];
 
       groupMatches.forEach(function (match) {
         headerCells.push('<th class="match-col">' + buildMatchHeaderCell(match) + '</th>');
       });
-
       headerCells.push('<th class="score-col">Score</th>');
-      headerCells.push('<th class="rank-col">Rank</th>');
-      headerCells.push('<th class="seed-col">Seed</th>');
-      headerCells.push('<th class="team-col">Team</th>');
-
       thead.innerHTML = '<tr>' + headerCells.join('') + '</tr>';
 
-      tbody.innerHTML = rows.map(function (row) {
+      const bodyHtml = rows.map(function (row) {
         const cells = [];
+        cells.push('<td class="rank-col">' + escapeHtml(row.rank) + '</td>');
+        cells.push('<td class="seed-col">' + escapeHtml(row.seed || '') + '</td>');
         cells.push('<td class="name-col">' + escapeHtml(row.name) + '</td>');
+        cells.push('<td class="team-col">' + buildTeamMarkup(row.team) + '</td>');
 
         groupMatches.forEach(function (match) {
           const pickIndex = getMatchPickIndex(match);
@@ -613,14 +519,23 @@
         });
 
         cells.push('<td class="score-col">' + escapeHtml(row.score) + '</td>');
-        cells.push('<td class="rank-col">' + escapeHtml(row.rank) + '</td>');
-        cells.push('<td class="seed-col">' + escapeHtml(row.seed || '') + '</td>');
-        cells.push('<td class="team-col">' + buildTeamMarkup(row.team) + '</td>');
-
         return '<tr>' + cells.join('') + '</tr>';
       }).join('');
 
-      fitRows(rows.length);
+      const resultCells = [];
+      resultCells.push('<td class="rank-col">&nbsp;</td>');
+      resultCells.push('<td class="seed-col">&nbsp;</td>');
+      resultCells.push('<td class="name-col result-label">Result</td>');
+      resultCells.push('<td class="team-col">&nbsp;</td>');
+
+      groupMatches.forEach(function (match) {
+        const result = results[getMatchId(match)];
+        resultCells.push('<td class="match-col">' + buildResultCell(match, result) + '</td>');
+      });
+      resultCells.push('<td class="score-col">&nbsp;</td>');
+
+      tbody.innerHTML = bodyHtml + '<tr class="result-row">' + resultCells.join('') + '</tr>';
+      fitRows(rows.length + 1);
     }
 
     function fitRows(rowCount) {
@@ -628,12 +543,9 @@
       const thead = document.querySelector('#standingsTable thead');
       const rows = document.querySelectorAll('#standingsTable tbody tr');
       if (!card || !thead || !rows.length || !rowCount) return;
-
       const available = card.clientHeight - thead.offsetHeight;
       const rowHeight = Math.max(10, Math.floor(available / rowCount));
-      rows.forEach(function (tr) {
-        tr.style.height = rowHeight + 'px';
-      });
+      rows.forEach(function (tr) { tr.style.height = rowHeight + 'px'; });
     }
 
     async function load() {
@@ -645,20 +557,16 @@
 
       try {
         const groupMatches = getGroupMatches();
-
         const [resultsPayload, users, mappingData] = await Promise.all([
           loadResultsReadOnly(dbInstance),
           loadUsers(dbInstance),
           loadR32Mapping(dbInstance)
         ]);
-
         const userTeamLookup = buildUserTeamLookup(mappingData, users);
-
         const rows = users.map(function (user) {
           const stats = calculateUserStats(user, groupMatches, resultsPayload.results);
           const seed = getUserSeed(user);
           const team = userTeamLookup[user.id] || "Elim";
-
           return {
             id: user.id,
             name: getDisplayName(user),
@@ -669,7 +577,6 @@
             team
           };
         });
-
         applyRanks(rows);
         sortRowsBySeed(rows);
         renderTable(groupMatches, rows, resultsPayload.results);
@@ -680,7 +587,6 @@
     }
 
     load();
-
     window.addEventListener('resize', function () {
       const rows = document.querySelectorAll('#standingsTable tbody tr');
       fitRows(rows.length || 1);
